@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 60" width="360" height="60">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@1,900&amp;display=swap');
+    .logo-text {
+      font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+      font-weight: 900;
+      font-style: italic;
+      fill: #ffffff;
+      letter-spacing: -1px;
+    }
+    .orange-dot {
+      fill: #f97316;
+    }
+  </style>
+  
+  <!-- "Di" Logo -->
+  <text x="10" y="44" font-size="36" class="logo-text">Dı</text>
+  <circle cx="47" cy="17" r="4.5" class="orange-dot" />
+
+  <!-- "DiskIngressos" Logo -->
+  <text x="75" y="44" font-size="36" class="logo-text">DıskIngressos</text>
+  <circle cx="112" cy="17" r="4.5" class="orange-dot" />
+</svg>

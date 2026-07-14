@@ -1,0 +1,56 @@
+// Dock component
+// ------------------------------
+
+.dock-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+
+    > * {
+        pointer-events: auto;
+    }
+
+    .card {
+        border-radius: 1rem;
+    }
+}
+
+.dock-groups-stack {
+    display: grid;
+}
+
+.dock-group {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    will-change: opacity;
+
+    &.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    select.form-select,
+    .choices {
+        width: auto;
+        min-width: 180px;
+    }
+}
+
+.dock-separator {
+    width: 1px;
+    align-self: stretch;
+    background: var(--gray-400);
+    flex-shrink: 0;
+}

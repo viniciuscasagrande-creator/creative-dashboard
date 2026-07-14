@@ -1,0 +1,388 @@
+/* ------------------------------------------------------------------------------
+*
+*  # Flatpickr - Datepicker
+*
+*  Flatpickr date picker component styled for Bootstrap
+*
+* ---------------------------------------------------------------------------- */
+
+// Check if component is enabled
+@if $enable-flatpickr {
+
+    // Color theme configuration
+    .flatpickr-calendar {
+        --#{$prefix}drp-bg: #{$dropdown-bg};
+        --#{$prefix}drp-padding: #{$datepicker-padding};
+        --#{$prefix}drp-border-width: #{$dropdown-border-width};
+        --#{$prefix}drp-border-color: #{$dropdown-border-color};
+        --#{$prefix}drp-box-shadow: #{$dropdown-box-shadow};
+        --#{$prefix}drp-border-radius: #{$dropdown-border-radius};
+
+        --#{$prefix}drp-item-padding: #{$datepicker-item-padding};
+        --#{$prefix}drp-item-border-radius: #{$datepicker-item-border-radius};
+        --#{$prefix}drp-item-hover-bg: #{$datepicker-item-hover-bg};
+        --#{$prefix}drp-item-hover-color: #{$datepicker-item-hover-color};
+        --#{$prefix}drp-item-active-bg: #{$datepicker-item-active-bg};
+        --#{$prefix}drp-item-active-color: #{$datepicker-item-active-color};
+        --#{$prefix}drp-item-weekday-color: #{$datepicker-item-weekday-color};
+        --#{$prefix}drp-item-focusout-color: #{$datepicker-item-focusout-color};
+
+        // Dark theme
+        @include color-scheme(dark) {
+            --#{$prefix}drp-bg: #{$dropdown-darkmode-bg};
+            --#{$prefix}drp-border-color: #{$dropdown-darkmode-border-color};
+        }
+    }
+
+    // Core Flatpickr Styles
+    .flatpickr-calendar {
+        position: absolute;
+        z-index: $zindex-tooltip;
+        color: inherit;
+        margin-top: $dropdown-spacer;
+        max-width: none;
+        background-color: var(--#{$prefix}drp-bg);
+        background-clip: padding-box;
+        border: var(--#{$prefix}drp-border-width) solid var(--#{$prefix}drp-border-color);
+        @include border-radius(var(--#{$prefix}drp-border-radius));
+        @include box-shadow(var(--#{$prefix}drp-box-shadow));
+        
+        font-size: $font-size-base;
+        padding: 0;
+        width: auto;
+        
+        // Hide by default (shown when opened)
+        display: none;
+        
+        // When open
+        &.open {
+            display: block;
+        }
+
+        // Arrow styling (similar to daterangepicker)
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            cursor: pointer;
+            
+            svg {
+                fill: var(--#{$prefix}body-color);
+                width: 0.75rem;
+                height: 0.75rem;
+            }
+            
+            &:hover svg {
+                fill: var(--#{$prefix}drp-item-hover-color);
+            }
+        }
+    }
+
+    // Month container
+    .flatpickr-months {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--#{$prefix}drp-padding) var(--#{$prefix}drp-padding) 0;
+        
+        .flatpickr-month {
+            text-align: center;
+            font-size: $h6-font-size;
+            font-weight: $font-weight-normal;
+            color: var(--#{$prefix}body-color);
+            position: relative;
+            flex: 1;
+        }
+        
+        .flatpickr-current-month {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--#{$prefix}spacer-1);
+            
+            .flatpickr-monthDropdown-months,
+            .numInputWrapper {
+                display: inline-block;
+                width: auto;
+
+                input {
+                    background-color: var(--#{$prefix}drp-bg);
+                    color: var(--#{$prefix}body-color);
+                    border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+                    @include border-radius(var(--#{$prefix}drp-item-border-radius));
+                    padding: var(--#{$prefix}drp-item-padding);
+                    font-size: $font-size-base;
+                    font-family: inherit;
+                    font-weight: inherit;
+                    line-height: inherit;
+                    outline: none;
+
+                    &:hover {
+                        background-color: var(--#{$prefix}drp-item-hover-bg);
+                    }
+
+                    // Hide arrows
+                    &::-webkit-outer-spin-button,
+                    &::-webkit-inner-spin-button {
+                        -webkit-appearance: none;
+                        margin: 0;
+                    }
+                    -moz-appearance: textfield;
+                }
+
+                // Hide Flatpickr arrows
+                .arrowUp,
+                .arrowDown {
+                    display: none;
+                }
+            }
+            
+            .flatpickr-monthDropdown-months {
+                background-color: var(--#{$prefix}drp-bg);
+                color: var(--#{$prefix}body-color);
+                border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+                @include border-radius(var(--#{$prefix}drp-item-border-radius));
+                padding: var(--#{$prefix}drp-item-padding);
+                font-size: $font-size-base;
+                font-family: inherit;
+                font-weight: inherit;
+                line-height: inherit;
+                outline: none;
+                cursor: pointer;
+                appearance: none;
+
+                &:hover {
+                    background-color: var(--#{$prefix}drp-item-hover-bg);
+                }
+            }
+        }
+    }
+
+    // Weekdays container
+    .flatpickr-weekdays {
+        display: flex;
+        align-items: center;
+        padding: var(--#{$prefix}drp-padding) var(--#{$prefix}drp-padding) 0;
+        
+        .flatpickr-weekdaycontainer {
+            display: flex;
+            flex: 1;
+        }
+
+        .flatpickr-weekday {
+            flex: 1;
+            text-align: center;
+            font-weight: $font-weight-normal;
+            font-size: 80%;
+            color: var(--#{$prefix}drp-item-weekday-color);
+        }
+    }
+
+    // Days container
+    .flatpickr-days {
+        padding: 0 var(--#{$prefix}drp-padding) var(--#{$prefix}drp-padding);
+        
+        .dayContainer {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0;
+            width: 100%;
+        }
+        
+        // Flatpickr day cells
+        .flatpickr-day {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: calc(calc(var(--#{$prefix}drp-item-padding) * 2) + var(--#{$prefix}body-line-height-computed));
+            padding: var(--#{$prefix}drp-item-padding);
+            cursor: pointer;
+            @include border-radius(var(--#{$prefix}drp-item-border-radius));
+            @include transition(color ease-in-out var(--#{$prefix}transition-base-timer), background-color ease-in-out var(--#{$prefix}transition-base-timer));
+            
+            color: var(--#{$prefix}body-color);
+            
+            // Hover state
+            &:hover {
+                background-color: var(--#{$prefix}drp-item-hover-bg);
+                color: var(--#{$prefix}drp-item-hover-color);
+            }
+            
+            // Disabled dates (prev/next month)
+            &.prevMonthDay,
+            &.nextMonthDay {
+                background-color: transparent;
+                color: var(--#{$prefix}drp-item-focusout-color);
+                
+                &:hover {
+                    background-color: var(--#{$prefix}drp-item-hover-bg);
+                    color: var(--#{$prefix}drp-item-focusout-color);
+                }
+            }
+            
+            // Today
+            &.today {
+                border-color: var(--#{$prefix}drp-item-active-bg);
+                font-weight: $font-weight-bold;
+                
+                &:hover {
+                    background-color: var(--#{$prefix}drp-item-hover-bg);
+                    color: var(--#{$prefix}drp-item-hover-color);
+                }
+            }
+            
+            // Selected date
+            &.selected {
+                background-color: var(--#{$prefix}drp-item-active-bg);
+                color: var(--#{$prefix}drp-item-active-color);
+                border-color: transparent;
+                
+                &:hover {
+                    background-color: var(--#{$prefix}drp-item-active-bg);
+                    color: var(--#{$prefix}drp-item-active-color);
+                }
+            }
+            
+            // Range styles
+            &.inRange {
+                background-color: var(--#{$prefix}drp-item-hover-bg);
+                color: var(--#{$prefix}drp-item-hover-color);
+                @include border-radius(0);
+            }
+            
+            &.startRange {
+                @include border-radius(var(--#{$prefix}drp-item-border-radius) 0 0 var(--#{$prefix}drp-item-border-radius));
+            }
+            
+            &.endRange {
+                @include border-radius(0 var(--#{$prefix}drp-item-border-radius) var(--#{$prefix}drp-item-border-radius) 0);
+            }
+            
+            &.startRange.endRange {
+                @include border-radius(var(--#{$prefix}drp-item-border-radius));
+            }
+            
+            // Disabled
+            &.disabled {
+                opacity: $datepicker-item-disabled-opacity;
+                cursor: default;
+                
+                &:hover {
+                    background-color: transparent;
+                    color: inherit;
+                }
+            }
+        }
+        
+        // Empty cells
+        .flatpickr-day.flatpickr-disabled {
+            opacity: $datepicker-item-disabled-opacity;
+        }
+    }
+
+    // Time picker container
+    .flatpickr-time {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--#{$prefix}drp-padding);
+        border-top: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+        
+        input {
+            display: inline-block;
+            width: auto;
+            background-color: var(--#{$prefix}drp-bg);
+            color: var(--#{$prefix}body-color);
+            border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+            @include border-radius(var(--#{$prefix}drp-item-border-radius));
+            padding: var(--#{$prefix}drp-item-padding);
+            text-align: center;
+            
+            &:focus {
+                outline: none;
+                border-color: var(--#{$prefix}drp-item-active-bg);
+            }
+        }
+        
+        .flatpickr-time-separator {
+            margin: 0 var(--#{$prefix}spacer-1);
+            color: var(--#{$prefix}body-color);
+        }
+        
+        .numInputWrapper {
+            display: inline-block;
+        }
+        
+        .flatpickr-am-pm {
+            margin-left: var(--#{$prefix}spacer-1);
+            background-color: var(--#{$prefix}drp-bg);
+            color: var(--#{$prefix}body-color);
+            border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+            @include border-radius(var(--#{$prefix}drp-item-border-radius));
+            padding: var(--#{$prefix}drp-item-padding);
+            cursor: pointer;
+            
+            &:hover {
+                background-color: var(--#{$prefix}drp-item-hover-bg);
+            }
+        }
+    }
+
+    // Range plugin styles (for daterange functionality)
+    .flatpickr-calendar.rangeMode {
+        .flatpickr-day {
+            &.inRange {
+                background-color: var(--#{$prefix}drp-item-hover-bg);
+                color: var(--#{$prefix}drp-item-hover-color);
+                @include border-radius(0);
+            }
+            
+            &.startRange {
+                @include border-radius(var(--#{$prefix}drp-item-border-radius) 0 0 var(--#{$prefix}drp-item-border-radius));
+            }
+            
+            &.endRange {
+                @include border-radius(0 var(--#{$prefix}drp-item-border-radius) var(--#{$prefix}drp-item-border-radius) 0);
+            }
+        }
+    }
+
+    // Responsive adjustments
+    @include media-breakpoint-down(sm) {
+        .flatpickr-calendar {
+            margin-left: var(--#{$prefix}spacer);
+            margin-right: var(--#{$prefix}spacer);
+            width: calc(100% - calc(var(--#{$prefix}spacer) * 2)) !important;
+            
+            .flatpickr-days .dayContainer {
+                grid-template-columns: repeat(7, 1fr);
+            }
+        }
+        
+        .flatpickr-time {
+            flex-wrap: wrap;
+            gap: var(--#{$prefix}spacer-1);
+        }
+    }
+
+    // Multi-month view (similar to daterangepicker with 2 calendars)
+    .flatpickr-calendar.hasTime {
+        .flatpickr-time {
+            display: flex;
+        }
+    }
+    
+    // Two calendars side by side (range mode desktop)
+    @include media-breakpoint-up(md) {
+        .flatpickr-calendar.inline {
+            &.rangeMode {
+                width: auto;
+                min-width: 650px;
+                
+                .flatpickr-months,
+                .flatpickr-weekdays,
+                .flatpickr-days {
+                    width: 50%;
+                }
+            }
+        }
+    }
+}

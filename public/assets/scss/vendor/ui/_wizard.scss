@@ -1,0 +1,455 @@
+// ── Layout fixes (tab-pane + content height para mapa full) ──
+
+.tab-pane:has(.wizard-container) {
+    height: 100%;
+}
+
+.content.content--wizard {
+    padding: 0;
+}
+
+.tab-content:has(.wizard-container) {
+    height: 100%;
+}
+
+// ── Wizard Container ──────────────────────────────────────────
+
+.wizard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+
+    --wizard-bg: #ffffff;
+    --wizard-bottom-bar-bg: #ffffff;
+    --stat-sold: #bdc3c7;
+    --stat-available: #3498db;
+    --stat-blocked: #7f8c8d;
+    --stat-complimentary: #FF69B4;
+    --stat-selected: #00CD75;
+
+    @include color-scheme(dark) {
+        --wizard-bg: #2c2d31;
+        --wizard-bottom-bar-bg: #2c2d31;
+        --stat-sold: var(--gray-600);
+        --stat-available: #5faee3;
+        --stat-blocked: var(--gray-500);
+        --stat-complimentary: #ff85c7;
+        --stat-selected: #00e080;
+    }
+
+    .modal-backdrop {
+        z-index: 1060;
+    }
+
+    .modal {
+        z-index: 1070;
+    }
+}
+
+// ── Wizard ────────────────────────────────────────────────────
+
+.wizard-header {
+    flex-shrink: 0;
+    background: var(--wizard-bg);
+    border-bottom: 1px solid var(--border-color, #ddd);
+    padding: 1rem 1.5rem;
+}
+
+.wizard-steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    position: relative;
+    flex: 1;
+    cursor: default;
+    user-select: none;
+
+    &.disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    &:not(.disabled):not(.active) {
+        cursor: pointer;
+    }
+
+    & + &::before {
+        content: '';
+        position: absolute;
+        top: 14px;
+        left: calc(-50% + 28px);
+        right: calc(50% + 28px);
+        height: 2px;
+        background: var(--border-color, #ddd);
+        z-index: 0;
+    }
+
+    &.completed + &.completed::before,
+    &.completed + &.active::before {
+        background: var(--success, #198754);
+    }
+
+    &.active + &::before,
+    &.active + &.completed::before {
+        background: var(--primary, #0d6efd);
+    }
+}
+
+.step-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    z-index: 1;
+    background: var(--gray-300, #dee2e6);
+    color: var(--gray-600, #6c757d);
+    transition: all 0.3s ease;
+}
+
+.wizard-step.active .step-indicator {
+    background: var(--primary, #0d6efd);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+}
+
+.wizard-step.completed .step-indicator {
+    background: var(--success, #198754);
+    color: #fff;
+}
+
+.step-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--body-color, #333);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.wizard-step.disabled .step-title {
+    color: var(--gray-500, #adb5bd);
+}
+
+// ── Content Area ──────────────────────────────────────────────
+
+.wizard-stage {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.step-content-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.map-wrapper {
+    position: absolute;
+    inset: 0;
+    bottom: var(--bottom-bar-height, 0px);
+    z-index: 1;
+}
+
+.map-wrapper:not(.d-none) ~ .step-content-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    align-items: flex-start;
+    padding-top: 2rem;
+    pointer-events: none;
+
+    > * {
+        pointer-events: auto;
+    }
+
+    &.overlay-active {
+        background: rgba(0, 0, 0, 0.3);
+    }
+}
+
+// ── Step Content Styles ───────────────────────────────────────
+
+.step-mode-selection {
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.step-title-text {
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.mode-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-mode {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2rem 2.5rem;
+    border-radius: 12px;
+    border: 2px solid var(--border-color, #ddd);
+    background: var(--wizard-bg);
+    min-width: 200px;
+    transition: all 0.2s ease;
+
+    color: var(--body-color, #333);
+
+    i {
+        font-size: 2.5rem;
+    }
+
+    .mode-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .mode-desc {
+        font-size: 0.8rem;
+        color: var(--gray-600, #6c757d);
+
+        @include color-scheme(dark) {
+            color: var(--gray-700);
+        }
+    }
+
+    &:hover {
+        border-color: var(--primary, #0d6efd);
+        background: rgba(13, 110, 253, 0.04);
+    }
+
+    &.active {
+        border-color: var(--primary, #0d6efd);
+        background: rgba(13, 110, 253, 0.08);
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+    }
+}
+
+.step-type {
+    max-width: 500px;
+    width: 100%;
+}
+
+// ── Type Toggle (switch) ───────────────────────────────────────
+
+.toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.toggle-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-muted, #6c757d);
+    transition: color 0.2s ease;
+
+    &.active {
+        color: var(--primary, #0d6efd);
+    }
+}
+
+.toggle-track {
+    position: relative;
+    width: 52px;
+    height: 26px;
+    background: var(--primary, #0d6efd);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+
+    .toggle-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease;
+    }
+
+    &:has(#toggle-type-input:checked) .toggle-thumb {
+        transform: translateX(26px);
+    }
+}
+
+
+.confirm-sector-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.confirm-sector-group {
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.confirm-sector-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--gray-100, #f8f9fa);
+    font-size: 0.85rem;
+
+    @include color-scheme(dark) {
+        background: var(--gray-300);
+    }
+}
+
+.confirm-seat-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.confirm-seat-item {
+    font-size: 0.75rem;
+    background: var(--gray-200, #e9ecef);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: var(--body-color, #333);
+
+    @include color-scheme(dark) {
+        background: var(--gray-400);
+    }
+}
+
+.step-confirm-card .btn {
+    min-width: 160px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.5rem;
+}
+
+// ── Sector Bottom Bar ─────────────────────────────────────────
+
+.sector-bottom-bar {
+    flex-shrink: 0;
+    background: var(--card-bg, #fff);
+    border-top: 1px solid var(--border-color, #ddd);
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow: hidden;
+    z-index: 5;
+    transition:
+        max-height 0.35s ease,
+        opacity 0.35s ease,
+        padding 0.35s ease,
+        border-width 0.35s ease,
+        visibility 0.35s ease;
+}
+
+.btn-advance--hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+// ── Confirm Email ────────────────────────────────────────────
+
+.confirm-email-section {
+    .form-label {
+        font-size: 0.85rem;
+    }
+    .form-control {
+        font-size: 0.85rem;
+        max-width: 350px;
+    }
+}
+
+// ── Responsive: Small Screens ─────────────────────────────────
+
+@media (max-width: 576px) {
+    .wizard-header {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .step-title {
+        font-size: 0.55rem;
+    }
+
+    .step-indicator {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .step-content-panel {
+        padding: 1rem;
+    }
+
+    .mode-buttons {
+        flex-direction: column;
+    }
+
+    .btn-mode {
+        min-width: 100%;
+        padding: 1rem 1.5rem;
+
+        i {
+            font-size: 1.8rem;
+        }
+    }
+
+    #sector-bottom-bar {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .confirm-actions {
+        flex-direction: column;
+
+        .btn {
+            min-width: auto;
+            width: 100%;
+        }
+    }
+}
+
+.content--wizard ~ .navbar-footer {
+    display: none;
+}
