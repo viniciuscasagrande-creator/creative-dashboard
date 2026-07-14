@@ -412,7 +412,7 @@ function switchActiveView(viewId) {
       if (typeof initNegotiationsPage === 'function') {
         initNegotiationsPage();
       }
-    } else if (viewId.startsWith('financial')) {
+    } else if (['financial-balance', 'financial-repass', 'financial-repasses', 'financial-advance', 'financial-statement', 'financial-expenses', 'financial-accounts', 'financial-bordero'].includes(viewId)) {
       targetSection = document.getElementById('view-financial-balance');
       
       // Map financial viewIds to HTML tab keys
@@ -427,6 +427,8 @@ function switchActiveView(viewId) {
         subtabName = 'despesas';
       } else if (viewId === 'financial-accounts') {
         subtabName = 'contas';
+      } else if (viewId === 'financial-bordero') {
+        subtabName = 'bordero';
       } else if (viewId === 'financial-balance') {
         subtabName = 'saldo';
       }
@@ -475,9 +477,19 @@ function switchActiveView(viewId) {
       const parentLi = link.closest('.nav-item-submenu');
       if (parentLi) {
         document.querySelectorAll('.nav-item-submenu').forEach(p => {
-          if (p !== parentLi) p.classList.remove('nav-item-open');
+          if (p !== parentLi) {
+            p.classList.remove('nav-item-open');
+            const sub = p.querySelector('.nav-group-sub');
+            if (sub && typeof bootstrap !== 'undefined') {
+              bootstrap.Collapse.getOrCreateInstance(sub, { toggle: false }).hide();
+            }
+          }
         });
         parentLi.classList.add('nav-item-open');
+        const sub = parentLi.querySelector('.nav-group-sub');
+        if (sub && typeof bootstrap !== 'undefined') {
+          bootstrap.Collapse.getOrCreateInstance(sub, { toggle: false }).show();
+        }
       }
     }
   });
@@ -715,6 +727,13 @@ function initFinanceModule() {
   renderPayoutHistory();
   calculateAnticipationSimPage();
   resetRepasseWizard();
+
+  // Render new Ticketera modules
+  if (typeof renderPDVs === 'function') renderPDVs();
+  if (typeof renderRefundsLog === 'function') renderRefundsLog();
+  if (typeof renderCustomPayRules === 'function') renderCustomPayRules();
+  if (typeof renderOperators === 'function') renderOperators();
+  if (typeof renderAdvancedTables === 'function') renderAdvancedTables();
 
   // Saque buttons - scroll to the page form
   const newRepasseBtn = document.getElementById('financial-new-repasse-btn');
@@ -6174,4 +6193,348 @@ window.renderFinancialPDVSubReport = function() {
       });
     }
   }, 100);
+};
+
+// ==========================================================================
+// 6. Ticketera & Hub Financeiro Sub-modules Implementation
+// ==========================================================================
+
+// --- 6.1 PDV MODULE ---
+let PDVS_DATA = [
+  { id: 1, name: "Bilheteria Shopping Mueller", operator: "Mariana Souza", status: "Aberto", sales: 12450.00 },
+  { id: 2, name: "Quiosque Teatro Guaíra", operator: "Carlos Andrade", status: "Aberto", sales: 8320.00 },
+  { id: 3, name: "Totem Autoatendimento", operator: "Sistema Auto", status: "Aberto", sales: 4150.00 },
+  { id: 4, name: "Bilheteria Física Teatro Positivo", operator: "Paula Santos", status: "Fechado", sales: 0.00 }
+];
+
+function renderPDVs() {
+  const tbody = document.getElementById('pdv-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  PDVS_DATA.forEach(pdv => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-bold text-dark">${pdv.name}</td>
+      <td>${pdv.operator}</td>
+      <td>
+        <span class="badge ${pdv.status === 'Aberto' ? 'bg-success' : 'bg-secondary'}">${pdv.status}</span>
+      </td>
+      <td class="font-monospace fw-bold text-success">R$ ${pdv.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td>
+        <button class="btn btn-xs ${pdv.status === 'Aberto' ? 'btn-outline-danger' : 'btn-outline-success'} py-0.5 px-2 fw-bold me-1" onclick="window.togglePDVStatus(${pdv.id})">
+          ${pdv.status === 'Aberto' ? 'Fechar' : 'Abrir'}
+        </button>
+        <button class="btn btn-xs btn-outline-warning py-0.5 px-2 fw-bold" onclick="window.sangriaPDV(${pdv.id})" ${pdv.status === 'Fechado' ? 'disabled' : ''}>
+          Sangria
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.togglePDVStatus = function(id) {
+  const pdv = PDVS_DATA.find(p => p.id === id);
+  if (pdv) {
+    pdv.status = pdv.status === 'Aberto' ? 'Fechado' : 'Aberto';
+    if (pdv.status === 'Fechado') pdv.sales = 0.00;
+    renderPDVs();
+  }
+};
+
+window.sangriaPDV = function(id) {
+  const pdv = PDVS_DATA.find(p => p.id === id);
+  if (pdv) {
+    const amountStr = prompt(`Informe o valor da sangria para o caixa do PDV "${pdv.name}":`);
+    if (amountStr === null) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0 || amount > pdv.sales) {
+      alert("Valor inválido! Insira um valor maior que zero e menor ou igual ao saldo de vendas.");
+      return;
+    }
+    pdv.sales -= amount;
+    alert(`Sangria de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} efetuada com sucesso!`);
+    renderPDVs();
+  }
+};
+
+window.addNewPDV = function() {
+  const name = prompt("Nome do Ponto de Venda (PDV):");
+  if (!name) return;
+  const operator = prompt("Nome do Operador Responsável:");
+  if (!operator) return;
+  PDVS_DATA.push({
+    id: Date.now(),
+    name: name,
+    operator: operator,
+    status: "Aberto",
+    sales: 0.00
+  });
+  renderPDVs();
+};
+
+// --- 6.2 REFUNDS / CDC MODULE ---
+let REFUNDS_LOG = [
+  { txId: "TX-99001", client: "Amanda Cruz", method: "PIX", value: 120.00, date: "14/07/2026 12:45" },
+  { txId: "TX-99002", client: "Bruno Senna", method: "Estorno Gateway (Crédito)", value: 380.00, date: "14/07/2026 11:30" }
+];
+
+function renderRefundsLog() {
+  const tbody = document.getElementById('refund-log-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  REFUNDS_LOG.forEach(log => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-bold text-dark font-monospace">${log.txId}</td>
+      <td>${log.client}</td>
+      <td><span class="badge bg-light text-dark">${log.method}</span></td>
+      <td class="font-monospace text-danger fw-bold">- R$ ${log.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-muted fs-xxs">${log.date}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.searchRefundTransaction = function() {
+  const searchId = document.getElementById('refund-search-id').value.trim();
+  if (searchId === 'TX-98765') {
+    document.getElementById('refund-client-name').textContent = "Vinicius de Souza";
+    document.getElementById('refund-event-name').textContent = "Show L7NNON & Xamã";
+    document.getElementById('refund-value-amount').textContent = "R$ 250,00";
+    
+    document.getElementById('refund-result-panel').style.display = 'block';
+    document.getElementById('refund-no-result').style.display = 'none';
+  } else {
+    alert("Transação não encontrada! Digite a transação de teste TX-98765.");
+  }
+};
+
+window.executeRefund = function() {
+  const type = document.getElementById('refund-type-select').value;
+  const methodText = type === 'gateway' ? "Estorno Gateway (CDC)" : "Voucher DiskIngressos";
+  
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  
+  REFUNDS_LOG.unshift({
+    txId: "TX-98765",
+    client: "Vinicius de Souza",
+    method: methodText,
+    value: 250.00,
+    date: dateStr
+  });
+  
+  renderRefundsLog();
+  alert(`Reembolso de R$ 250,00 efetuado com sucesso via ${methodText}!`);
+  
+  document.getElementById('refund-result-panel').style.display = 'none';
+  document.getElementById('refund-no-result').style.display = 'block';
+  document.getElementById('refund-search-id').value = '';
+};
+
+// --- 6.3 METHODS OF PAYMENT ---
+window.savePaymentMethods = function(e) {
+  if (e) e.preventDefault();
+  const pixMdr = document.getElementById('pm-pix-mdr').value;
+  const ccMdr = document.getElementById('pm-cc-mdr').value;
+  const boletoFee = document.getElementById('pm-boleto-fee').value;
+  alert(`Métodos de Pagamento Atualizados!\n- PIX MDR: ${pixMdr}%\n- Crédito MDR: ${ccMdr}%\n- Tarifa Fixa Boleto: R$ ${boletoFee}`);
+};
+
+// --- 6.4 CUSTOM PAYMENTS MODULE ---
+let CUSTOM_PAY_RULES = [
+  { id: 1, name: "Acordo Especial Produtor - L7NNON", type: "MDR Reduzido", event: "Show L7NNON & Xamã", rate: "1.5% fixo", status: "Ativo" },
+  { id: 2, name: "Cortesias Patrocinador Heineken", type: "Taxa Zero", event: "Festival Rock & Art", rate: "0.00% (Sem Taxa)", status: "Ativo" },
+  { id: 3, name: "Permuta Rádio Jovem Pan", type: "Ingresso Promocional", event: "Show Deive Leonardo", rate: "Isento", status: "Ativo" }
+];
+
+function renderCustomPayRules() {
+  const tbody = document.getElementById('custompay-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  CUSTOM_PAY_RULES.forEach(rule => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-bold text-dark">${rule.name}</td>
+      <td><span class="badge bg-light text-dark">${rule.type}</span></td>
+      <td>${rule.event}</td>
+      <td class="fw-bold text-primary">${rule.rate}</td>
+      <td><span class="badge bg-success">${rule.status}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.addNewCustomPay = function() {
+  const name = prompt("Nome da Regra Customizada:");
+  if (!name) return;
+  const type = prompt("Tipo de Acordo (ex: Taxa Zero, MDR Reduzido):");
+  if (!type) return;
+  const event = prompt("Evento Aplicado:");
+  if (!event) return;
+  const rate = prompt("MDR / Tarifa Customizada (ex: 1.2%):");
+  if (!rate) return;
+  CUSTOM_PAY_RULES.push({
+    id: Date.now(),
+    name: name,
+    type: type,
+    event: event,
+    rate: rate,
+    status: "Ativo"
+  });
+  renderCustomPayRules();
+};
+
+// --- 6.5 OPERATORS & SMART GATEWAY ROUTING ---
+let OPERATORS_DATA = [
+  { id: "stone", name: "Stone Pagamentos", approval: 92.4, volume: 154300.00, mdr: "2.10%", status: "Ativo" },
+  { id: "cielo", name: "Cielo S.A.", approval: 89.1, volume: 92100.00, mdr: "2.35%", status: "Ativo" },
+  { id: "rede", name: "Rede Card", approval: 90.5, volume: 43200.00, mdr: "2.20%", status: "Ativo" },
+  { id: "pagseguro", name: "PagSeguro", approval: 87.8, volume: 12400.00, mdr: "2.50%", status: "Ativo" }
+];
+
+window.primaryGateway = "stone";
+window.secondaryGateway = "cielo";
+
+function renderOperators() {
+  const tbody = document.getElementById('operators-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  OPERATORS_DATA.forEach(op => {
+    let nameHtml = op.name;
+    if (op.id === window.primaryGateway) {
+      nameHtml += ` <span class="badge bg-success ms-2 font-monospace" style="font-size: 9px; padding: 2px 4px;">[PRINCIPAL]</span>`;
+    } else if (op.id === window.secondaryGateway) {
+      nameHtml += ` <span class="badge bg-warning text-dark ms-2 font-monospace" style="font-size: 9px; padding: 2px 4px;">[BACKUP]</span>`;
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-bold text-dark">${nameHtml}</td>
+      <td class="fw-bold text-success">${op.approval}%</td>
+      <td class="font-monospace fw-bold">R$ ${op.volume.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td>${op.mdr}</td>
+      <td><span class="badge bg-success">${op.status}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.saveGatewayConfig = function(e) {
+  if (e) e.preventDefault();
+  window.primaryGateway = document.getElementById('gw-primary').value;
+  window.secondaryGateway = document.getElementById('gw-secondary').value;
+  renderOperators();
+  alert("Configurações do Gateway salvas e Roteamento Inteligente de Custos aplicado com sucesso!");
+  closeModal('gateway-config');
+};
+
+// --- 6.6 ADVANCED MODULE MANAGEMENT ---
+let ADVANCED_RECEBER = [
+  { id: 1, name: "Guto Lima", event: "Festival de Inverno", value: 3450.00, status: "Aberto" },
+  { id: 2, name: "Clara Mendes", event: "Show Deive Leonardo", value: 1200.00, status: "Pago" },
+  { id: 3, name: "Rodrigo Alencar", event: "Festival Rock & Art", value: 5800.00, status: "Atrasado" }
+];
+let ADVANCED_PAGAR = [
+  { id: 1, vendor: "Som & Luz Equipamentos", value: 4500.00, due: "2026-07-20" },
+  { id: 2, vendor: "Segurança SegTotal", value: 2300.00, due: "2026-07-18" },
+  { id: 3, vendor: "Limpeza CleanEvent", value: 1200.00, due: "2026-07-22" }
+];
+
+function renderAdvancedTables() {
+  const tbodyRec = document.getElementById('advanced-receber-table-body');
+  if (tbodyRec) {
+    tbodyRec.innerHTML = '';
+    ADVANCED_RECEBER.forEach(item => {
+      let badgeClass = 'bg-warning';
+      if (item.status === 'Pago') badgeClass = 'bg-success';
+      if (item.status === 'Atrasado') badgeClass = 'bg-danger';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="fw-bold text-dark">${item.name}</td>
+        <td>${item.event}</td>
+        <td class="font-monospace text-success fw-bold">R$ ${item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td><span class="badge ${badgeClass}">${item.status}</span></td>
+      `;
+      tbodyRec.appendChild(tr);
+    });
+  }
+
+  const tbodyPag = document.getElementById('advanced-pagar-table-body');
+  if (tbodyPag) {
+    tbodyPag.innerHTML = '';
+    ADVANCED_PAGAR.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="fw-bold text-dark">${item.vendor}</td>
+        <td class="font-monospace text-danger fw-bold">R$ ${item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-muted fs-xxs">${item.due}</td>
+        <td>
+          <button class="btn btn-danger btn-xs py-0.5 px-2 fw-bold" onclick="window.payExpense(${item.id})">Pagar</button>
+        </td>
+      `;
+      tbodyPag.appendChild(tr);
+    });
+  }
+}
+
+window.toggleTxTypeFields = function(type) {
+  const nameLabel = document.getElementById('tx-name-label');
+  const nameInput = document.getElementById('tx-name');
+  const statusGroup = document.getElementById('tx-status-group');
+  
+  if (type === 'receita') {
+    if (nameLabel) nameLabel.textContent = "Cliente:";
+    if (nameInput) nameInput.placeholder = "Ex: João da Silva";
+    if (statusGroup) statusGroup.style.display = 'block';
+  } else {
+    if (nameLabel) nameLabel.textContent = "Fornecedor:";
+    if (nameInput) nameInput.placeholder = "Ex: Fornecedor Som";
+    if (statusGroup) statusGroup.style.display = 'none';
+  }
+};
+
+window.saveNewTransaction = function(e) {
+  if (e) e.preventDefault();
+  const type = document.getElementById('tx-type').value;
+  const name = document.getElementById('tx-name').value;
+  const desc = document.getElementById('tx-desc').value;
+  const val = parseFloat(document.getElementById('tx-value').value) || 0;
+  const date = document.getElementById('tx-date').value;
+  const status = document.getElementById('tx-status').value;
+  
+  if (type === 'receita') {
+    ADVANCED_RECEBER.unshift({
+      id: Date.now(),
+      name: name,
+      event: desc,
+      value: val,
+      status: status
+    });
+  } else {
+    ADVANCED_PAGAR.unshift({
+      id: Date.now(),
+      vendor: name,
+      value: val,
+      due: date
+    });
+  }
+  
+  renderAdvancedTables();
+  alert("Lançamento financeiro adicionado com sucesso!");
+  closeModal('new-transaction');
+  
+  document.getElementById('modal-new-transaction-form').reset();
+  window.toggleTxTypeFields('receita');
+};
+
+window.payExpense = function(id) {
+  const item = ADVANCED_PAGAR.find(p => p.id === id);
+  if (item) {
+    if (confirm(`Deseja confirmar a liquidação (pagamento) do lançamento "${item.vendor}" no valor de R$ ${item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}?`)) {
+      ADVANCED_PAGAR = ADVANCED_PAGAR.filter(p => p.id !== id);
+      renderAdvancedTables();
+      alert("Despesa liquidada e caixa atualizado!");
+    }
+  }
 };
