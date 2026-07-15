@@ -1716,3 +1716,91 @@ html, body {
 .chart-bar-custom:hover {
   filter: brightness(1.2) drop-shadow(0 0 8px currentColor) !important;
 }
+
+/* ==========================================================================
+   Premium Fine-Tuning Styling Overrides
+   ========================================================================== */
+
+/* Modern glow focus effect on form elements */
+.form-control, .form-select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.form-control:focus, .form-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+  outline: none !important;
+}
+
+/* Tab contents smooth transition fade-in effect */
+.gateway-tab-pane, .page-section {
+  animation: tabFadeIn 0.35s ease-out;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Simulated Curitiba geographical map animations */
+.map-pulse {
+  animation: mapMarkerPulse 2.2s infinite ease-out;
+  transform-origin: center;
+}
+
+@keyframes mapMarkerPulse {
+  0% {
+    r: 6px;
+    opacity: 0.8;
+  }
+  50% {
+    r: 16px;
+    opacity: 0.3;
+  }
+  100% {
+    r: 22px;
+    opacity: 0;
+  }
+}
+
+/* Interactive tables row hover highlight styling */
+#pdv-executive-rows tr, #pdv-caixas-rows tr, #pdv-conciliation-rows tr {
+  transition: all 0.2s ease;
+}
+#pdv-executive-rows tr:hover, #pdv-caixas-rows tr:hover {
+  background-color: rgba(59, 130, 246, 0.02) !important;
+  transform: scale(1.002);
+}
+
+/* Flash animation for real-time simulated sales updates */
+.flash-update {
+  animation: flashHighlight 0.8s ease;
+}
+
+@keyframes flashHighlight {
+  0% {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+  }
+  100% {
+    background-color: transparent !important;
+  }
+}
+
+/* Glassmorphism style action buttons */
+.btn-glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transition: all 0.2s ease;
+}
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

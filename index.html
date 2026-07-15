@@ -25,9 +25,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=20260714">
+    <link rel="stylesheet" href="src/styles.css?v=20260714">
 </head>
 <body>
+    <!-- Subtle System Status Badge -->
+    <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.85); color: #22c55e; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 10px; z-index: 999999; border: 1px solid #15803d; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+        🟢 System: OK | Build: 1.0.5
+    </div>
     <!-- Main Top Navbar (Limitless navbar) -->
     <div class="navbar navbar-dark navbar-expand-lg navbar-static border-bottom border-bottom-white border-opacity-10">
         <div class="container-fluid">
@@ -234,7 +238,7 @@
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-pdv"><i class="ph-storefront me-2"></i> Pontos de Venda (PDV)</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-paymethods"><i class="ph-credit-card me-2"></i> Métodos de Pagamento</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-custompay"><i class="ph-gear me-2"></i> Pagamentos Customizados</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-negotiations"><i class="ph-handshake me-2"></i> Negociações Financeiro</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-negotiations" onclick="if(window.switchActiveView) { window.switchActiveView('financial-negotiations'); event.preventDefault(); }"><i class="ph-handshake me-2"></i> Negociações Financeiras</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-refunds"><i class="ph-arrow-counter-clockwise me-2"></i> Devoluções / Estornos</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-operators"><i class="ph-shield-check me-2"></i> Operadoras de Cartão</a></li>
                             </ul>
@@ -454,6 +458,12 @@
                                 <span>Permissões</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link submenu-link" data-view="financial-negotiations" title="Negociações Financeiro do Evento" onclick="if(window.switchActiveView) { window.switchActiveView('financial-negotiations'); event.preventDefault(); }">
+                                <i class="ph-handshake me-2"></i>
+                                <span>Negociações Financeiras</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <!-- Quick Actions Sidebar Footer -->
@@ -463,6 +473,7 @@
                         <button class="btn btn-success w-100 btn-sm fw-bold" id="quick-repasse-btn"><i class="ph-hand-coins me-1"></i> Solicitar Repasse</button>
                         <button class="btn btn-light w-100 btn-sm text-dark fw-bold" id="quick-report-btn"><i class="ph-chart-bar me-1"></i> Relatório Rápido</button>
                     </div>
+                    <div class="text-center text-muted fs-xxs mt-2 opacity-50">Build: 1.0.4 (Negociações Financeiras)</div>
                 </div>
             </div>
         </div>
@@ -3015,38 +3026,383 @@
 
                     <!-- VIEW: Financeiro - Pontos de Venda (PDV) -->
                     <section id="view-financial-pdv" class="page-section" style="display: none; flex-direction: column; width: 100%;">
-                        <div class="card card-body shadow-sm d-flex flex-row justify-content-between align-items-center py-2 mb-3" style="border-radius: 6px;">
-                            <div class="d-flex align-items-center gap-2">
-                                <h5 class="fw-bold mb-0 text-dark"><i class="ph-storefront me-1 text-primary"></i> Pontos de Venda (PDV)</h5>
-                                <span class="badge bg-primary-light text-primary fw-bold">Bilheterias Físicas</span>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-orange text-white fw-bold" onclick="window.addNewPDV()"><i class="ph-plus me-1"></i> Cadastrar PDV</button>
+                        <!-- Cabeçalho Executivo do PDV -->
+                        <div class="card card-body shadow-sm border-0 mb-3" style="border-radius: 12px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                <div>
+                                    <h4 class="fw-bold mb-1 text-white d-flex align-items-center gap-2">
+                                        <i class="ph-storefront text-warning"></i> DISKINGRESSOS - PDV FINANCEIRO
+                                    </h4>
+                                    <span class="fs-xs text-slate-300">Empresa: DiskIngressos S.A. | Monitoramento de Bilheterias Físicas e PDVs</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-3 align-items-center" style="font-size: 13px;">
+                                    <div class="bg-white bg-opacity-10 px-3 py-1.5 rounded-3">
+                                        <span class="text-slate-300 d-block fs-xxs text-uppercase fw-bold">Caixas Abertos</span>
+                                        <span class="fw-bold text-white fs-base" id="pdv-header-caixas-open">18</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-10 px-3 py-1.5 rounded-3">
+                                        <span class="text-slate-300 d-block fs-xxs text-uppercase fw-bold">Operadores Online</span>
+                                        <span class="fw-bold text-white fs-base" id="pdv-header-ops-online">42</span>
+                                    </div>
+                                    <div class="bg-white bg-opacity-10 px-3 py-1.5 rounded-3 text-end">
+                                        <span class="text-slate-300 d-block fs-xxs text-uppercase fw-bold">Status Operação</span>
+                                        <span class="fw-bold text-success d-flex align-items-center gap-1.5 justify-content-end" id="pdv-header-status">
+                                            <i class="ph-circle-fill fs-xxs text-success animate-pulse"></i> Online
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center ms-md-2">
+                                        <button class="btn btn-warning btn-sm fw-bold text-dark px-3" onclick="openModal('add-new-pdv-modal')" style="border-radius: 8px;">
+                                            <i class="ph-plus-circle me-1"></i> Novo PDV
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Indicadores Gerais (KPI Cards) -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                <div class="card card-body p-2 border-0 shadow-sm" style="border-radius: 8px; background: rgba(59, 130, 246, 0.04);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Receita do Dia</span>
+                                    <h5 class="fw-bold text-primary mb-0" id="pdv-kpi-revenue">R$ 184.850,00</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                <div class="card card-body p-2 border-0 shadow-sm" style="border-radius: 8px; background: rgba(16, 185, 129, 0.04);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Ingressos Vendidos</span>
+                                    <h5 class="fw-bold text-success mb-0" id="pdv-kpi-sold">3.426</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                <div class="card card-body p-2 border-0 shadow-sm" style="border-radius: 8px; background: rgba(139, 92, 246, 0.04);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Ticket Médio</span>
+                                    <h5 class="fw-bold text-indigo mb-0" id="pdv-kpi-ticket">R$ 53,96</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                <div class="card card-body p-2 border-0 shadow-sm" style="border-radius: 8px; background: rgba(245, 158, 11, 0.04);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">PIX Recebido</span>
+                                    <h5 class="fw-bold text-warning mb-0" id="pdv-kpi-pix">R$ 64.280,00</h5>
+                                </div>
+                            </div>
+                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                <div class="card card-body p-2 border-0 shadow-sm" style="border-radius: 8px; background: rgba(6, 182, 212, 0.04);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Crédito / Débito</span>
+                                    <h5 class="fw-bold text-cyan mb-0" id="pdv-kpi-cards">R$ 109.170,00</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Secondary KPI Info Row (Dinheiro, Cancelamentos, Estornos, Aprovação) -->
+                        <div class="row g-2 mb-3" style="font-size: 12px;">
+                            <div class="col-md-3">
+                                <div class="card card-body p-2 border shadow-none d-flex flex-row justify-content-between align-items-center mb-0">
+                                    <span class="text-muted"><i class="ph-money text-success me-1"></i> Dinheiro em Caixa:</span>
+                                    <span class="fw-bold text-dark" id="pdv-kpi-cash">R$ 11.400,00</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-body p-2 border shadow-none d-flex flex-row justify-content-between align-items-center mb-0">
+                                    <span class="text-muted"><i class="ph-x-circle text-danger me-1"></i> Cancelamentos:</span>
+                                    <span class="fw-bold text-danger" id="pdv-kpi-cancel">R$ 1.820,00</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-body p-2 border shadow-none d-flex flex-row justify-content-between align-items-center mb-0">
+                                    <span class="text-muted"><i class="ph-arrow-counter-clockwise text-warning me-1"></i> Estornos Efetuados:</span>
+                                    <span class="fw-bold text-warning" id="pdv-kpi-refunds">R$ 680,00</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-body p-2 border shadow-none d-flex flex-row justify-content-between align-items-center mb-0">
+                                    <span class="text-muted"><i class="ph-shield-check text-success me-1"></i> Aprovação Cartão:</span>
+                                    <span class="fw-bold text-success" id="pdv-kpi-approval">98,9%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Grid Layout -->
                         <div class="row g-3">
-                            <div class="col-md-12">
-                                <div class="card shadow-sm border p-0" style="border-radius: 8px;">
-                                    <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center py-2 px-3">
-                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-list text-primary me-1"></i> Lista de PDVs Ativos</h6>
-                                        <span class="fs-xxs text-muted fw-bold">Sincronização em tempo real</span>
+                            <!-- Left Column: Tables & Payment Charts -->
+                            <div class="col-md-8">
+                                <!-- 📍 Pontos de Venda (PDVs) -->
+                                <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px; overflow: hidden;">
+                                    <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center py-2.5 px-3">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-storefront text-primary me-1"></i> Desempenho por Pontos de Venda (PDVs)</h6>
+                                        <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="ph-arrows-clockwise me-1"></i> Atualizando</span>
                                     </div>
                                     <div class="table-responsive">
                                         <table class="table table-hover align-middle mb-0 text-start" style="font-size: 13px;">
                                             <thead>
-                                                <tr class="table-light">
-                                                    <th>Local / PDV</th>
-                                                    <th>Operador Responsável</th>
-                                                    <th>Status do Caixa</th>
-                                                    <th>Vendas Hoje (R$)</th>
-                                                    <th>Ações</th>
+                                                <tr class="table-light text-muted">
+                                                    <th>Ponto de Venda</th>
+                                                    <th class="text-center">Operadores</th>
+                                                    <th class="text-center">Vendas</th>
+                                                    <th class="text-end">Receita</th>
+                                                    <th class="text-end">Ticket Médio</th>
+                                                    <th class="text-center">Status</th>
+                                                    <th class="text-center">Ações</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="pdv-table-body">
-                                                <!-- Dynamic rows -->
+                                            <tbody id="pdv-executive-rows">
+                                                <!-- Dynamic rows populate here -->
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+
+                                <!-- Monitor de Caixas -->
+                                <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px; overflow: hidden;">
+                                    <div class="card-header bg-transparent border-bottom py-2.5 px-3">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-desktop text-primary me-1"></i> Monitor de Caixas Físicos (Terminais)</h6>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle table-sm mb-0 text-start" style="font-size: 12.5px;">
+                                            <thead>
+                                                <tr class="table-light text-muted">
+                                                    <th>Caixa</th>
+                                                    <th>Ponto de Venda</th>
+                                                    <th>Operador</th>
+                                                    <th class="text-center">Status</th>
+                                                    <th class="text-center">Vendas</th>
+                                                    <th class="text-end">Acumulado</th>
+                                                    <th class="text-center">Ação</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pdv-caixas-rows">
+                                                <!-- CX-001 through CX-006 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Grid for Formas de Pagamento & Conciliação -->
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <!-- Formas de Pagamento Chart & Table -->
+                                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                                            <div class="card-header bg-transparent border-bottom py-2.5 px-3">
+                                                <h6 class="fw-bold text-dark mb-0"><i class="ph-wallet text-primary me-1"></i> Métodos de Pagamento</h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div style="height: 140px;" class="mb-3 position-relative">
+                                                    <canvas id="c-pdv-paymethods-chart"></canvas>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover align-middle mb-0 text-start" style="font-size: 11.5px;">
+                                                        <thead>
+                                                            <tr class="table-light text-muted">
+                                                                <th>Método</th>
+                                                                <th class="text-center">Qtd</th>
+                                                                <th class="text-end">Total</th>
+                                                                <th class="text-end">Part. %</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="pdv-paymethods-rows">
+                                                            <!-- Credit, PIX, Debit, Cash -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <!-- Conciliação Financeira -->
+                                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                            <div class="card-header bg-transparent border-bottom py-2.5 px-3 d-flex justify-content-between align-items-center">
+                                                <h6 class="fw-bold text-dark mb-0"><i class="ph-scales text-primary me-1"></i> Conciliação ERP x Gateway</h6>
+                                                <span class="badge bg-success bg-opacity-10 text-success fw-bold">100% Conciliado</span>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle mb-0 text-start" style="font-size: 12px;">
+                                                    <thead>
+                                                        <tr class="table-light text-muted">
+                                                            <th>PDV</th>
+                                                            <th class="text-end">ERP</th>
+                                                            <th class="text-end">Gateway</th>
+                                                            <th class="text-end">Divergência</th>
+                                                            <th class="text-center">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="pdv-conciliation-rows">
+                                                        <!-- Reconciliation data rows -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Detail Dashboards & Insights -->
+                            <div class="col-md-4">
+                                <!-- Interactive Detail Dashboard Pane -->
+                                <div class="card border-0 shadow-sm mb-3 text-start" style="border-radius: 12px; background: #fff;" id="pdv-detail-card">
+                                    <div class="card-header bg-transparent border-bottom py-2.5 px-3" style="background: rgba(15, 23, 42, 0.02) !important;">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-info text-primary me-1"></i> Faturamento Detalhado</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="fw-bold text-dark mb-0" id="pdv-detail-title">Shopping Mueller</h5>
+                                            <span class="badge bg-success bg-opacity-10 text-success fw-bold" id="pdv-detail-status-badge"><i class="ph-circle-fill me-1 fs-xxs"></i>Aberto</span>
+                                        </div>
+                                        <div class="d-flex flex-column gap-2" style="font-size: 13px;">
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted">Receita Acumulada</span>
+                                                <span class="fw-bold text-dark font-monospace" id="pdv-detail-revenue">R$ 46.520,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted">Ingressos Emitidos</span>
+                                                <span class="fw-semibold text-dark" id="pdv-detail-sold">846</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted"><i class="ph-qr-code text-warning me-1"></i> Recebido por PIX</span>
+                                                <span class="fw-semibold text-dark font-monospace" id="pdv-detail-pix">R$ 15.420,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted"><i class="ph-credit-card text-primary me-1"></i> Crédito Capturado</span>
+                                                <span class="fw-semibold text-dark font-monospace" id="pdv-detail-credit">R$ 22.840,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted"><i class="ph-credit-card text-info me-1"></i> Débito Capturado</span>
+                                                <span class="fw-semibold text-dark font-monospace" id="pdv-detail-debit">R$ 5.880,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted"><i class="ph-money text-success me-1"></i> Dinheiro Físico</span>
+                                                <span class="fw-semibold text-dark font-monospace" id="pdv-detail-cash">R$ 2.380,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted">Cancelamentos Solicitados</span>
+                                                <span class="fw-bold text-danger font-monospace" id="pdv-detail-cancel">R$ 420,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5" id="pdv-detail-estorno-row" style="display: none;">
+                                                <span class="text-muted">Estornos / CDC</span>
+                                                <span class="fw-bold text-warning font-monospace" id="pdv-detail-refund">R$ 0,00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between border-bottom pb-1.5">
+                                                <span class="text-muted">Caixas Ativos no Ponto</span>
+                                                <span class="fw-semibold text-dark" id="pdv-detail-caixas">4</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="text-muted">Tempo Médio de Atendimento</span>
+                                                <span class="fw-bold text-primary font-monospace" id="pdv-detail-time">01:42</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Geographical Map Simulation Card -->
+                                <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px; overflow: hidden;">
+                                    <div class="card-header bg-transparent border-bottom py-2.5 px-3">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-map-pin text-primary me-1"></i> Mapa Geográfico de Operação</h6>
+                                    </div>
+                                    <div class="card-body p-0 position-relative" style="height: 180px; background: #e2e8f0;">
+                                        <!-- Simulated Curitiba map vectors with pulsing markers -->
+                                        <svg viewBox="0 0 400 200" style="width: 100%; height: 100%; display: block; background: #cbd5e1;">
+                                            <path d="M 30,50 Q 80,10 150,40 T 280,30 T 380,80 Q 320,150 240,120 T 110,160 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
+                                            <!-- Mueller -->
+                                            <circle cx="160" cy="70" r="15" fill="rgba(59, 130, 246, 0.2)" class="map-pulse" />
+                                            <circle cx="160" cy="70" r="5" fill="#3b82f6" />
+                                            <!-- Positivo -->
+                                            <circle cx="80" cy="110" r="15" fill="rgba(16, 185, 129, 0.2)" class="map-pulse" />
+                                            <circle cx="80" cy="110" r="5" fill="#10b981" />
+                                            <!-- Guaíra -->
+                                            <circle cx="210" cy="85" r="15" fill="rgba(245, 158, 11, 0.2)" class="map-pulse" />
+                                            <circle cx="210" cy="85" r="5" fill="#f59e0b" />
+                                            <!-- Fernanda Montenegro -->
+                                            <circle cx="270" cy="120" r="15" fill="rgba(139, 92, 246, 0.2)" class="map-pulse" />
+                                            <circle cx="270" cy="120" r="5" fill="#8b5cf6" />
+                                            <!-- Família Pavê -->
+                                            <circle cx="140" cy="135" r="15" fill="rgba(6, 182, 212, 0.2)" class="map-pulse" />
+                                            <circle cx="140" cy="135" r="5" fill="#06b6d4" />
+                                        </svg>
+                                        <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 text-white py-1 px-2 d-flex justify-content-between align-items-center" style="font-size: 10px;">
+                                            <span>Curitiba Metropol. (Pontos Habilitados)</span>
+                                            <span class="text-success"><i class="ph-circle-fill me-1 fs-xxs"></i>Todos Ativos</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Real-Time Simulation Panel -->
+                                <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px; background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%); color: #fff;">
+                                    <div class="card-body p-3 text-start">
+                                        <h6 class="fw-bold text-white mb-2"><i class="ph-lightning text-warning me-1"></i> Simulador de Vendas Físicas</h6>
+                                        <p class="text-slate-300 fs-xs mb-3">Clique no botão abaixo para disparar uma transação de compra física em um PDV randômico no mapa e atualizar o painel.</p>
+                                        <button class="btn btn-warning btn-sm w-100 fw-bold text-dark mb-2" onclick="window.simulatePDVSale()"><i class="ph-play-fill me-1"></i> Simular Venda Física</button>
+                                        <div class="text-slate-400 font-monospace fs-xxs border-top border-white border-opacity-10 pt-2 mt-2" id="pdv-simulation-log">
+                                            Status: Aguardando nova simulação...
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Alert operational panel -->
+                                <div class="card border-0 shadow-sm mb-3 text-start" style="border-radius: 12px;">
+                                    <div class="card-header bg-transparent border-bottom py-2.5 px-3">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-bell-ringing text-danger me-1"></i> Alertas Operacionais (Sistema)</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="d-flex flex-column gap-2" id="pdv-alerts-container" style="font-size: 12px;">
+                                            <div class="alert alert-info py-1.5 px-2.5 mb-0 border-0 d-flex gap-2 align-items-start">
+                                                <i class="ph-info fs-base text-info mt-0.5"></i>
+                                                <div>
+                                                    <span class="fw-bold text-dark d-block">Sincronização Ativa</span>
+                                                    <span class="text-muted fs-xxs">Conexão redundante com adquirentes operacional.</span>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-warning py-1.5 px-2.5 mb-0 border-0 d-flex gap-2 align-items-start">
+                                                <i class="ph-warning-circle fs-base text-warning mt-0.5"></i>
+                                                <div>
+                                                    <span class="fw-bold text-dark d-block">Estoque Bobina CX-002</span>
+                                                    <span class="text-muted fs-xxs">Nível estimado do papel de impressão em 15% no Mueller.</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ranking e KPIs consolidado -->
+                                <div class="card border-0 shadow-sm mb-3 text-start" style="border-radius: 12px;">
+                                    <div class="card-header bg-transparent border-bottom py-2.5 px-3">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-trophy text-warning me-1"></i> Ranking de Faturamento</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="d-flex flex-column gap-2" style="font-size: 13px;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>🥇 1º Shopping Mueller</span>
+                                                <span class="fw-bold font-monospace">R$ 46.520</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <span>🥈 2º Teatro Guaíra</span>
+                                                <span class="fw-bold font-monospace">R$ 42.380</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 91%;"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <span>🥉 3º Teatro Positivo</span>
+                                                <span class="fw-bold font-monospace">R$ 38.740</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 83%;"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <span>4º Teatro Fernanda Montenegro</span>
+                                                <span class="fw-bold font-monospace">R$ 24.960</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: 53%;"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <span>5º Família Pavê</span>
+                                                <span class="fw-bold font-monospace">R$ 18.950</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 40%;"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -3246,38 +3602,1229 @@
                         </div>
                     </section>
 
-                    <!-- VIEW: Financeiro - Operadoras de Cartão -->
                     <section id="view-financial-operators" class="page-section" style="display: none; flex-direction: column; width: 100%;">
-                        <div class="card card-body shadow-sm d-flex flex-row justify-content-between align-items-center py-2 mb-3" style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.06);">
-                            <div class="d-flex align-items-center gap-2">
-                                <h5 class="fw-bold mb-0 text-dark"><i class="ph-shield-check me-1 text-primary"></i> Vendas por Operadora de Cartão</h5>
-                                <span class="badge bg-cyan bg-opacity-10 text-cyan fw-bold">Adquirentes &amp; Bandeiras</span>
-                            </div>
-                            <button class="btn btn-orange btn-sm text-white fw-bold" onclick="openModal('gateway-config')"><i class="ph-gear me-1"></i> Gateway de Pagamento</button>
+                        
+                        <!-- Barra de Ações Global -->
+                        <div class="card card-body shadow-sm d-flex flex-row flex-wrap gap-2 p-2 mb-3 border-0" style="border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;">
+                            <button class="btn btn-sm btn-outline-dark fw-bold" onclick="window.globalAction('novo')"><i class="ph-plus-circle me-1"></i> Novo</button>
+                            <button class="btn btn-sm btn-outline-dark fw-bold" onclick="window.globalAction('editar')"><i class="ph-pencil me-1"></i> Editar</button>
+                            <button class="btn btn-sm btn-primary fw-bold" onclick="window.globalAction('salvar')"><i class="ph-floppy-disk me-1"></i> Salvar</button>
+                            <button class="btn btn-sm btn-light fw-bold text-dark border" onclick="window.globalAction('cancelar')"><i class="ph-x me-1"></i> Cancelar</button>
+                            <button class="btn btn-sm btn-danger fw-bold" onclick="window.globalAction('excluir')"><i class="ph-trash me-1"></i> Excluir</button>
+                            <button class="btn btn-sm btn-outline-secondary fw-semibold" onclick="window.globalAction('pesquisar')"><i class="ph-magnifying-glass me-1"></i> Pesquisar</button>
+                            <button class="btn btn-sm btn-outline-secondary fw-semibold" onclick="window.globalAction('atualizar')"><i class="ph-arrows-clockwise me-1"></i> Atualizar</button>
+                            <button class="btn btn-sm btn-outline-success fw-semibold" onclick="window.globalAction('importar')"><i class="ph-upload me-1"></i> Importar</button>
+                            <button class="btn btn-sm btn-outline-success fw-semibold" onclick="window.globalAction('exportar')"><i class="ph-download me-1"></i> Exportar</button>
+                            <button class="btn btn-sm btn-outline-info fw-semibold" onclick="window.globalAction('historico')"><i class="ph-clock-counter-clockwise me-1"></i> Histórico</button>
+                            <button class="btn btn-sm btn-outline-warning fw-semibold ms-md-auto" onclick="window.globalAction('ajuda')"><i class="ph-question me-1"></i> Ajuda</button>
                         </div>
 
+                        <!-- Dashboard Superior (KPIs) -->
+                        <div class="row g-2 mb-3">
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(59, 130, 246, 0.05);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Pagamentos Hoje</span>
+                                    <h5 class="fw-bold text-dark mb-0" id="gw-kpi-today-value">R$ 152.320,00</h5>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(16, 185, 129, 0.05);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Aprovados</span>
+                                    <h5 class="fw-bold text-success mb-0" id="gw-kpi-approved-count">1.245</h5>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(239, 68, 68, 0.05);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Negados</span>
+                                    <h5 class="fw-bold text-danger mb-0" id="gw-kpi-denied-count">23</h5>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(107, 114, 128, 0.05);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Chargebacks</span>
+                                    <h5 class="fw-bold text-secondary mb-0" id="gw-kpi-chargeback-count">2</h5>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(245, 158, 11, 0.05);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">PIX</span>
+                                    <h5 class="fw-bold text-warning mb-0" id="gw-kpi-pix-count">430</h5>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(139, 92, 246, 0.05);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Cartão</span>
+                                    <h5 class="fw-bold text-indigo mb-0" id="gw-kpi-card-count">815</h5>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card card-body p-2 text-center shadow-sm border-0" style="border-radius: 8px; background: rgba(16, 185, 129, 0.08);">
+                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Taxa Aprovação</span>
+                                    <h5 class="fw-bold text-success mb-0" id="gw-kpi-approval-rate">98,12%</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cabeçalho Principal -->
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center py-2 px-3 mb-3 border-0" style="border-radius: 12px; background: #fff;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark"><i class="ph-gear me-1 text-primary"></i> Gateway de Pagamentos</h5>
+                                    <span class="fs-xxs text-muted">Financeiro &gt; Configurações &gt; Gateway de Pagamentos</span>
+                                </div>
+                                <div class="border-start ps-3 py-1">
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold me-1" id="gw-header-status-badge"><i class="ph-circle-fill me-1 fs-xxs"></i>Online</span>
+                                    <span class="fs-xxs text-muted" id="gw-header-sync-label">Sinc: 10/07/2026 14:36</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 mt-2 mt-md-0">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fs-xxs fw-bold text-muted text-uppercase">Ambiente:</span>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="gw-env-global" id="gw-env-prod" value="production" checked onchange="window.toggleGatewayEnv('production')">
+                                        <label class="form-check-label fs-xs fw-semibold text-dark" for="gw-env-prod">Produção</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="gw-env-global" id="gw-env-sandbox" value="sandbox" onchange="window.toggleGatewayEnv('sandbox')">
+                                        <label class="form-check-label fs-xs fw-semibold text-dark" for="gw-env-sandbox">Sandbox</label>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm fw-bold px-3 py-1" onclick="window.testGatewayConnection()"><i class="ph-plugs-connected me-1"></i> Testar Conexão</button>
+                            </div>
+                        </div>
+
+                        <!-- Style block for sidebar menu matching user screenshot -->
+                        <style>
+                            .gateway-sidebar-card {
+                                border-radius: 12px; 
+                                background: #fff; 
+                                border: 1px solid #e5e7eb; 
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02); 
+                                overflow: hidden;
+                            }
+                            #gateway-menu-list .nav-link {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                padding: 14px 20px !important;
+                                font-size: 14.5px !important;
+                                color: #4b5563 !important;
+                                font-weight: 500 !important;
+                                text-decoration: none;
+                                transition: all 0.2s ease;
+                                border-bottom: 1px solid #f3f4f6;
+                                background-color: transparent !important;
+                                border-radius: 0 !important;
+                            }
+                            #gateway-menu-list .nav-link:last-child {
+                                border-bottom: none;
+                            }
+                            #gateway-menu-list .nav-link:hover {
+                                background-color: #f9fafb !important;
+                                color: #111827 !important;
+                            }
+                            #gateway-menu-list .nav-link.active {
+                                color: #111827 !important;
+                                font-weight: 700 !important;
+                                background-color: transparent !important;
+                            }
+                            #gateway-menu-list .nav-link i.menu-icon {
+                                font-size: 20px;
+                                margin-right: 12px;
+                                color: #4b5563;
+                                transition: color 0.2s ease;
+                            }
+                            #gateway-menu-list .nav-link.active i.menu-icon {
+                                color: #111827 !important;
+                            }
+                            #gateway-menu-list .nav-link i.chevron-icon {
+                                font-size: 16px;
+                                color: #9ca3af;
+                                transition: transform 0.2s ease, color 0.2s ease;
+                            }
+                            #gateway-menu-list .nav-link:hover i.chevron-icon {
+                                transform: translateX(3px);
+                                color: #111827;
+                            }
+                        </style>
+
+                        <!-- Main Grid Split -->
                         <div class="row g-3">
-                            <div class="col-md-12">
-                                <div class="card shadow-sm border p-0" style="border-radius: 8px;">
-                                    <div class="card-header bg-transparent border-bottom">
-                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-activity text-primary me-1"></i> Performance por Adquirente</h6>
+                            <!-- Sidebar Menu -->
+                            <div class="col-md-3">
+                                <div class="card gateway-sidebar-card p-0 mb-0">
+                                    <ul class="nav flex-column gap-0" id="gateway-menu-list">
+                                        <li class="nav-item">
+                                            <a class="nav-link active fw-bold text-dark" href="#" onclick="window.switchGatewayTab(event, 'config')">
+                                                <span><i class="ph-faders menu-icon"></i> Configurações</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'credentials')">
+                                                <span><i class="ph-key menu-icon"></i> Credenciais</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'cards')">
+                                                <span><i class="ph-credit-card menu-icon"></i> Cartões Aceitos</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'pix')">
+                                                <span><i class="ph-squares-four menu-icon"></i> PIX</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'boletos')">
+                                                <span><i class="ph-barcode menu-icon"></i> Boletos</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'installment')">
+                                                <span><i class="ph-calculator menu-icon"></i> Parcelamento</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'antifraud')">
+                                                <span><i class="ph-shield-check menu-icon"></i> Antifraude</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'webhooks')">
+                                                <span><i class="ph-brackets-curly menu-icon"></i> Webhooks</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'conciliation')">
+                                                <span><i class="ph-scales menu-icon"></i> Conciliação</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'refunds')">
+                                                <span><i class="ph-arrow-counter-clockwise menu-icon"></i> Estornos</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'logs')">
+                                                <span><i class="ph-terminal-window menu-icon"></i> Logs</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-muted" href="#" onclick="window.switchGatewayTab(event, 'reports')">
+                                                <span><i class="ph-presentation-chart menu-icon"></i> Relatórios</span>
+                                                <i class="ph-chevron-right chevron-icon"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Content Area -->
+                            <div class="col-md-9">
+                                <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; min-height: 520px; display: flex; flex-direction: column;">
+                                    
+                                    <!-- TAB 1: Configurações Gerais -->
+                                    <div class="gateway-tab-pane" id="gw-tab-config" style="display: block;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-sliders me-1 text-primary"></i> Configurações Gerais</h6>
+                                        <div class="row g-3 text-start">
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-main-provider">Gateway Principal</label>
+                                                <div class="input-group">
+                                                    <select class="form-select form-select-sm fw-semibold" id="gw-main-provider" onchange="window.onGatewayProviderChange(this.value)">
+                                                        <option value="Mercado Pago" selected>Mercado Pago (Taxa 1.99%)</option>
+                                                        <option value="Cielo">Cielo S.A. (Taxa 2.10%)</option>
+                                                        <option value="Rede">Rede Card (Taxa 2.15%)</option>
+                                                        <option value="Stone">Stone Pagamentos (Taxa 1.95%)</option>
+                                                        <option value="PagSeguro">PagSeguro UOL (Taxa 2.30%)</option>
+                                                        <option value="Pagar.me">Pagar.me Stone (Taxa 2.05%)</option>
+                                                    </select>
+                                                    <button class="btn btn-primary btn-sm fw-bold px-3" type="button" onclick="openModal('add-new-gateway-modal')" style="font-size: 11px;"><i class="ph-plus-circle me-1"></i> Novo Gateway</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-env">Ambiente</label>
+                                                <select class="form-select form-select-sm" id="gw-config-env">
+                                                    <option value="sandbox">Sandbox (Ambiente de Testes)</option>
+                                                    <option value="production" selected>Produção (Ambiente Real)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-company">Empresa</label>
+                                                <input type="text" class="form-control form-control-sm" id="gw-config-company" value="DiskIngressos Entretenimento S.A.">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-branch">Filial</label>
+                                                <input type="text" class="form-control form-control-sm" id="gw-config-branch" value="Filial Curitiba Centro">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-status">Status</label>
+                                                <select class="form-select form-select-sm" id="gw-config-status">
+                                                    <option value="ativo" selected>Ativo</option>
+                                                    <option value="inativo">Inativo</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Tipo de Integração</label>
+                                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="gw-config-integration" id="int-api-rest" value="API REST" checked>
+                                                        <label class="form-check-label fs-xs" for="int-api-rest">API REST</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="gw-config-integration" id="int-tef-rest" value="TEF">
+                                                        <label class="form-check-label fs-xs" for="int-tef-rest">TEF</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="gw-config-integration" id="int-pos-rest" value="POS">
+                                                        <label class="form-check-label fs-xs" for="int-pos-rest">POS</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="gw-config-integration" id="int-link-rest" value="Link de Pagamento">
+                                                        <label class="form-check-label fs-xs" for="int-link-rest">Link de Pagamento</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-timeout">Timeout da API (Segundos)</label>
+                                                <input type="number" class="form-control form-control-sm font-monospace" id="gw-config-timeout" value="30" min="1" max="120">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-currency">Moeda</label>
+                                                <select class="form-select form-select-sm" id="gw-config-currency">
+                                                    <option value="BRL" selected>Real Brasileiro (R$)</option>
+                                                    <option value="USD">Dólar Americano ($)</option>
+                                                    <option value="EUR">Euro (€)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-timezone">Fuso Horário</label>
+                                                <select class="form-select form-select-sm" id="gw-config-timezone">
+                                                    <option value="GMT-3" selected>Brasília (GMT-3)</option>
+                                                    <option value="GMT-4">Manaus (GMT-4)</option>
+                                                    <option value="UTC">UTC (Zero)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-url">URL da API</label>
+                                                <input type="url" class="form-control form-control-sm font-monospace" id="gw-config-url" value="https://api.mercadopago.com/v1">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-config-webhook">URL do Webhook</label>
+                                                <input type="url" class="form-control form-control-sm font-monospace" id="gw-config-webhook" value="https://erp.diskingressos.com.br/api/gateway/callback">
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-success btn-sm fw-bold" onclick="window.setGatewayActiveStatus(true)"><i class="ph-circle-fill me-1 fs-xxs"></i> Ativar Gateway</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.setGatewayActiveStatus(false)"><i class="ph-x-circle me-1"></i> Desativar Gateway</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.restoreGatewayDefaults()"><i class="ph-arrow-counter-clockwise me-1"></i> Restaurar Configurações</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayGeneralConfig()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
                                     </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0 text-start" style="font-size: 13px;">
-                                            <thead>
-                                                <tr class="table-light">
-                                                    <th>Adquirente</th>
-                                                    <th>Taxa de Aprovação (%)</th>
-                                                    <th>Volume Capturado Hoje</th>
-                                                    <th>MDR Médio</th>
-                                                    <th>Status de Antecipação</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="operators-table-body">
-                                                <!-- Loaded dynamically -->
-                                            </tbody>
-                                        </table>
+
+                                    <!-- TAB 2: Credenciais -->
+                                    <div class="gateway-tab-pane" id="gw-tab-credentials" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-key me-1 text-primary"></i> Credenciais de Autenticação</h6>
+                                        <div class="row g-3 text-start">
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-merchant-id">Merchant ID</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="gw-merchant-id" value="mp_mch_92384110">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-merchant-key">Merchant Key</label>
+                                                <input type="password" class="form-control form-control-sm font-monospace" id="gw-merchant-key" value="••••••••••••••••••••••••••••••••">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-api-key">API Key</label>
+                                                <input type="password" class="form-control form-control-sm font-monospace" id="gw-api-key" value="••••••••••••••••••••••••••••••••">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-secret-key">Secret Key</label>
+                                                <input type="password" class="form-control form-control-sm font-monospace" id="gw-secret-key" value="••••••••••••••••••••••••••••••••">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-client-id">Client ID</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="gw-client-id" value="cli_client_id_prod_88293">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-client-secret">Client Secret</label>
+                                                <input type="password" class="form-control form-control-sm font-monospace" id="gw-client-secret" value="••••••••••••••••••••••••••••••••">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-webhook-secret">Webhook Secret</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="gw-webhook-secret" value="whsec_88f91c28b3a0e1">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-public-token">Token Público</label>
+                                                <input type="password" class="form-control form-control-sm font-monospace" id="gw-public-token" value="••••••••••••••••••••••••••••••••">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-private-token">Token Privado</label>
+                                                <input type="password" class="form-control form-control-sm font-monospace" id="gw-private-token" value="••••••••••••••••••••••••••••••••">
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-primary btn-sm fw-bold" onclick="window.validateGatewayCredentials()"><i class="ph-fingerprint me-1"></i> Validar Credenciais</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.generateNewAPIToken()"><i class="ph-key-return me-1"></i> Gerar Novo Token</button>
+                                            <button class="btn btn-outline-info btn-sm fw-semibold" onclick="window.copyPrivateAPIToken()"><i class="ph-copy me-1"></i> Copiar Token</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayCredentials()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
                                     </div>
+
+                                    <!-- TAB 3: Cartões Aceitos -->
+                                    <div class="gateway-tab-pane" id="gw-tab-cards" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-credit-card me-1 text-primary"></i> Cartões e Bandeiras Aceitas</h6>
+                                        <div class="row g-3 text-start mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-2">Bandeiras Habilitadas</label>
+                                                <div class="row g-2" id="gw-cards-brand-checks">
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input brand-check-item" type="checkbox" id="c-visa" checked>
+                                                            <label class="form-check-label fs-xs" for="c-visa">Visa</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-master" checked>
+                                                            <label class="form-check-label fs-xs" for="c-master">Mastercard</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-elo" checked>
+                                                            <label class="form-check-label fs-xs" for="c-elo">Elo</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-amex" checked>
+                                                            <label class="form-check-label fs-xs" for="c-amex">Amex</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-hipercard" checked>
+                                                            <label class="form-check-label fs-xs" for="c-hipercard">Hipercard</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-diners" checked>
+                                                            <label class="form-check-label fs-xs" for="c-diners">Diners</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-discover" checked>
+                                                            <label class="form-check-label fs-xs" for="c-discover">Discover</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="c-cabal" checked>
+                                                            <label class="form-check-label fs-xs" for="c-cabal">Cabal</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-2">Recursos da Operadora</label>
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-debito" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-debito">Débito</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-credito" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-credito">Crédito</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-preauth" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-preauth">Pré-Autorização</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-recorrencia" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-recorrencia">Recorrência</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-tokenizacao" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-tokenizacao">Tokenização</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-3ds" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-3ds">3DS Ativo</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-cvv" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-cvv">CVV Obrigatório</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox" id="feat-parcelas" checked>
+                                                            <label class="form-check-label fs-xs" for="feat-parcelas">Parcelamento</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle text-start mb-0" style="font-size: 12.5px;">
+                                                <thead>
+                                                    <tr class="table-light text-muted">
+                                                        <th>Bandeira</th>
+                                                        <th>Débito</th>
+                                                        <th>Crédito</th>
+                                                        <th>Ativo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-cards-table-body">
+                                                    <tr>
+                                                        <td class="fw-bold">Visa</td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+                                                        <td><span class="badge bg-success bg-opacity-10 text-success">✔ Ativo</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-bold">Mastercard</td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+                                                        <td><span class="badge bg-success bg-opacity-10 text-success">✔ Ativo</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-bold">Elo</td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+                                                        <td><span class="badge bg-success bg-opacity-10 text-success">✔ Ativo</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.setGatewayCardChecks(true)">Selecionar Todos</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.setGatewayCardChecks(false)">Desmarcar Todos</button>
+                                            <button class="btn btn-outline-primary btn-sm fw-bold" onclick="window.updateGatewayBrandsTable()"><i class="ph-arrows-clockwise me-1"></i> Atualizar Bandeiras</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayCards()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 4: PIX -->
+                                    <div class="gateway-tab-pane" id="gw-tab-pix" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-qr-code me-1 text-primary"></i> Configuração PIX</h6>
+                                        <div class="row g-3 text-start">
+                                            <div class="col-md-12">
+                                                <div class="form-check form-switch mb-1">
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="pix-enabled" checked>
+                                                    <label class="form-check-label fs-xs fw-bold text-dark text-uppercase" for="pix-enabled">Ativar Recebimento por PIX</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-key-val">Chave PIX</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="pix-key-val" value="financeiro@diskingressos.com.br">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-key-type">Tipo da Chave</label>
+                                                <select class="form-select form-select-sm" id="pix-key-type">
+                                                    <option value="email" selected>E-mail</option>
+                                                    <option value="cnpj">CNPJ / CPF</option>
+                                                    <option value="phone">Telefone Celular</option>
+                                                    <option value="random">Chave Aleatória (EVP)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-bank-select">Banco do Recebimento</label>
+                                                <select class="form-select form-select-sm" id="pix-bank-select">
+                                                    <option value="bb">Banco do Brasil S.A.</option>
+                                                    <option value="itau" selected>Itaú Unibanco S.A.</option>
+                                                    <option value="bradesco">Bradesco S.A.</option>
+                                                    <option value="inter">Banco Inter S.A.</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-expiration-val">Tempo de Expiração (Minutos)</label>
+                                                <input type="number" class="form-control form-control-sm font-monospace" id="pix-expiration-val" value="30">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-webhook-url">Webhook PIX</label>
+                                                <input type="url" class="form-control form-control-sm font-monospace" id="pix-webhook-url" value="https://erp.diskingressos.com.br/api/gateway/pix/webhook">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-description">Descrição padrão da Fatura</label>
+                                                <input type="text" class="form-control form-control-sm" id="pix-description" value="Pagamento DiskIngressos Ticketera">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="pix-use-dynamic" checked>
+                                                    <label class="form-check-label fs-xs" for="pix-use-dynamic">Gerar QR Code Dinâmico</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="pix-use-static">
+                                                    <label class="form-check-label fs-xs text-dark fw-semibold" for="pix-use-static">Gerar QR Code Estático</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12 mt-2">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="pix-copiapaste">PIX Copia e Cola (Exemplo / Mock)</label>
+                                                <textarea class="form-control form-control-sm font-monospace" id="pix-copiapaste" rows="2" readonly style="font-size: 11px;">00020101021226870014br.gov.bcb.pix2565financeiro@diskingressos.com.br5204000053039865802BR5915DiskIngressos6009Curitiba62070503***630402E8</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-info btn-sm fw-bold" onclick="window.generatePixQRCodeDemo()"><i class="ph-qr-code me-1"></i> Gerar QRCode</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.testPixTransaction()"><i class="ph-terminal me-1"></i> Testar PIX</button>
+                                            <button class="btn btn-outline-primary btn-sm fw-semibold" onclick="window.consultPixStatus()"><i class="ph-magnifying-glass me-1"></i> Consultar PIX</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.cancelPixTransaction()"><i class="ph-trash me-1"></i> Cancelar PIX</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayPIX()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 5: Boletos -->
+                                    <div class="gateway-tab-pane" id="gw-tab-boletos" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-barcode me-1 text-primary"></i> Configuração de Boletos Bancários</h6>
+                                        <div class="row g-3 text-start">
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-bank-sel">Banco</label>
+                                                <select class="form-select form-select-sm fw-semibold" id="boleto-bank-sel">
+                                                    <option value="001" selected>001 - Banco do Brasil S.A.</option>
+                                                    <option value="341">341 - Itaú Unibanco S.A.</option>
+                                                    <option value="237">237 - Bradesco S.A.</option>
+                                                    <option value="033">033 - Santander Brasil S.A.</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-carteira">Carteira</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-carteira" value="17">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-convenio">Convênio</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-convenio" value="2388410">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-agencia">Agência</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-agencia" value="3840-7">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-conta">Conta Corrente</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-conta" value="109283-4">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-nossonumero">Nosso Número Inicial</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-nossonumero" value="1000000001">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-due-days">Dias para Vencimento</label>
+                                                <input type="number" class="form-control form-control-sm font-monospace" id="boleto-due-days" value="3">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-multa">Multa após atraso (%)</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-multa" value="2.00">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-juros">Juros de mora ao dia (%)</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-juros" value="1.00">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-desconto">Desconto Pontualidade (%)</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="boleto-desconto" value="5.00">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="boleto-instrucoes">Instruções no Caixa de Boleto</label>
+                                                <textarea class="form-control form-control-sm" id="boleto-instrucoes" rows="2" style="font-size: 12px;">NÃO RECEBER APÓS 30 DIAS DO VENCIMENTO. JUROS E MULTA CONFORME ESPECIFICADO. DESCONTO APLICADO APENAS PARA PAGAMENTO ANTECIPADO.</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-info btn-sm fw-bold" onclick="window.emitBoletoDemo()"><i class="ph-barcode me-1"></i> Emitir Boleto</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.reemitBoletoDemo()"><i class="ph-arrows-clockwise me-1"></i> Reemitir</button>
+                                            <button class="btn btn-outline-success btn-sm fw-semibold" onclick="window.downloadBoletoDemo()"><i class="ph-download-simple me-1"></i> Baixar PDF</button>
+                                            <button class="btn btn-outline-warning btn-sm fw-semibold" onclick="window.sendBoletoEmail()"><i class="ph-envelope me-1"></i> Enviar Email</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.cancelBoletoDemo()"><i class="ph-trash me-1"></i> Cancelar</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayBoletos()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 6: Parcelamento -->
+                                    <div class="gateway-tab-pane" id="gw-tab-installment" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-calculator me-1 text-primary"></i> Regras de Parcelamento &amp; Juros</h6>
+                                        <div class="row g-3 text-start mb-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-max-installments">Máximo de Parcelas</label>
+                                                <select class="form-select form-select-sm" id="gw-max-installments">
+                                                    <option value="6">6x</option>
+                                                    <option value="12" selected>12x</option>
+                                                    <option value="18">18x</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-min-installment-val">Parcela Mínima</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="gw-min-installment-val" value="R$ 20,00">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-installment-fees">Juros ao Mês (%)</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="gw-installment-fees" value="1.99%">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-fees-payer">Quem Paga os Juros?</label>
+                                                <select class="form-select form-select-sm" id="gw-fees-payer">
+                                                    <option value="cliente" selected>Cliente (Consumidor)</option>
+                                                    <option value="empresa">Empresa (Produtor)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="gw-admin-fee">Taxa da Administradora (%)</label>
+                                                <input type="text" class="form-control form-control-sm font-monospace" id="gw-admin-fee" value="2.50%">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch mt-3 pt-1">
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="feat-antecipacao" checked>
+                                                    <label class="form-check-label fs-xs fw-bold text-dark text-uppercase" for="feat-antecipacao">Antecipação Automática de Recebíveis</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                            <table class="table table-sm align-middle text-start mb-0" style="font-size: 11.5px;">
+                                                <thead>
+                                                    <tr class="table-light text-muted">
+                                                        <th>Parcela</th>
+                                                        <th>Taxa de Juros (%)</th>
+                                                        <th class="text-center">Cobrar Cliente</th>
+                                                        <th class="text-center">Absorver Empresa</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-installment-table-rows">
+                                                    <tr><td>1x</td><td class="fw-bold text-success">0.00%</td><td class="text-center"><input type="checkbox" disabled checked></td><td class="text-center"><input type="checkbox" disabled></td></tr>
+                                                    <tr><td>2x</td><td class="fw-bold text-success">0.00%</td><td class="text-center"><input type="checkbox" disabled checked></td><td class="text-center"><input type="checkbox" disabled></td></tr>
+                                                    <tr><td>3x</td><td class="fw-bold text-success">0.00%</td><td class="text-center"><input type="checkbox" disabled checked></td><td class="text-center"><input type="checkbox" disabled></td></tr>
+                                                    <tr><td>4x</td><td class="fw-bold text-danger">1.99%</td><td class="text-center"><input type="checkbox" checked></td><td class="text-center"><input type="checkbox"></td></tr>
+                                                    <tr><td>5x</td><td class="fw-bold text-danger">2.50%</td><td class="text-center"><input type="checkbox" checked></td><td class="text-center"><input type="checkbox"></td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-success btn-sm fw-bold" onclick="window.addInstallmentRow()"><i class="ph-plus-circle me-1"></i> Adicionar Parcela</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.deleteInstallmentRow()"><i class="ph-trash me-1"></i> Excluir</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.duplicateInstallmentConfig()"><i class="ph-copy me-1"></i> Duplicar</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayInstallments()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 7: Antifraude -->
+                                    <div class="gateway-tab-pane" id="gw-tab-antifraud" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-shield-check me-1 text-primary"></i> Filtro Antifraude e Compliance</h6>
+                                        <div class="row g-3 text-start mb-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="antifraud-provider">Fornecedor Antifraude</label>
+                                                <select class="form-select form-select-sm" id="antifraud-provider">
+                                                    <option value="ClearSale" selected>ClearSale V3</option>
+                                                    <option value="Konduto">Konduto Machine Learning</option>
+                                                    <option value="Cybersource">Visa CyberSource</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="antifraud-min-score">Score Mínimo para Bloqueio</label>
+                                                <input type="number" class="form-control form-control-sm font-monospace" id="antifraud-min-score" value="80" min="10" max="100">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="antifraud-whitelist">Regra Manual (Whitelist)</label>
+                                                <select class="form-select form-select-sm" id="antifraud-whitelist">
+                                                    <option value="ativo" selected>Ignorar Clientes VIP</option>
+                                                    <option value="inativo">Sem Whitelist</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="antifraud-blacklist-cpf">Blacklist de CPFs (Exemplos)</label>
+                                                <textarea class="form-control form-control-sm font-monospace" id="antifraud-blacklist-cpf" rows="2" style="font-size: 11px;">102.392.482-12&#10;042.883.928-33</textarea>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="antifraud-blacklist-card">Blacklist de Cartões (Finais)</label>
+                                                <textarea class="form-control form-control-sm font-monospace" id="antifraud-blacklist-card" rows="2" style="font-size: 11px;">4111-XXXX-XXXX-9923&#10;5502-XXXX-XXXX-2831</textarea>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="antifraud-whitelist-domains">Domínios Confiáveis (Whitelist)</label>
+                                                <textarea class="form-control form-control-sm font-monospace" id="antifraud-whitelist-domains" rows="2" style="font-size: 11px;">diskingressos.com.br&#10;parceiros.gov.br</textarea>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="af-cvv" checked>
+                                                    <label class="form-check-label fs-xs fw-semibold" for="af-cvv">Exigir CVV</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="af-cpf" checked>
+                                                    <label class="form-check-label fs-xs fw-semibold" for="af-cpf">Solicitar CPF</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="af-doc" checked>
+                                                    <label class="form-check-label fs-xs fw-semibold" for="af-doc">Solicitar Documento</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="af-3ds" checked>
+                                                    <label class="form-check-label fs-xs fw-semibold" for="af-3ds">Habilitar 3D Secure</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-info btn-sm fw-bold" onclick="window.testAntifraudAPI()"><i class="ph-shield me-1"></i> Testar Antifraude</button>
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.updateBlacklistData()"><i class="ph-arrows-clockwise me-1"></i> Outros Bancos</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.saveGatewayAntifraud()"><i class="ph-check me-1"></i> Salvar</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 8: Webhooks -->
+                                    <div class="gateway-tab-pane" id="gw-tab-webhooks" style="display: none;">
+                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                                            <h6 class="fw-bold text-dark mb-0"><i class="ph-brackets-curly me-1 text-primary"></i> Notificações Webhook</h6>
+                                            <button class="btn btn-primary btn-xs fw-bold" onclick="window.addGatewayWebhook()"><i class="ph-plus-circle me-1"></i> Adicionar</button>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle table-hover text-start mb-0" style="font-size: 12.5px;">
+                                                <thead>
+                                                    <tr class="table-light text-muted">
+                                                        <th>Evento</th>
+                                                        <th>URL Callback</th>
+                                                        <th>Método</th>
+                                                        <th>Status</th>
+                                                        <th>Tentativas</th>
+                                                        <th>Última Execução</th>
+                                                        <th class="text-end">Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-webhooks-table-body">
+                                                    <tr>
+                                                        <td class="fw-semibold">Pagamento Aprovado</td>
+                                                        <td><code style="font-size: 11px;">https://erp/api/webhook</code></td>
+                                                        <td><span class="badge bg-light text-dark fw-bold">POST</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Ativo</span></td>
+                                                        <td class="font-monospace">1/5</td>
+                                                        <td class="font-monospace fs-xxs">10/07 14:38</td>
+                                                        <td class="text-end">
+                                                            <button class="btn btn-xs btn-outline-secondary py-0.5 px-1.5" onclick="window.testWebhook('payment.approved')">Testar</button>
+                                                            <button class="btn btn-xs btn-outline-info py-0.5 px-1.5" onclick="window.viewWebhookPayload('payment.approved')">Payload</button>
+                                                            <button class="btn btn-xs btn-outline-warning py-0.5 px-1.5" onclick="window.resendWebhookEvent('payment.approved')">Reenviar</button>
+                                                            <button class="btn btn-xs btn-outline-danger py-0.5 px-1.5" onclick="window.deleteWebhook(this)">Excluir</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Pagamento Negado</td>
+                                                        <td><code style="font-size: 11px;">https://erp/api/webhook</code></td>
+                                                        <td><span class="badge bg-light text-dark fw-bold">POST</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Ativo</span></td>
+                                                        <td class="font-monospace">1/5</td>
+                                                        <td class="font-monospace fs-xxs">10/07 14:35</td>
+                                                        <td class="text-end">
+                                                            <button class="btn btn-xs btn-outline-secondary py-0.5 px-1.5" onclick="window.testWebhook('payment.denied')">Testar</button>
+                                                            <button class="btn btn-xs btn-outline-info py-0.5 px-1.5" onclick="window.viewWebhookPayload('payment.denied')">Payload</button>
+                                                            <button class="btn btn-xs btn-outline-warning py-0.5 px-1.5" onclick="window.resendWebhookEvent('payment.denied')">Reenviar</button>
+                                                            <button class="btn btn-xs btn-outline-danger py-0.5 px-1.5" onclick="window.deleteWebhook(this)">Excluir</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Chargeback</td>
+                                                        <td><code style="font-size: 11px;">https://erp/api/webhook</code></td>
+                                                        <td><span class="badge bg-light text-dark fw-bold">POST</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Ativo</span></td>
+                                                        <td class="font-monospace">1/5</td>
+                                                        <td class="font-monospace fs-xxs">09/07 18:22</td>
+                                                        <td class="text-end">
+                                                            <button class="btn btn-xs btn-outline-secondary py-0.5 px-1.5" onclick="window.testWebhook('payment.chargeback')">Testar</button>
+                                                            <button class="btn btn-xs btn-outline-info py-0.5 px-1.5" onclick="window.viewWebhookPayload('payment.chargeback')">Payload</button>
+                                                            <button class="btn btn-xs btn-outline-warning py-0.5 px-1.5" onclick="window.resendWebhookEvent('payment.chargeback')">Reenviar</button>
+                                                            <button class="btn btn-xs btn-outline-danger py-0.5 px-1.5" onclick="window.deleteWebhook(this)">Excluir</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Estorno</td>
+                                                        <td><code style="font-size: 11px;">https://erp/api/webhook</code></td>
+                                                        <td><span class="badge bg-light text-dark fw-bold">POST</span></td>
+                                                        <td><span class="text-success"><i class="ph-check-bold"></i> Ativo</span></td>
+                                                        <td class="font-monospace">1/5</td>
+                                                        <td class="font-monospace fs-xxs">10/07 10:44</td>
+                                                        <td class="text-end">
+                                                            <button class="btn btn-xs btn-outline-secondary py-0.5 px-1.5" onclick="window.testWebhook('payment.refunded')">Testar</button>
+                                                            <button class="btn btn-xs btn-outline-info py-0.5 px-1.5" onclick="window.viewWebhookPayload('payment.refunded')">Payload</button>
+                                                            <button class="btn btn-xs btn-outline-warning py-0.5 px-1.5" onclick="window.resendWebhookEvent('payment.refunded')">Reenviar</button>
+                                                            <button class="btn btn-xs btn-outline-danger py-0.5 px-1.5" onclick="window.deleteWebhook(this)">Excluir</button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 9: Conciliação -->
+                                    <div class="gateway-tab-pane" id="gw-tab-conciliation" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-scales me-1 text-primary"></i> Conciliação Financeira</h6>
+                                        <div class="table-responsive mb-3">
+                                            <table class="table table-sm align-middle text-start mb-0" style="font-size: 12px;">
+                                                <thead>
+                                                    <tr class="table-light text-muted">
+                                                        <th>Código Venda</th>
+                                                        <th>Pedido ERP</th>
+                                                        <th>Cliente</th>
+                                                        <th>Valor ERP</th>
+                                                        <th>Valor Gateway</th>
+                                                        <th>Diferença</th>
+                                                        <th>Status</th>
+                                                        <th class="text-center">Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-conciliation-rows">
+                                                    <tr>
+                                                        <td class="font-monospace">VN-092841</td>
+                                                        <td class="font-monospace">#15254</td>
+                                                        <td>João Silva Medeiros</td>
+                                                        <td class="font-monospace">R$ 120,00</td>
+                                                        <td class="font-monospace">R$ 120,00</td>
+                                                        <td class="font-monospace text-success">R$ 0,00</td>
+                                                        <td><span class="badge bg-success bg-opacity-10 text-success">Conciliado</span></td>
+                                                        <td class="text-center">
+                                                            <button class="btn btn-xs btn-outline-secondary" onclick="window.reconcileRow(this)">Conciliar</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="table-warning bg-opacity-10">
+                                                        <td class="font-monospace">VN-092842</td>
+                                                        <td class="font-monospace">#15255</td>
+                                                        <td>Maria Antônia Rocha</td>
+                                                        <td class="font-monospace">R$ 80,00</td>
+                                                        <td class="font-monospace">R$ 85,00</td>
+                                                        <td class="font-monospace text-danger fw-bold">R$ 5,00</td>
+                                                        <td><span class="badge bg-warning bg-opacity-10 text-warning">Divergência</span></td>
+                                                        <td class="text-center">
+                                                            <button class="btn btn-xs btn-outline-primary" onclick="window.reconcileRow(this)">Conciliar</button>
+                                                            <button class="btn btn-xs btn-outline-danger" onclick="window.ignoreConciliationRow(this)">Ignorar</button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.refreshConciliationData()"><i class="ph-arrows-clockwise me-1"></i> Atualizar</button>
+                                            <button class="btn btn-outline-success btn-sm fw-semibold" onclick="window.exportConciliationExcel()"><i class="ph-file-xls me-1"></i> Exportar Excel</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.exportConciliationPDF()"><i class="ph-file-pdf me-1"></i> Exportar PDF</button>
+                                            <button class="btn btn-primary btn-sm fw-bold" onclick="window.runConciliationNow()"><i class="ph-check-bold me-1"></i> Conciliar Tudo</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 10: Estornos -->
+                                    <div class="gateway-tab-pane" id="gw-tab-refunds" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-arrow-counter-clockwise me-1 text-primary"></i> Controle de Estornos &amp; Devoluções</h6>
+                                        <div class="table-responsive mb-3">
+                                            <table class="table table-sm align-middle table-hover text-start mb-0" style="font-size: 12px;">
+                                                <thead>
+                                                    <tr class="table-light text-muted">
+                                                        <th>Pedido</th>
+                                                        <th>Cliente</th>
+                                                        <th>Valor</th>
+                                                        <th>Tipo</th>
+                                                        <th>Status</th>
+                                                        <th>Data</th>
+                                                        <th>Usuário</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-refunds-rows">
+                                                    <tr>
+                                                        <td class="font-monospace fw-bold">#15254</td>
+                                                        <td>João Silva Medeiros</td>
+                                                        <td class="font-monospace">R$ 120,00</td>
+                                                        <td><span class="badge bg-light text-dark fw-bold">Estorno Total</span></td>
+                                                        <td><span class="badge bg-success bg-opacity-10 text-success">Pago</span></td>
+                                                        <td class="font-monospace fs-xxs">10/07 14:38</td>
+                                                        <td>admin_faturamento</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="font-monospace fw-bold">#15255</td>
+                                                        <td>Maria Antônia Rocha</td>
+                                                        <td class="font-monospace">R$ 80,00</td>
+                                                        <td><span class="badge bg-light text-dark fw-bold">Estorno Parcial</span></td>
+                                                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary">Estornado</span></td>
+                                                        <td class="font-monospace fs-xxs">10/07 10:44</td>
+                                                        <td>supervisor_fin</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-primary btn-sm fw-semibold" onclick="window.consultRefundStatus()"><i class="ph-magnifying-glass me-1"></i> Consultar Estorno</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.cancelRefundDemo()"><i class="ph-x me-1"></i> Cancelar Estorno</button>
+                                            <button class="btn btn-outline-warning btn-sm fw-semibold" onclick="window.triggerPartialRefund()"><i class="ph-scissors me-1"></i> Estorno Parcial</button>
+                                            <button class="btn btn-danger btn-sm fw-bold" onclick="window.triggerNewRefund()"><i class="ph-hand-coins me-1"></i> Estorno Total</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 11: Logs -->
+                                    <div class="gateway-tab-pane" id="gw-tab-logs" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-terminal-window me-1 text-primary"></i> Histórico de Logs &amp; Auditoria</h6>
+                                        <!-- Filters Row -->
+                                        <div class="row g-2 mb-3 text-start" style="font-size: 11.5px;">
+                                            <div class="col-md-3">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Data</label>
+                                                <input type="date" class="form-control form-control-xs font-monospace" id="log-filter-date" value="2026-07-10">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Pedido</label>
+                                                <input type="text" class="form-control form-control-xs font-monospace" id="log-filter-pedido" placeholder="Ex: #15254">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Cliente</label>
+                                                <input type="text" class="form-control form-control-xs" id="log-filter-cliente" placeholder="Ex: João">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Gateway</label>
+                                                <select class="form-select form-select-xs fw-semibold" id="log-filter-gateway">
+                                                    <option value="all">Todos</option>
+                                                    <option value="mercadopago">Mercado Pago</option>
+                                                    <option value="cielo">Cielo</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mt-2">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Código HTTP</label>
+                                                <input type="text" class="form-control form-control-xs font-monospace" id="log-filter-http" placeholder="Ex: 200">
+                                            </div>
+                                            <div class="col-md-3 mt-2">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Status</label>
+                                                <select class="form-select form-select-xs fw-semibold" id="log-filter-status">
+                                                    <option value="all">Todos</option>
+                                                    <option value="sucesso">Sucesso</option>
+                                                    <option value="erro">Erro</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mt-2">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Evento</label>
+                                                <input type="text" class="form-control form-control-xs" id="log-filter-evento" placeholder="Ex: Tokenização">
+                                            </div>
+                                            <div class="col-md-3 mt-2">
+                                                <label class="fw-semibold text-muted d-block mb-0.5">Usuário</label>
+                                                <input type="text" class="form-control form-control-xs" id="log-filter-usuario" placeholder="Ex: admin">
+                                            </div>
+                                        </div>
+                                        <div class="table-responsive mb-3" style="max-height: 180px; overflow-y: auto;">
+                                            <table class="table table-sm align-middle table-hover text-start mb-0" style="font-size: 11px;">
+                                                <thead>
+                                                    <tr class="table-light text-muted">
+                                                        <th>Hora</th>
+                                                        <th>Evento</th>
+                                                        <th>Payload</th>
+                                                        <th>Resposta</th>
+                                                        <th>Tempo</th>
+                                                        <th>IP</th>
+                                                        <th>Usuário</th>
+                                                        <th class="text-end">Ver</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-logs-rows">
+                                                    <tr>
+                                                        <td class="font-monospace">10:20:14</td>
+                                                        <td class="fw-semibold">Tokenização de Cartão</td>
+                                                        <td><code style="font-size: 10px;">{card_number: "4111..."}</code></td>
+                                                        <td><code style="font-size: 10px;">{token: "tok_3918a"}</code></td>
+                                                        <td class="font-monospace text-primary">240ms</td>
+                                                        <td class="font-monospace">192.168.1.42</td>
+                                                        <td>client_web</td>
+                                                        <td class="text-end"><button class="btn btn-xs btn-outline-secondary p-0.5 px-1" onclick="window.viewLogDetails(this)"><i class="ph-eye"></i></button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="font-monospace">10:21:05</td>
+                                                        <td class="fw-semibold">Solicitação de Pagamento (Visa)</td>
+                                                        <td><code style="font-size: 10px;">{amount: 120.00}</code></td>
+                                                        <td><code style="font-size: 10px;">{status: "approved"}</code></td>
+                                                        <td class="font-monospace text-primary">480ms</td>
+                                                        <td class="font-monospace">192.168.1.42</td>
+                                                        <td>faturamento_srv</td>
+                                                        <td class="text-end"><button class="btn btn-xs btn-outline-secondary p-0.5 px-1" onclick="window.viewLogDetails(this)"><i class="ph-eye"></i></button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="font-monospace">10:23:42</td>
+                                                        <td class="fw-semibold">Recebimento de Webhook</td>
+                                                        <td><code style="font-size: 10px;">{event: "charge.paid"}</code></td>
+                                                        <td><code style="font-size: 10px;">{received: true}</code></td>
+                                                        <td class="font-monospace text-primary">120ms</td>
+                                                        <td class="font-monospace">54.120.30.22</td>
+                                                        <td>mp_webhook_srv</td>
+                                                        <td class="text-end"><button class="btn btn-xs btn-outline-secondary p-0.5 px-1" onclick="window.viewLogDetails(this)"><i class="ph-eye"></i></button></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.clearLogFilters()"><i class="ph-x me-1"></i> Limpar</button>
+                                            <button class="btn btn-outline-success btn-sm fw-semibold" onclick="window.exportLogsCSV()"><i class="ph-download me-1"></i> Exportar</button>
+                                            <button class="btn btn-outline-info btn-sm fw-semibold" onclick="window.downloadLogsJSON()"><i class="ph-file-code me-1"></i> Baixar JSON</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.searchLogsData()"><i class="ph-magnifying-glass me-1"></i> Pesquisar</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 12: Relatórios -->
+                                    <div class="gateway-tab-pane" id="gw-tab-reports" style="display: none;">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-presentation-chart me-1 text-primary"></i> Relatórios &amp; Gráficos Analíticos</h6>
+                                        <!-- 15 Indicators -->
+                                        <div class="row g-2 mb-3 text-start" style="font-size: 11.5px;">
+                                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Valor Recebido</span>
+                                                    <span class="fw-bold text-dark">R$ 1.543.200,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Valor Cancelado</span>
+                                                    <span class="fw-bold text-danger">R$ 42.100,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Valor Estornado</span>
+                                                    <span class="fw-bold text-warning">R$ 15.200,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Total PIX</span>
+                                                    <span class="fw-bold text-success">R$ 450.000,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Total Cartão</span>
+                                                    <span class="fw-bold text-indigo">R$ 890.000,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6 mt-1" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Total Boletos</span>
+                                                    <span class="fw-bold text-cyan">R$ 203.200,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6 mt-1" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Total Chargebacks</span>
+                                                    <span class="fw-bold text-danger">R$ 4.200,00</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6 mt-1" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Taxa de Aprovação</span>
+                                                    <span class="fw-bold text-success">98.12%</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6 mt-1" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Tempo Médio API</span>
+                                                    <span class="fw-bold text-primary">480 ms</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2.4 col-6 mt-1" style="width: 20%;">
+                                                <div class="card card-body p-2 border shadow-none mb-0">
+                                                    <span class="text-muted d-block mb-0.5">Receita Líquida</span>
+                                                    <span class="fw-bold text-dark">R$ 1.340.500,00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- 8 Charts -->
+                                        <div class="row g-2 mb-3 text-start">
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Pagamentos por Dia</span>
+                                                    <canvas id="c-gw-payments-day" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Aprovação x Negação</span>
+                                                    <canvas id="c-gw-app-neg" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Bandeiras</span>
+                                                    <canvas id="c-gw-card-brands" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">PIX x Cartão</span>
+                                                    <canvas id="c-gw-pix-card" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Chargebacks</span>
+                                                    <canvas id="c-gw-chargebacks" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Receita Mensal</span>
+                                                    <canvas id="c-gw-net-revenue" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Parcelamentos</span>
+                                                    <canvas id="c-gw-installments" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card card-body p-1 border shadow-none" style="height: 120px;">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase d-block mb-0.5">Performance Gateway</span>
+                                                    <canvas id="c-gw-response-time" style="max-height: 100px;"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2 justify-content-end mt-auto">
+                                            <button class="btn btn-outline-secondary btn-sm fw-semibold" onclick="window.agendarRelatorio()"><i class="ph-calendar me-1"></i> Agendar</button>
+                                            <button class="btn btn-outline-info btn-sm fw-semibold" onclick="window.enviarPorEmail()"><i class="ph-envelope me-1"></i> Enviar E-mail</button>
+                                            <button class="btn btn-outline-success btn-sm fw-semibold" onclick="window.exportReportsExcel()"><i class="ph-file-xls me-1"></i> Excel</button>
+                                            <button class="btn btn-outline-danger btn-sm fw-semibold" onclick="window.exportReportsPDF()"><i class="ph-file-pdf me-1"></i> PDF</button>
+                                            <button class="btn btn-primary btn-sm fw-bold px-3" onclick="window.refreshGatewayDashboard()"><i class="ph-arrows-clockwise me-1"></i> Atualizar Dashboard</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rodapé do ERP -->
+                        <div class="card card-body p-2 text-muted shadow-sm border-0 mt-3" style="border-radius: 8px; font-size: 11px; background: #fafafa;">
+                            <div class="row text-center text-md-start">
+                                <div class="col-md-3">
+                                    <span><strong>Última comunicação:</strong> 10/07/2026 14:38</span>
+                                </div>
+                                <div class="col-md-3 text-md-center">
+                                    <span><strong>Status Canal Gateway:</strong> <span class="text-success fw-bold" id="gw-footer-status-label"><i class="ph-circle-fill me-1 fs-xxs"></i>Online</span></span>
+                                </div>
+                                <div class="col-md-3 text-md-center">
+                                    <span><strong>Versão da API:</strong> v2.8</span>
+                                </div>
+                                <div class="col-md-3 text-md-end">
+                                    <span><strong>Tempo médio de resposta:</strong> 480 ms</span>
                                 </div>
                             </div>
                         </div>
@@ -3286,29 +4833,30 @@
                     <!-- VIEW: Financeiro - Negociações (Taxas & Comissões) -->
                     <section id="view-financial-negotiations" class="page-section" style="display: none; flex-direction: column; width: 100%;">
                         <!-- Event Info Header matching the screenshot -->
-                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 mb-3 border-0 bg-white" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;">
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center py-2 mb-3 border-0 bg-white" style="border-radius: 8px;">
                             <div class="d-flex flex-wrap gap-3 align-items-center">
-                                <div>
+                                <div id="neg-select-container">
                                     <label class="fs-xxs text-muted fw-bold text-uppercase d-block mb-1">Selecionar Evento para Negociação</label>
                                     <select id="neg-event-select" class="form-select form-select-sm fw-bold text-dark" style="width: 320px; font-size: 12.5px; border-radius: 6px;" onchange="window.selectNegotiationEvent(this.value)">
                                         <!-- Loaded dynamically -->
                                     </select>
                                 </div>
-                                <div class="ms-md-3">
-                                    <div class="d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
-                                        <span class="fs-xxs text-muted fw-semibold" id="neg-sales-start-label"><i class="ph-calendar me-1 text-primary"></i> <strong>Início das Vendas:</strong> --</span>
-                                        <span class="fs-xxs text-muted fw-semibold" id="neg-sales-end-label"><i class="ph-calendar me-1 text-primary"></i> <strong>Final das Vendas:</strong> --</span>
-                                    </div>
+                                <div id="neg-event-title-container" style="display: none;">
+                                    <h5 class="fw-bold mb-0 text-dark" id="neg-event-title-text" style="font-size: 15px;">ID.719 - Rock concert com Luciano Reis</h5>
+                                </div>
+                                <div class="d-flex flex-wrap gap-3 align-items-center text-muted fs-xs">
+                                    <span id="neg-sales-start-label"><i class="ph-calendar-blank me-1"></i> Início das Vendas: <strong>01/07/2025 às 16h38</strong></span>
+                                    <span id="neg-sales-end-label"><i class="ph-calendar-x me-1"></i> Final das Vendas: <strong>10/07/2026 às 20h40</strong></span>
                                 </div>
                             </div>
                             <div class="mt-2 mt-md-0">
-                                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2 fs-xxs" id="neg-event-badge"><i class="ph-info me-1"></i> Evento ativo</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-2 fs-xxs fw-bold" id="neg-event-badge">Evento realizado há: 02 Dias 16h 29m 27s</span>
                             </div>
                         </div>
 
                         <!-- Top Title and Sub-Tabs -->
                         <div class="d-flex flex-column mb-3 text-start">
-                            <h4 class="fw-bold text-dark mb-3">Negociações Financeiro</h4>
+                            <h4 class="fw-bold text-dark mb-3">Negociações Financeiras</h4>
                             <div class="d-flex justify-content-between align-items-center">
                                 <ul class="nav nav-tabs border-0 gap-1 bg-light p-1 rounded" style="width: fit-content; border-radius: 8px;">
                                     <li class="nav-item">
@@ -3500,6 +5048,48 @@
                         <!-- TAB: ADVANCED -->
                         <div id="neg-tab-content-advanced" class="negotiation-tab-pane" style="display: none;">
                             <div class="card shadow-sm border-0 p-3 mb-3 bg-white" style="border-radius: 12px;">
+                                <div class="card-header bg-white py-2 border-bottom text-center mb-3">
+                                    <h6 class="fw-bold text-dark mb-0 text-uppercase"><i class="ph-bank text-purple me-1"></i> Negociação de Adiantamento (Advanced)</h6>
+                                </div>
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-hover align-middle mb-0 text-start" style="font-size: 12px;">
+                                        <thead>
+                                            <tr class="table-light text-muted fw-bold">
+                                                <th>DESCRIÇÃO DO PARÂMETRO</th>
+                                                <th class="text-center" style="width: 250px;">MODELO</th>
+                                                <th class="text-end" style="width: 150px;">VALOR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="neg-advanced-param-rows">
+                                            <!-- Loaded via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div id="neg-advanced-installments-section" style="display: none;">
+                                    <h6 class="fw-bold text-dark mb-3 text-start"><i class="ph-list-bullets text-purple me-1"></i> Parcelas de Adiantamento (Advanced)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0 text-start" style="font-size: 12px;">
+                                            <thead>
+                                                <tr class="table-light text-muted fw-bold">
+                                                    <th class="text-center" style="width: 100px;">Nº PARCELA</th>
+                                                    <th class="text-center">VALOR ACORDADO</th>
+                                                    <th class="text-center">VALOR PAGO</th>
+                                                    <th class="text-center">STATUS</th>
+                                                    <th class="text-center">DATA PREVISTA</th>
+                                                    <th class="text-end">AÇÕES</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="neg-advanced-installments-rows">
+                                                <!-- Loaded via JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Divisão Tributária por Setor -->
+                            <div class="card shadow-sm border-0 p-3 mb-3 bg-white" style="border-radius: 12px;">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="d-flex align-items-center gap-2">
                                         <h6 class="fw-bold text-dark mb-0"><i class="ph-arrows-split text-purple me-1"></i> Divisão Tributária e Tarifária por Setores</h6>
@@ -3528,6 +5118,25 @@
 
                         <!-- TAB: INFORMAÇÕES FINANCEIRAS -->
                         <div id="neg-tab-content-informacoes" class="negotiation-tab-pane" style="display: none;">
+                            <div class="card shadow-sm border-0 p-3 mb-3 bg-white" style="border-radius: 12px;">
+                                <div class="card-header bg-white py-2 border-bottom text-center mb-3">
+                                    <h6 class="fw-bold text-dark mb-0 text-uppercase"><i class="ph-info text-info me-1"></i> Parâmetros de Liberação de Saque</h6>
+                                </div>
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-hover align-middle mb-0 text-start" style="font-size: 12px;">
+                                        <thead>
+                                            <tr class="table-light text-muted fw-bold">
+                                                <th>DESCRIÇÃO DO PARÂMETRO</th>
+                                                <th class="text-center" style="width: 250px;">MODELO</th>
+                                                <th class="text-end" style="width: 150px;">VALOR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="neg-info-param-rows">
+                                            <!-- Loaded via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                             <div class="row g-3 text-start mb-3">
                                 <div class="col-md-4">
                                     <div class="card p-3 border shadow-sm bg-white" style="border-radius: 8px;">
@@ -9182,6 +10791,113 @@
         </div>
     </div>
 
+    <!-- MODAL: CADASTRAR NOVO PDV COMPLETO -->
+    <div class="modal-overlay" id="modal-add-new-pdv-modal">
+        <div class="modal-content" style="max-width: 520px; border-radius: 8px;">
+            <div class="modal-header text-white py-3 bg-dark" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.08);">
+                <span class="modal-title fw-bold" style="color: #fff;"><i class="ph-storefront me-2"></i> Cadastrar Novo PDV Completo</span>
+                <button class="btn-close-modal" type="button" onclick="closeModal('add-new-pdv-modal')" style="color: #fff; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <form id="modal-add-new-pdv-form" onsubmit="window.saveNewCompletePDV(event)">
+                <div class="modal-body p-4 text-start" style="max-height: 400px; overflow-y: auto;">
+                    <div class="mb-3">
+                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="add-pdv-name">Nome do Ponto de Venda (PDV):</label>
+                        <input type="text" class="form-control form-control-sm" id="add-pdv-name" placeholder="Ex: Shopping Estação, Teatro Guaírinha" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="add-pdv-ops">Qtd Operadores:</label>
+                            <input type="number" class="form-control form-control-sm" id="add-pdv-ops" value="1" min="0" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="add-pdv-caixas">Qtd Caixas Físicos:</label>
+                            <input type="number" class="form-control form-control-sm" id="add-pdv-caixas" value="1" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="add-pdv-operator-name">Operador Responsável:</label>
+                            <input type="text" class="form-control form-control-sm" id="add-pdv-operator-name" value="Operador Padrão" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="add-pdv-status">Status Inicial:</label>
+                            <select class="form-select form-select-sm fw-semibold" id="add-pdv-status" required>
+                                <option value="🟢" selected>🟢 Online</option>
+                                <option value="🔴">🔴 Offline</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="add-pdv-time">Tempo Médio de Atendimento:</label>
+                        <input type="text" class="form-control form-control-sm font-monospace" id="add-pdv-time" value="01:30" placeholder="Ex: 01:25" required>
+                    </div>
+                    <h6 class="fw-bold text-dark border-bottom pb-1 mb-2 fs-xs text-uppercase text-muted">Faturamento Inicial por Forma de Pagamento</h6>
+                    <div class="row g-2">
+                        <div class="col-6 mb-2">
+                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-0.5" for="add-pdv-pix">PIX (R$):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm font-monospace" id="add-pdv-pix" value="0.00" required>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-0.5" for="add-pdv-credit">Crédito (R$):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm font-monospace" id="add-pdv-credit" value="0.00" required>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-0.5" for="add-pdv-debit">Débito (R$):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm font-monospace" id="add-pdv-debit" value="0.00" required>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-0.5" for="add-pdv-cash">Dinheiro (R$):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm font-monospace" id="add-pdv-cash" value="0.00" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-light btn-sm" onclick="closeModal('add-new-pdv-modal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="ph-check me-1"></i> Adicionar PDV</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CADASTRAR NOVO GATEWAY -->
+    <div class="modal-overlay" id="modal-add-new-gateway-modal">
+        <div class="modal-content" style="max-width: 480px; border-radius: 8px;">
+            <div class="modal-header text-white py-3 bg-dark" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.08);">
+                <span class="modal-title fw-bold" style="color: #fff;"><i class="ph-plus-circle me-2"></i> Cadastrar Novo Gateway</span>
+                <button class="btn-close-modal" type="button" onclick="closeModal('add-new-gateway-modal')" style="color: #fff; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <form id="modal-add-new-gateway-form" onsubmit="window.addNewGatewayProvider(event)">
+                <div class="modal-body p-4 text-start">
+                    <div class="mb-3">
+                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="new-gw-name">Nome do Gateway / Adquirente:</label>
+                        <input type="text" class="form-control form-control-sm" id="new-gw-name" placeholder="Ex: Stripe, Safe2Pay, Adyen, Asaas" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="new-gw-fee">Taxa de Transação Média (MDR %):</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" id="new-gw-fee" placeholder="Ex: 1.85" min="0.1" max="15" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="new-gw-settlement">Prazo de Liquidação Padrão:</label>
+                        <select class="form-select form-select-sm fw-semibold" id="new-gw-settlement" required>
+                            <option value="D+0">D+0 (Imediato)</option>
+                            <option value="D+1" selected>D+1 (1 dia útil)</option>
+                            <option value="D+14">D+14 (14 dias)</option>
+                            <option value="D+30">D+30 (30 dias)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1" for="new-gw-api-version">Versão da API:</label>
+                        <input type="text" class="form-control form-control-sm font-monospace" id="new-gw-api-version" value="v3" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-light btn-sm" onclick="closeModal('add-new-gateway-modal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="ph-check me-1"></i> Cadastrar Gateway</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL: NOVA NEGOCIACAO FINANCEIRA -->
     <div class="modal-overlay" id="modal-new-negotiation">
         <div class="modal-content" style="max-width: 480px; border-radius: 8px;">
@@ -9235,6 +10951,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="assets/js/bootstrap/bootstrap.bundle.min.js?v=20260714"></script>
     <script src="limitless_assets/js/app.js?v=20260714"></script>
-    <script type="module" src="app.js?v=20260714"></script>
+    <script type="module" src="src/app.js?v=20260714"></script>
 </body>
 </html>

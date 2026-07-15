@@ -1,6 +1,8 @@
 /**
  * DiskIngressos Pro Dashboard — Application Logic
  */
+import './services/firebase/index.js';
+import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
 // Global state for events
 let EVENTS_DATA = [
@@ -251,10 +253,13 @@ let currentEventsFilter = 'ativos';
 let currentSearchQuery = '';
 
 function initApp() {
-  // Initialize Limitless Core Layout
-  if (typeof window.App !== 'undefined') {
-    window.App.initCore();
-    window.App.initAfterLoad();
+  try {
+    if (typeof window.App !== 'undefined') {
+      window.App.initCore();
+      window.App.initAfterLoad();
+    }
+  } catch (err) {
+    console.warn("Limitless template initialization warning:", err);
   }
   
   initViewSwitcher();
@@ -309,7 +314,15 @@ function initApp() {
             if (typeof renderCouponsTable === 'function') renderCouponsTable();
           });
         })
-        .catch(console.error);
+    } else {
+      // Offline / fallback rendering directly
+      renderEventsTable();
+      if (typeof renderFinancialBalanceRows === 'function') renderFinancialBalanceRows();
+      if (typeof renderAgendaCalendarGrid === 'function') renderAgendaCalendarGrid();
+      if (typeof initAgendaGeneralModule === 'function') initAgendaGeneralModule();
+      if (typeof COUPONS_DATA !== 'undefined' && typeof renderCouponsTable === 'function') {
+        renderCouponsTable();
+      }
     }
   }
 }
@@ -390,6 +403,11 @@ function switchActiveView(viewId) {
         if (typeof switchAccountingTab === 'function') switchAccountingTab(null, 'dashboard');
       }, 50);
     }
+  } else if (viewId === 'financial-negotiations') {
+    targetSection = document.getElementById('view-financial-negotiations');
+    if (typeof initNegotiationsPage === 'function') {
+      initNegotiationsPage();
+    }
   }
 
   // Try to find the section directly if not already found
@@ -412,27 +430,15 @@ function switchActiveView(viewId) {
       if (typeof initNegotiationsPage === 'function') {
         initNegotiationsPage();
       }
-    } else if (['financial-balance', 'financial-repass', 'financial-repasses', 'financial-advance', 'financial-statement', 'financial-expenses', 'financial-accounts', 'financial-bordero'].includes(viewId)) {
-      targetSection = document.getElementById('view-financial-balance');
-      
-      // Map financial viewIds to HTML tab keys
-      let subtabName = 'saldo';
-      if (viewId === 'financial-repass' || viewId === 'financial-repasses') {
-        subtabName = 'repasses';
-      } else if (viewId === 'financial-advance') {
-        subtabName = 'antecipacoes';
-      } else if (viewId === 'financial-statement') {
-        subtabName = 'extrato';
-      } else if (viewId === 'financial-expenses') {
-        subtabName = 'despesas';
-      } else if (viewId === 'financial-accounts') {
-        subtabName = 'contas';
-      } else if (viewId === 'financial-bordero') {
-        subtabName = 'bordero';
-      } else if (viewId === 'financial-balance') {
-        subtabName = 'saldo';
+    } else if (['financial-balance', 'financial-repass', 'financial-repasses', 'financial-advance', 'financial-statement', 'financial-expenses', 'financial-accounts', 'financial-bordero', 'financial-pdv'].includes(viewId)) {
+      let actualViewId = viewId;
+      if (viewId === 'financial-repasses') actualViewId = 'financial-repass';
+      targetSection = document.getElementById('view-' + actualViewId);
+      if (viewId === 'financial-pdv') {
+        setTimeout(() => {
+          if (typeof initPDVFinanceiroModule === 'function') initPDVFinanceiroModule();
+        }, 50);
       }
-      activateFinancialSubtab(subtabName);
     } else if (viewId.startsWith('reports')) {
       targetSection = document.getElementById('view-reports-sales');
       
@@ -537,6 +543,25 @@ function initEventsModule() {
       if (typeof renderEventsList === 'function') renderEventsList();
     });
   });
+
+  // Manual toggle for the Layout config dropdown
+  const layoutBtn = document.getElementById('layout-config-btn');
+  if (layoutBtn) {
+    layoutBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = layoutBtn.nextElementSibling;
+      if (menu) {
+        menu.classList.toggle('show');
+      }
+    });
+    // Click outside closes it
+    document.addEventListener('click', () => {
+      const menu = layoutBtn.nextElementSibling;
+      if (menu) {
+        menu.classList.remove('show');
+      }
+    });
+  }
 
   // Handle Event Creation (both forms)
   const quickForm = document.getElementById('quick-new-event-form');
@@ -711,17 +736,6 @@ let payoutSelectedMethod = "PIX";
 let payoutHasPending = false;
 
 function initFinanceModule() {
-  const tabs = document.querySelectorAll('#financial-sub-tabs .tab');
-  
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      
-      const subtab = tab.getAttribute('data-subtab');
-      activateFinancialSubtab(subtab);
-    });
-  });
 
   // Render original history table
   renderPayoutHistory();
@@ -732,14 +746,41 @@ function initFinanceModule() {
   if (typeof renderPDVs === 'function') renderPDVs();
   if (typeof renderRefundsLog === 'function') renderRefundsLog();
   if (typeof renderCustomPayRules === 'function') renderCustomPayRules();
-  if (typeof renderOperators === 'function') renderOperators();
   if (typeof renderAdvancedTables === 'function') renderAdvancedTables();
+
+  // Bind Dashboard search & filters
+  const searchInput = document.getElementById('search-financial-balance');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      financialSearchQuery = e.target.value;
+      renderFinancialBalanceRows();
+    });
+  }
+  
+  const orgFilter = document.getElementById('filter-financial-organizer');
+  if (orgFilter) {
+    orgFilter.addEventListener('change', (e) => {
+      financialFilterOrganizer = e.target.value;
+      renderFinancialBalanceRows();
+    });
+  }
+
+  const statusFilter = document.getElementById('filter-financial-status');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', (e) => {
+      financialFilterStatus = e.target.value;
+      renderFinancialBalanceRows();
+    });
+  }
+
+  if (typeof renderFinancialBalanceRows === 'function') renderFinancialBalanceRows();
+  updateEvolutionChartFilter('7d');
 
   // Saque buttons - scroll to the page form
   const newRepasseBtn = document.getElementById('financial-new-repasse-btn');
   if (newRepasseBtn) {
     newRepasseBtn.addEventListener('click', () => {
-      activateFinancialSubtab('repasses');
+      switchActiveView('financial-repass');
       const formEl = document.getElementById('page-repasse-form');
       if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
     });
@@ -812,26 +853,6 @@ function initFinanceModule() {
     btn.addEventListener('click', () => {
       openModal('anticipate');
     });
-  });
-}
-
-function activateFinancialSubtab(subtabName) {
-  document.querySelectorAll('.financial-subpane').forEach(pane => {
-    pane.style.display = 'none';
-  });
-  
-  const targetPane = document.getElementById(`subpane-${subtabName}`);
-  if (targetPane) {
-    targetPane.style.display = 'block';
-  }
-
-  // Update tabs selection
-  const subtabs = document.querySelectorAll('#financial-sub-tabs .tab');
-  subtabs.forEach(tab => {
-    if (tab.getAttribute('data-subtab') === subtabName) {
-      subtabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-    }
   });
 }
 
@@ -1130,7 +1151,7 @@ function navigateRepasseWizard(direction) {
     else if (payoutWizardStep === 5) {
       // Close modal and focus on requests page
       closeModal('request-repasse');
-      activateFinancialSubtab('repasses');
+      switchActiveView('financial-repass');
     }
   } else {
     // Navigate Backwards
@@ -1357,8 +1378,7 @@ function initQuickActions() {
   const quickRepasseBtn = document.getElementById('quick-repasse-btn');
   if (quickRepasseBtn) {
     quickRepasseBtn.addEventListener('click', () => {
-      switchActiveView('financial-balance');
-      activateFinancialSubtab('repasses');
+      switchActiveView('financial-repass');
       setTimeout(() => {
         const pageForm = document.getElementById('page-repasse-form');
         if (pageForm) pageForm.scrollIntoView({ behavior: 'smooth' });
@@ -1386,6 +1406,10 @@ function initQuickActions() {
    6. ChartJS Graphs Setup
    ========================================================================== */
 function initCharts() {
+  if (typeof Chart === 'undefined') {
+    console.warn("Chart.js not loaded. Skipping chart rendering.");
+    return;
+  }
   // 1. Dashboard Sales Line Chart
   const salesCtx = document.getElementById('chart-sales-dashboard');
   if (salesCtx) {
@@ -4439,73 +4463,386 @@ window.logAudit = logAudit;
    ========================================================================== */
 window.financialShowClosed = false;
 
+window.financialShowClosed = false;
+let financialSearchQuery = '';
+let financialFilterOrganizer = 'all';
+let financialFilterStatus = 'all';
+let currentEvolutionPeriod = '7d';
+
+window.financialEvolutionChart = null;
+window.financialDistributionChart = null;
+
 function renderFinancialBalanceRows() {
   const tbody = document.getElementById('financial-balance-rows');
   if (!tbody) return;
   tbody.innerHTML = '';
   
-  const showClosed = window.financialShowClosed || false;
   const filteredEvents = EVENTS_DATA.filter(ev => {
-    if (showClosed) return true;
-    return ev.status === 'ativos';
+    // Search filter
+    const matchesSearch = !financialSearchQuery || 
+      ev.name.toLowerCase().includes(financialSearchQuery.toLowerCase()) ||
+      (ev.location && ev.location.toLowerCase().includes(financialSearchQuery.toLowerCase())) ||
+      (ev.id && ev.id.toString().includes(financialSearchQuery));
+
+    // Organizer filter
+    let matchesOrganizer = true;
+    if (financialFilterOrganizer !== 'all') {
+      if (financialFilterOrganizer === 'Vila Brasil') {
+        matchesOrganizer = ev.location && ev.location.includes('Vila Brasil');
+      } else if (financialFilterOrganizer === 'PM Curitiba') {
+        matchesOrganizer = ev.location && (ev.location.includes('Parque') || ev.location.includes('Teatro'));
+      } else {
+        matchesOrganizer = !ev.location || (!ev.location.includes('Vila Brasil') && !ev.location.includes('Parque'));
+      }
+    }
+
+    // Status filter
+    let matchesStatus = true;
+    if (financialFilterStatus !== 'all') {
+      matchesStatus = ev.status === financialFilterStatus;
+    }
+    
+    return matchesSearch && matchesOrganizer && matchesStatus;
   });
   
   if (filteredEvents.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Nenhum saldo encontrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-3">Nenhum saldo encontrado para os filtros selecionados.</td></tr>';
+    
+    // Clear KPIs as well
+    ['kpi-available-balance', 'kpi-releasing-balance', 'kpi-blocked-balance', 'kpi-next-repasse-value', 'kpi-gross-revenue', 'kpi-net-revenue', 'kpi-total-fees', 'kpi-meta-achieved'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.textContent = 'R$ 0,00';
+    });
+    const metaPercentEl = document.getElementById('kpi-meta-percent');
+    if (metaPercentEl) metaPercentEl.textContent = '0%';
+    const metaProgressEl = document.getElementById('kpi-meta-progress');
+    if (metaProgressEl) metaProgressEl.style.width = '0%';
     return;
   }
   
+  let grossRevenueTotal = 0;
+  let feesTotal = 0;
+  let netRevenueTotal = 0;
+  let availableTotal = 0;
+  let releasingTotal = 0;
+  let blockedTotal = 0;
+  let paidRepassesTotal = 0;
+  let pendingRepassesTotal = 0;
+
   filteredEvents.forEach(ev => {
     const platformFee = ev.fees?.platform || 0;
     const cardFee = ev.fees?.card || 0;
     const retention = ev.fees?.retention || 0;
-    const totalFees = platformFee + cardFee + retention;
-    const netRevenue = Math.max(0, ev.revenue - totalFees);
+    const fees = platformFee + cardFee + retention;
+    const net = Math.max(0, ev.revenue - fees);
     
-    // Prior payouts match
     const evRepasses = PAYOUTS_HISTORY.filter(p => p.eventId === ev.id || (ev.id === 3368 && !p.eventId));
-    const paidRepasses = evRepasses.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.value, 0);
-    const pendingRepasses = evRepasses.filter(p => p.status === 'Pendente' || p.status === 'Em Processamento' || p.status === 'Em processamento' || p.status === 'Aguardando Aprovação').reduce((sum, p) => sum + p.value, 0);
+    const paid = evRepasses.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.value, 0);
+    const pending = evRepasses.filter(p => p.status === 'Pendente' || p.status === 'Em Processamento' || p.status === 'Em processamento' || p.status === 'Aguardando Aprovação').reduce((sum, p) => sum + p.value, 0);
     
-    const available = Math.max(0, netRevenue - paidRepasses - pendingRepasses);
+    const releasing = ev.status === 'ativos' ? net * 0.15 : 0;
+    const blocked = ev.status === 'ativos' ? net * 0.02 : 0;
+    const available = Math.max(0, net - paid - pending - releasing - blocked);
     
+    grossRevenueTotal += ev.revenue;
+    feesTotal += fees;
+    netRevenueTotal += net;
+    availableTotal += available;
+    releasingTotal += releasing;
+    blockedTotal += blocked;
+    paidRepassesTotal += paid;
+    pendingRepassesTotal += pending;
+
+    // Organizer name
+    let organizer = 'DiskIngressos';
+    if (ev.location && ev.location.includes('Vila Brasil')) organizer = 'Vila Brasil';
+    else if (ev.location && (ev.location.includes('Parque') || ev.location.includes('Teatro'))) organizer = 'PM Curitiba';
+
+    // Status badge
+    const statusClass = ev.status === 'ativos' ? 'bg-success' : 'bg-secondary';
+    const statusText = ev.status === 'ativos' ? 'Ativo' : 'Encerrado';
+
     const rowHtml = `
       <tr>
         <td>
           <div class="d-flex align-items-center">
-            <div class="symbol-circle me-3" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
-              <i class="ph-wallet"></i>
+            <div class="symbol-circle me-2" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+              <i class="ph-wallet" style="font-size: 14px;"></i>
             </div>
             <div>
-              <span class="fw-semibold text-dark d-block event-name-td">${ev.name}</span>
-              <span class="text-muted fs-xs">${ev.date} • ${ev.location}</span>
+              <span class="fw-semibold text-dark d-block event-name-td" style="font-size: 12.5px;">${ev.name}</span>
+              <span class="text-muted fs-xxs">${ev.date}</span>
             </div>
           </div>
         </td>
-        <td>
-          <span class="fw-bold text-dark">R$ ${ev.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-          <span class="text-muted fs-xs d-block">Líquido: R$ ${netRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-        </td>
-        <td>
-          <span class="badge bg-success bg-opacity-10 text-success fw-bold fs-6">R$ ${available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-          ${pendingRepasses > 0 ? `<span class="text-warning fs-xs d-block">Pendente: R$ ${pendingRepasses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>` : ''}
-        </td>
-        <td class="text-right text-end">
-          <div class="d-flex gap-2 justify-content-end">
-            <button class="btn btn-outline-primary btn-sm fw-semibold btn-trigger-sacar" onclick="window.requestRepasseForEvent(${ev.id})" ${available <= 0 ? 'disabled' : ''} style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">
-              <i class="ph-hand-coins me-1"></i> Sacar
+        <td><span class="badge bg-light text-dark fw-bold">${organizer}</span></td>
+        <td class="text-end font-monospace">R$ ${ev.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-end text-muted font-monospace">R$ ${fees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-end font-monospace fw-semibold text-dark">R$ ${net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-end font-monospace text-success fw-bold">R$ ${available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-end font-monospace text-primary">R$ ${releasing.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-end font-monospace text-warning">R$ ${(available * 0.22).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-center"><span class="badge ${statusClass} bg-opacity-10 text-${ev.status === 'ativos' ? 'success' : 'muted'}">${statusText}</span></td>
+        <td class="text-center">
+          <div class="dropdown">
+            <button class="btn btn-outline-light border text-dark btn-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 2px 6px;">
+              <i class="ph-dots-three-vertical"></i>
             </button>
-            <button class="btn btn-outline-secondary btn-sm fw-semibold btn-trigger-balanco" onclick="window.viewEventFinancialDetails(${ev.id})" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">
-              <i class="ph-eye me-1"></i> Detalhes
-            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="font-size: 12.5px; border-radius: 8px;">
+              <li><a class="dropdown-item fw-semibold text-success" href="#" onclick="window.requestRepasseForEvent(${ev.id})"><i class="ph-hand-coins me-2"></i> Solicitar Repasse</a></li>
+              <li><a class="dropdown-item fw-semibold" href="#" onclick="window.viewEventFinancialDetails(${ev.id})"><i class="ph-eye me-2"></i> Ver Detalhes</a></li>
+            </ul>
           </div>
         </td>
       </tr>
     `;
     tbody.insertAdjacentHTML('beforeend', rowHtml);
   });
+
+  // Update KPIs
+  const availableKpi = document.getElementById('kpi-available-balance');
+  if (availableKpi) availableKpi.textContent = 'R$ ' + availableTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  
+  const releasingKpi = document.getElementById('kpi-releasing-balance');
+  if (releasingKpi) releasingKpi.textContent = 'R$ ' + releasingTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  
+  const blockedKpi = document.getElementById('kpi-blocked-balance');
+  if (blockedKpi) blockedKpi.textContent = 'R$ ' + blockedTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  
+  const nextRepasseKpi = document.getElementById('kpi-next-repasse-value');
+  if (nextRepasseKpi) nextRepasseKpi.textContent = 'R$ ' + (availableTotal * 0.22).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  
+  const grossKpi = document.getElementById('kpi-gross-revenue');
+  if (grossKpi) grossKpi.textContent = 'R$ ' + grossRevenueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  
+  const netKpi = document.getElementById('kpi-net-revenue');
+  if (netKpi) netKpi.textContent = 'R$ ' + netRevenueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  
+  const feesKpi = document.getElementById('kpi-total-fees');
+  if (feesKpi) feesKpi.textContent = 'R$ ' + feesTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+  const metaAchieved = document.getElementById('kpi-meta-achieved');
+  if (metaAchieved) metaAchieved.textContent = 'R$ ' + netRevenueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+  const metaTarget = 500000;
+  const metaPercent = Math.min(100, Math.round((netRevenueTotal / metaTarget) * 100));
+  const metaPercentEl = document.getElementById('kpi-meta-percent');
+  if (metaPercentEl) metaPercentEl.textContent = metaPercent + '%';
+  const metaProgressEl = document.getElementById('kpi-meta-progress');
+  if (metaProgressEl) metaProgressEl.style.width = metaPercent + '%';
+
+  // Smart Cards update
+  const smartBiggestEvent = document.getElementById('smart-biggest-event');
+  if (smartBiggestEvent && filteredEvents.length > 0) {
+    const sorted = [...filteredEvents].sort((a, b) => b.revenue - a.revenue);
+    smartBiggestEvent.textContent = sorted[0].name;
+    const revenueEl = document.getElementById('smart-biggest-event-revenue');
+    if (revenueEl) revenueEl.textContent = 'R$ ' + sorted[0].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  }
+
+  // Update charts
+  renderEvolutionChart();
+  renderDistributionChart(availableTotal, releasingTotal, paidRepassesTotal, blockedTotal, blockedTotal * 0.25);
 }
-window.renderFinancialBalanceRows = renderFinancialBalanceRows;
+
+function renderEvolutionChart() {
+  const ctxEl = document.getElementById('chart-financial-evolution');
+  if (!ctxEl) return;
+  const ctx = ctxEl.getContext('2d');
+  if (!ctx) return;
+
+  if (window.financialEvolutionChart) {
+    window.financialEvolutionChart.destroy();
+  }
+
+  let labels = [];
+  let entradas = [];
+  let saidas = [];
+  let saldo = [];
+
+  if (currentEvolutionPeriod === '7d') {
+    labels = ['09/07', '10/07', '11/07', '12/07', '13/07', '14/07', '15/07'];
+    entradas = [4200, 5100, 8500, 3200, 6100, 7800, 8500];
+    saidas = [1100, 1500, 2100, 900, 1800, 2200, 2100];
+    saldo = [3100, 3600, 6400, 2300, 4300, 5600, 6400];
+  } else if (currentEvolutionPeriod === '30d') {
+    labels = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'];
+    entradas = [24000, 28000, 35000, 42000];
+    saidas = [8000, 9200, 12000, 15000];
+    saldo = [16000, 18800, 23000, 27000];
+  } else {
+    labels = ['Ago', 'Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'];
+    entradas = [85000, 92000, 104000, 120000, 150000, 95000, 110000, 125000, 130000, 142000, 155000, 168000];
+    saidas = [31000, 34000, 38000, 45000, 60000, 36000, 40000, 46000, 48000, 52000, 58000, 62000];
+    saldo = [54000, 58000, 66000, 75000, 90000, 59000, 70000, 79000, 82000, 90000, 97000, 106000];
+  }
+
+  window.financialEvolutionChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Entradas',
+          data: entradas,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.05)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Saídas',
+          data: saidas,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.05)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Saldo Líquido',
+          data: saldo,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.05)',
+          tension: 0.3,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 12, font: { size: 11 } }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: function(val) {
+              return 'R$ ' + val.toLocaleString('pt-BR');
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderDistributionChart(available, releasing, antecipado, blocked, contestacao) {
+  const ctxEl = document.getElementById('chart-financial-distribution');
+  if (!ctxEl) return;
+  const ctx = ctxEl.getContext('2d');
+  if (!ctx) return;
+
+  if (window.financialDistributionChart) {
+    window.financialDistributionChart.destroy();
+  }
+
+  window.financialDistributionChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Disponível', 'A Liberar', 'Antecipado', 'Bloqueado', 'Contestação'],
+      datasets: [{
+        data: [available, releasing, antecipado, blocked, contestacao],
+        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#6b7280'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { boxWidth: 10, font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function updateEvolutionChartFilter(period) {
+  currentEvolutionPeriod = period;
+  ['7d', '30d', '12m'].forEach(p => {
+    const btn = document.getElementById(`btn-evolution-${p}`);
+    if (btn) {
+      if (p === period) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  renderEvolutionChart();
+}
+window.updateEvolutionChartFilter = updateEvolutionChartFilter;
+
+function clearFinancialFilters() {
+  const searchEl = document.getElementById('search-financial-balance');
+  if (searchEl) searchEl.value = '';
+  const orgEl = document.getElementById('filter-financial-organizer');
+  if (orgEl) orgEl.value = 'all';
+  const statusEl = document.getElementById('filter-financial-status');
+  if (statusEl) statusEl.value = 'all';
+  
+  financialSearchQuery = '';
+  financialFilterOrganizer = 'all';
+  financialFilterStatus = 'all';
+  
+  renderFinancialBalanceRows();
+}
+window.clearFinancialFilters = clearFinancialFilters;
+
+function syncFinancialData() {
+  const icon = document.getElementById('sync-icon');
+  if (icon) {
+    icon.classList.add('fa-spin');
+  }
+  
+  setTimeout(() => {
+    if (icon) icon.classList.remove('fa-spin');
+    
+    EVENTS_DATA.forEach(ev => {
+      if (ev.status === 'ativos') {
+        ev.revenue += Math.round(Math.random() * 800 - 300);
+        if (ev.fees) {
+          ev.fees.platform = ev.revenue * 0.1;
+          ev.fees.card = ev.revenue * 0.05;
+        }
+      }
+    });
+    
+    renderFinancialBalanceRows();
+    
+    const insightsList = document.getElementById('ia-financeira-insights-list');
+    if (insightsList) {
+      insightsList.innerHTML = `
+        <li>Dados atualizados com sucesso às ${new Date().toLocaleTimeString('pt-BR')}.</li>
+        <li>Seu saldo disponível aumentou <strong>${(10 + Math.random()*5).toFixed(1)}%</strong> em relação à semana anterior.</li>
+        <li>O evento "${EVENTS_DATA[0].name}" representa <strong>${Math.round(EVENTS_DATA[0].revenue / EVENTS_DATA.reduce((sum, e) => sum + e.revenue, 0) * 100)}%</strong> de toda a sua receita total.</li>
+        <li>R$ ${(12000 + Math.random()*4000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} previstos para liberação automática amanhã.</li>
+      `;
+    }
+    
+    alert("Saldo sincronizado com sucesso!");
+  }, 1000);
+}
+window.syncFinancialData = syncFinancialData;
+
+function exportFinancialFormat(format) {
+  alert(`Exportando relatório financeiro no formato ${format.toUpperCase()}...`);
+  if (format === 'csv') {
+    exportFinancialBalanceCSV();
+  } else {
+    let filename = `relatorio-financeiro.${format}`;
+    let data = "Conteudo de relatorio mockup para formato " + format.toUpperCase();
+    let blob = new Blob([data], { type: 'text/plain' });
+    let link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+}
+window.exportFinancialFormat = exportFinancialFormat;
 
 function renderFinancialEligibleEvents() {
   const tbody = document.getElementById('financial-eligible-events-rows');
@@ -4703,6 +5040,51 @@ function calculateNegotiationTotals(eventId) {
     totalPatrocinio += parseFloat(p.valor) || 0;
   });
   data.total_patrocinio = totalPatrocinio;
+
+  // Run Advanced calculations (installment values based on Simple/Compound interest)
+  const advVal = parseFloat(data.advanced.adv.valor) || 0;
+  const advTaxa = (parseFloat(data.advanced.taxa.valor) || 0) / 100;
+  const advParcCount = parseInt(data.advanced.parcelas.valor) || 1;
+  let installmentVal = 0;
+
+  if (data.advanced.taxa.tipo_valor === 1) { // Simple interest
+    const totalWithSimpleJuros = advVal + (advVal * advTaxa);
+    installmentVal = totalWithSimpleJuros / advParcCount;
+  } else { // Compound interest
+    const totalWithCompJuros = advVal * Math.pow(1 + advTaxa, advParcCount);
+    installmentVal = totalWithCompJuros / advParcCount;
+  }
+  data.advanced.valor.valor = parseFloat(installmentVal.toFixed(2));
+
+  // Re-generate advanced installments list if needed
+  if (!data.advanced.parcelas_list || data.advanced.parcelas_list.length !== advParcCount) {
+    data.advanced.parcelas_list = [];
+    const baseDate = new Date(data.advanced.data.valor || '2026-07-15');
+    for (let i = 0; i < advParcCount; i++) {
+      const dueDate = new Date(baseDate);
+      dueDate.setMonth(baseDate.getMonth() + i);
+      data.advanced.parcelas_list.push({
+        numero: i + 1,
+        valor: installmentVal,
+        valor_pago: i === 0 ? installmentVal : 0.00,
+        status: i === 0 ? 1 : 0,
+        data: dueDate.toLocaleDateString('pt-BR')
+      });
+    }
+  } else {
+    // Update installment values
+    data.advanced.parcelas_list.forEach(p => {
+      p.valor = installmentVal;
+      if (p.status === 1) {
+        p.valor_pago = installmentVal;
+      }
+    });
+  }
+
+  // Run Saque calculations
+  const infoPercent = (parseFloat(data.infos.percent.valor) || 0) / 100;
+  const withdrawable = (data.total_bruto - data.total_despesas - data.total_taxas) * infoPercent;
+  data.infos.lib.valor = parseFloat(Math.max(0, withdrawable).toFixed(2));
 }
 
 function initializeNegotiationsData() {
@@ -4732,22 +5114,23 @@ function initializeNegotiationsData() {
     ];
     
     const advanced = {
-      habilitado: 'Não',
-      taxa_juros: 0.00,
-      percentual_desconto: 0.00,
-      forma_desconto: 'Inicio',
-      parcelas: 1,
-      primeira_parcela: '',
-      valor_parcelas: 0.00
+      adv: { descricao: 'Há verbas de advanced', tipo: 0, tipo_valor: 2, valor: 10000.00, show: true },
+      taxa: { descricao: 'Taxa de juros mensal do advanced', tipo: 1, tipo_valor: 1, valor: 1.50, show: true },
+      percent: { descricao: 'Percentual de desconto advanced', tipo: 2, valor: 20.00, show: true },
+      forma: { descricao: 'Forma de desconto', tipo: 3, tipo_valor: 6, show: true },
+      parcelas: { descricao: 'Quantidade de Parcelas', tipo: 4, valor: 3, show: true },
+      data: { descricao: 'Data das Parcelas', tipo: 5, valor: '2026-07-15', show: true },
+      valor: { descricao: 'Valor das parcelas', tipo: 6, valor: 0.00, show: true },
+      parcelas_list: []
     };
     
     const infos = {
-      liberado_saque: 'Sim',
-      percentual_liberado: 100,
-      valor_maximo: 0.00,
-      tempo_minimo: 0,
-      desconto_pix: 'Não',
-      desconto_ted: 'Não'
+      lib: { descricao: 'Liberado para saque', tipo: 0, tipo_valor: 2, valor: 0.00 },
+      percent: { descricao: 'Percentual liberado para saque', tipo: 1, valor: 80.00 },
+      max: { descricao: 'Valor máximo para saque', tipo: 2, valor: 50000.00 },
+      tempo: { descricao: 'Tempo mínimo para saque (Dias antes do evento)', tipo: 3, valor: 3 },
+      pix: { descricao: 'Descontar valor por pix', tipo: 4, tipo_valor: 3, valor: 0 },
+      ted: { descricao: 'Descontar valor por ted', tipo: 5, tipo_valor: 3, valor: 0 }
     };
     
     window.NEGOCIACOES_DATA[ev.id] = {
@@ -4762,7 +5145,105 @@ function initializeNegotiationsData() {
   });
 }
 
+window.updateAdvancedValue = function(eventId, key, value) {
+  const data = window.NEGOCIACOES_DATA[eventId];
+  if (!data) return;
+  data.advanced[key].valor = value;
+  calculateNegotiationTotals(eventId);
+  renderNegotiationsData(eventId);
+};
+
+window.updateAdvancedRadio = function(eventId, key, val) {
+  const data = window.NEGOCIACOES_DATA[eventId];
+  if (!data) return;
+  data.advanced[key].tipo_valor = parseInt(val);
+  calculateNegotiationTotals(eventId);
+  renderNegotiationsData(eventId);
+};
+
+window.updateInfoValue = function(eventId, key, value) {
+  const data = window.NEGOCIACOES_DATA[eventId];
+  if (!data) return;
+  data.infos[key].valor = value;
+  calculateNegotiationTotals(eventId);
+  renderNegotiationsData(eventId);
+};
+
+window.updateInfoRadio = function(eventId, key, val) {
+  const data = window.NEGOCIACOES_DATA[eventId];
+  if (!data) return;
+  data.infos[key].tipo_valor = parseInt(val);
+  calculateNegotiationTotals(eventId);
+  renderNegotiationsData(eventId);
+};
+
+window.payAdvancedInstallment = function(eventId, index) {
+  const data = window.NEGOCIACOES_DATA[eventId];
+  if (!data || !data.advanced.parcelas_list[index]) return;
+  const p = data.advanced.parcelas_list[index];
+  p.status = 1;
+  p.valor_pago = p.valor;
+  alert(`Parcela Nº ${index + 1} de R$ ${p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} marcada como PAGA!`);
+  renderNegotiationsData(eventId);
+};
+
 function renderNegotiationsData(eventId) {
+  if (!window.NEGOCIACOES_DATA[eventId]) {
+    const ev = EVENTS_DATA.find(e => e.id == eventId) || { id: eventId, revenue: 0, salesCount: 0 };
+    const brutoTotal = ev.revenue || 0;
+    const servicoTotal = ev.fees?.platform || 0;
+    
+    const dinero = { forma_pagamento: 'DINHEIRO', tipo: 0, taxa_pagamento: 0.00, pagamento_taxa_servico: 0, taxa_antecipacao: 0, taxa_parcelado: 0, pagamento_antecipado: 0, qtd_tickets: Math.round(ev.salesCount * 0.1), bruto: brutoTotal * 0.1, servico: servicoTotal * 0.1, taxas: 0.0, liquido: 0.0 };
+    const pix = { forma_pagamento: 'PIX', tipo: 1, taxa_pagamento: 0.99, pagamento_taxa_servico: 1, taxa_antecipacao: 0, taxa_parcelado: 0, pagamento_antecipado: 0, qtd_tickets: Math.round(ev.salesCount * 0.4), bruto: brutoTotal * 0.4, servico: servicoTotal * 0.4, taxas: 0.0, liquido: 0.0 };
+    const debito = { forma_pagamento: 'DÉBITO', tipo: 2, taxa_pagamento: 1.99, pagamento_taxa_servico: 1, taxa_antecipacao: 0, taxa_parcelado: 0, pagamento_antecipado: 0, qtd_tickets: Math.round(ev.salesCount * 0.2), bruto: brutoTotal * 0.2, servico: servicoTotal * 0.2, taxas: 0.0, liquido: 0.0 };
+    const credito = { forma_pagamento: 'CRÉDITO AV.', tipo: 3, taxa_pagamento: 2.99, pagamento_taxa_servico: 1, taxa_antecipacao: 1.50, taxa_parcelado: 0, pagamento_antecipado: 1, qtd_tickets: Math.round(ev.salesCount * 0.15), bruto: brutoTotal * 0.15, servico: servicoTotal * 0.15, taxas: 0.0, liquido: 0.0 };
+    const credito_2a6 = { forma_pagamento: 'PARCELADO 2x à 6x', tipo: 4, taxa_pagamento: 3.49, pagamento_taxa_servico: 1, taxa_antecipacao: 1.50, taxa_parcelado: 1.99, pagamento_antecipado: 1, qtd_tickets: Math.round(ev.salesCount * 0.1), bruto: brutoTotal * 0.1, servico: servicoTotal * 0.1, taxas: 0.0, liquido: 0.0 };
+    const credito_7a12 = { forma_pagamento: 'PARCELADO 7x à 12x', tipo: 5, taxa_pagamento: 3.99, pagamento_taxa_servico: 1, taxa_antecipacao: 1.50, taxa_parcelado: 2.99, pagamento_antecipado: 1, qtd_tickets: Math.round(ev.salesCount * 0.05), bruto: brutoTotal * 0.05, servico: servicoTotal * 0.05, taxas: 0.0, liquido: 0.0 };
+    const cortesia = { forma_pagamento: 'CORTESIA', tipo: 6, taxa_pagamento: 0.00, pagamento_taxa_servico: 0, taxa_antecipacao: 0, taxa_parcelado: 0, pagamento_antecipado: 0, qtd_tickets: Math.max(0, ev.salesCount - (dinero.qtd_tickets + pix.qtd_tickets + debito.qtd_tickets + credito.qtd_tickets + credito_2a6.qtd_tickets + credito_7a12.qtd_tickets)), bruto: 0.00, servico: 0.00, taxas: 0.0, liquido: 0.00 };
+    
+    const receitas = [dinero, pix, debito, credito, credito_2a6, credito_7a12, cortesia];
+    
+    const despesas = [
+      { fornecedor: 'Equipe de Som & Luz', categoria: 'Som & Luz', data: '2026-07-20', status: 'Pendente', valor: 800.00 },
+      { fornecedor: 'Staff e Segurança do Local', categoria: 'Segurança', data: '2026-07-18', status: 'Pago', valor: 500.00 },
+      { fornecedor: 'Agência de Publicidade', categoria: 'Marketing', data: '2026-07-15', status: 'Pago', valor: 300.00 }
+    ];
+    
+    const patrocinios = [
+      { marca: 'Cerveja Parceira', categoria: 'Master', status: 'Ativo', valor: 5000.00 },
+      { marca: 'Refrigerante Oficial', categoria: 'Gold', status: 'Ativo', valor: 2000.00 }
+    ];
+    
+    const advanced = {
+      adv: { descricao: 'Há verbas de advanced', tipo: 0, tipo_valor: 2, valor: 10000.00, show: true },
+      taxa: { descricao: 'Taxa de juros mensal do advanced', tipo: 1, tipo_valor: 1, valor: 1.50, show: true },
+      percent: { descricao: 'Percentual de desconto advanced', tipo: 2, valor: 20.00, show: true },
+      forma: { descricao: 'Forma de desconto', tipo: 3, tipo_valor: 6, show: true },
+      parcelas: { descricao: 'Quantidade de Parcelas', tipo: 4, valor: 3, show: true },
+      data: { descricao: 'Data das Parcelas', tipo: 5, valor: '2026-07-15', show: true },
+      valor: { descricao: 'Valor das parcelas', tipo: 6, valor: 0.00, show: true },
+      parcelas_list: []
+    };
+    
+    const infos = {
+      lib: { descricao: 'Liberado para saque', tipo: 0, tipo_valor: 2, valor: 0.00 },
+      percent: { descricao: 'Percentual liberado para saque', tipo: 1, valor: 80.00 },
+      max: { descricao: 'Valor máximo para saque', tipo: 2, valor: 50000.00 },
+      tempo: { descricao: 'Tempo mínimo para saque (Dias antes do evento)', tipo: 3, valor: 3 },
+      pix: { descricao: 'Descontar valor por pix', tipo: 4, tipo_valor: 3, valor: 0 },
+      ted: { descricao: 'Descontar valor por ted', tipo: 5, tipo_valor: 3, valor: 0 }
+    };
+    
+    window.NEGOCIACOES_DATA[eventId] = {
+      receitas,
+      despesas,
+      patrocinios,
+      advanced,
+      infos
+    };
+    calculateNegotiationTotals(eventId);
+  }
+  
   const data = window.NEGOCIACOES_DATA[eventId];
   if (!data) return;
   
@@ -4867,10 +5348,137 @@ function renderNegotiationsData(eventId) {
     document.getElementById('spons-total-val').textContent = `R$ ${data.total_patrocinio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
   }
   
-  // 4. Render Advanced Rules Tab
-  const advTbody = document.getElementById('negotiations-table-body');
-  if (advTbody) {
-    advTbody.innerHTML = `
+  // 4. Render Yii-Style Advanced Parameters
+  const advParamTbody = document.getElementById('neg-advanced-param-rows');
+  if (advParamTbody) {
+    advParamTbody.innerHTML = `
+      <tr>
+        <td class="fw-semibold text-dark">${data.advanced.adv.descricao}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-verba" id="adv-verba-sim" value="2" ${data.advanced.adv.tipo_valor === 2 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'adv', 2)">
+              <label class="form-check-label fs-xs fw-semibold" for="adv-verba-sim">Sim</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-verba" id="adv-verba-nao" value="3" ${data.advanced.adv.tipo_valor === 3 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'adv', 3)">
+              <label class="form-check-label fs-xs fw-semibold" for="adv-verba-nao">Não</label>
+            </div>
+          </div>
+        </td>
+        <td class="text-end">
+          <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace ms-auto" value="${data.advanced.adv.valor}" ${data.advanced.adv.tipo_valor === 3 ? 'disabled' : ''} oninput="window.updateAdvancedValue(${eventId}, 'adv', this.value)" style="width: 130px;">
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.advanced.taxa.descricao}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-taxa-tipo" id="adv-taxa-simples" value="1" ${data.advanced.taxa.tipo_valor === 1 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'taxa', 1)">
+              <label class="form-check-label fs-xs fw-semibold" for="adv-taxa-simples">% Simples</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-taxa-tipo" id="adv-taxa-composto" value="2" ${data.advanced.taxa.tipo_valor === 2 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'taxa', 2)">
+              <label class="form-check-label fs-xs fw-semibold" for="adv-taxa-composto">% Composto</label>
+            </div>
+          </div>
+        </td>
+        <td class="text-end">
+          <div class="input-group input-group-sm ms-auto" style="width: 100px;">
+            <input type="number" step="0.01" class="form-control text-end font-monospace" value="${data.advanced.taxa.valor}" oninput="window.updateAdvancedValue(${eventId}, 'taxa', this.value)">
+            <span class="input-group-text">%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.advanced.percent.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end">
+          <div class="input-group input-group-sm ms-auto" style="width: 100px;">
+            <input type="number" step="0.01" class="form-control text-end font-monospace" value="${data.advanced.percent.valor}" oninput="window.updateAdvancedValue(${eventId}, 'percent', this.value)">
+            <span class="input-group-text">%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.advanced.forma.descricao}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-forma" id="adv-forma-ini" value="4" ${data.advanced.forma.tipo_valor === 4 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'forma', 4)">
+              <label class="form-check-label fs-xxs" for="adv-forma-ini">Inicio</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-forma" id="adv-forma-fin" value="5" ${data.advanced.forma.tipo_valor === 5 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'forma', 5)">
+              <label class="form-check-label fs-xxs" for="adv-forma-fin">Final</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="adv-forma" id="adv-forma-par" value="6" ${data.advanced.forma.tipo_valor === 6 ? 'checked' : ''} onchange="window.updateAdvancedRadio(${eventId}, 'forma', 6)">
+              <label class="form-check-label fs-xxs" for="adv-forma-par">Parcelas</label>
+            </div>
+          </div>
+        </td>
+        <td class="text-end text-muted">—</td>
+      </tr>
+      <tr style="display: ${data.advanced.forma.tipo_valor === 6 ? 'table-row' : 'none'};">
+        <td class="fw-semibold text-dark">${data.advanced.parcelas.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end">
+          <input type="number" class="form-control form-control-sm text-end font-monospace ms-auto" value="${data.advanced.parcelas.valor}" oninput="window.updateAdvancedValue(${eventId}, 'parcelas', this.value)" style="width: 100px;">
+        </td>
+      </tr>
+      <tr style="display: ${data.advanced.forma.tipo_valor === 6 ? 'table-row' : 'none'};">
+        <td class="fw-semibold text-dark">${data.advanced.data.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end">
+          <input type="date" class="form-control form-control-sm font-monospace ms-auto" value="${data.advanced.data.valor}" oninput="window.updateAdvancedValue(${eventId}, 'data', this.value)" style="width: 150px;">
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.advanced.valor.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end fw-bold text-success font-monospace">R$ ${data.advanced.valor.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      </tr>
+    `;
+
+    // Render installments list
+    const instSection = document.getElementById('neg-advanced-installments-section');
+    const instTbody = document.getElementById('neg-advanced-installments-rows');
+    if (instSection && instTbody) {
+      if (data.advanced.forma.tipo_valor === 6 && data.advanced.parcelas_list && data.advanced.parcelas_list.length > 0) {
+        instSection.style.display = 'block';
+        instTbody.innerHTML = '';
+        data.advanced.parcelas_list.forEach((p, index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="text-center fw-bold text-primary font-monospace">${p.numero}</td>
+            <td class="text-center font-monospace text-dark">R$ ${p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+            <td class="text-center font-monospace text-muted">R$ ${p.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+            <td class="text-center">
+              <span class="badge ${p.status === 1 ? 'bg-success' : 'bg-warning text-dark'} fw-bold px-2 py-1 fs-xxs">
+                ${p.status === 1 ? 'PAGO' : 'AGUARDANDO'}
+              </span>
+            </td>
+            <td class="text-center text-muted font-monospace">${p.data}</td>
+            <td class="text-end">
+              <button class="btn btn-xs btn-success fw-bold text-white" onclick="window.payAdvancedInstallment(${eventId}, ${index})" ${p.status === 1 ? 'disabled' : ''}>
+                <i class="ph-check-circle me-1"></i> Pagar
+              </button>
+            </td>
+          `;
+          instTbody.appendChild(tr);
+        });
+      } else {
+        instSection.style.display = 'none';
+      }
+    }
+  }
+
+  // Keep original negotiations sectors list
+  const sectorsTbody = document.getElementById('negotiations-table-body');
+  if (sectorsTbody) {
+    sectorsTbody.innerHTML = `
       <tr>
         <td class="py-2">Pista Premium</td>
         <td class="py-2">Site / App</td>
@@ -4892,7 +5500,86 @@ function renderNegotiationsData(eventId) {
     `;
   }
   
-  // 5. Render Informacoes Financeiras Tab (KPIs)
+  // 5. Render Informacoes Financeiras Tab (Saque parameters table)
+  const infoParamTbody = document.getElementById('neg-info-param-rows');
+  if (infoParamTbody) {
+    infoParamTbody.innerHTML = `
+      <tr>
+        <td class="fw-semibold text-dark">${data.infos.lib.descricao}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="info-lib" id="info-lib-sim" value="2" ${data.infos.lib.tipo_valor === 2 ? 'checked' : ''} onchange="window.updateInfoRadio(${eventId}, 'lib', 2)">
+              <label class="form-check-label fs-xs fw-semibold" for="info-lib-sim">Sim</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="info-lib" id="info-lib-nao" value="3" ${data.infos.lib.tipo_valor === 3 ? 'checked' : ''} onchange="window.updateInfoRadio(${eventId}, 'lib', 3)">
+              <label class="form-check-label fs-xs fw-semibold" for="info-lib-nao">Não</label>
+            </div>
+          </div>
+        </td>
+        <td class="text-end fw-bold text-success font-monospace">R$ ${data.infos.lib.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.infos.percent.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end">
+          <div class="input-group input-group-sm ms-auto" style="width: 100px;">
+            <input type="number" step="0.01" class="form-control text-end font-monospace" value="${data.infos.percent.valor}" oninput="window.updateInfoValue(${eventId}, 'percent', this.value)">
+            <span class="input-group-text">%</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.infos.max.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end">
+          <input type="number" step="0.01" class="form-control form-control-sm text-end font-monospace ms-auto" value="${data.infos.max.valor}" oninput="window.updateInfoValue(${eventId}, 'max', this.value)" style="width: 120px;">
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.infos.tempo.descricao}</td>
+        <td class="text-center text-muted">—</td>
+        <td class="text-end">
+          <input type="number" class="form-control form-control-sm text-end font-monospace ms-auto" value="${data.infos.tempo.valor}" oninput="window.updateInfoValue(${eventId}, 'tempo', this.value)" style="width: 100px;">
+        </td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.infos.pix.descricao}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="info-pix" id="info-pix-sim" value="2" ${data.infos.pix.tipo_valor === 2 ? 'checked' : ''} onchange="window.updateInfoRadio(${eventId}, 'pix', 2)">
+              <label class="form-check-label fs-xs fw-semibold" for="info-pix-sim">Sim</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="info-pix" id="info-pix-nao" value="3" ${data.infos.pix.tipo_valor === 3 ? 'checked' : ''} onchange="window.updateInfoRadio(${eventId}, 'pix', 3)">
+              <label class="form-check-label fs-xs fw-semibold" for="info-pix-nao">Não</label>
+            </div>
+          </div>
+        </td>
+        <td class="text-end text-muted">—</td>
+      </tr>
+      <tr>
+        <td class="fw-semibold text-dark">${data.infos.ted.descricao}</td>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-3">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="info-ted" id="info-ted-sim" value="2" ${data.infos.ted.tipo_valor === 2 ? 'checked' : ''} onchange="window.updateInfoRadio(${eventId}, 'ted', 2)">
+              <label class="form-check-label fs-xs fw-semibold" for="info-ted-sim">Sim</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="info-ted" id="info-ted-nao" value="3" ${data.infos.ted.tipo_valor === 3 ? 'checked' : ''} onchange="window.updateInfoRadio(${eventId}, 'ted', 3)">
+              <label class="form-check-label fs-xs fw-semibold" for="info-ted-nao">Não</label>
+            </div>
+          </div>
+        </td>
+        <td class="text-end text-muted">—</td>
+      </tr>
+    `;
+  }
+  
+  // Render Informacoes Financeiras KPIs
   const infoBruto = document.getElementById('info-bruto-val');
   if (infoBruto) infoBruto.textContent = `R$ ${data.total_bruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
   
@@ -4910,7 +5597,7 @@ function renderNegotiationsData(eventId) {
   
   const infoLiquido = document.getElementById('info-lucro-liquido-val');
   if (infoLiquido) {
-    const finalNet = data.total_liquido + data.total_patrocinio - data.total_despesas;
+    const finalNet = data.total_bruto + data.total_patrocinio - data.total_despesas - data.total_taxas - data.total_servico;
     infoLiquido.textContent = `R$ ${finalNet.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
   }
 
@@ -4934,6 +5621,21 @@ function renderNegotiationsData(eventId) {
 window.renderNegotiationsData = renderNegotiationsData;
 
 function initNegotiationsPage() {
+  const eventNav = document.getElementById('event-sidebar-nav');
+  const isEventManaged = eventNav && eventNav.style.display === 'block';
+  
+  if (isEventManaged && window.currentManagedEventId) {
+    window.currentNegotiationEventId = window.currentManagedEventId;
+  }
+
+  // Fallback to first event if not set or invalid
+  if (EVENTS_DATA.length > 0) {
+    const exists = EVENTS_DATA.some(e => e.id == window.currentNegotiationEventId);
+    if (!exists) {
+      window.currentNegotiationEventId = EVENTS_DATA[0].id;
+    }
+  }
+
   const selectEl = document.getElementById('neg-event-select');
   if (selectEl) {
     selectEl.innerHTML = '';
@@ -4958,26 +5660,47 @@ function initNegotiationsPage() {
 window.initNegotiationsPage = initNegotiationsPage;
 
 window.selectNegotiationEvent = function(eventId) {
-  window.currentNegotiationEventId = eventId;
-  const ev = EVENTS_DATA.find(e => e.id == eventId);
+  let ev = EVENTS_DATA.find(e => e.id == eventId);
+  if (!ev && EVENTS_DATA.length > 0) {
+    ev = EVENTS_DATA[0];
+    eventId = ev.id;
+  }
   if (!ev) return;
+  window.currentNegotiationEventId = eventId;
   
-  // Set date labels
+  // Set date labels matching user screenshot exactly
   const startEl = document.getElementById('neg-sales-start-label');
-  if (startEl) startEl.innerHTML = `<i class="ph-calendar me-1 text-primary"></i> <strong>Início das Vendas:</strong> 01/07/2025 às 16h38`;
+  if (startEl) startEl.innerHTML = `<i class="ph-calendar-blank me-1"></i> Início das Vendas: <strong>01/07/2025 às 16h38</strong>`;
   
   const endEl = document.getElementById('neg-sales-end-label');
-  if (endEl) endEl.innerHTML = `<i class="ph-calendar me-1 text-primary"></i> <strong>Final das Vendas:</strong> ${ev.date.split(' - ')[0]} às ${ev.date.split(' - ')[1] || '20h00'}`;
+  if (endEl) endEl.innerHTML = `<i class="ph-calendar-x me-1"></i> Final das Vendas: <strong>${ev.date.split(' - ')[0]} às ${ev.date.split(' - ')[1] || '20h00'}</strong>`;
   
   const badgeEl = document.getElementById('neg-event-badge');
   if (badgeEl) {
     if (ev.status === 'ativos') {
-      badgeEl.className = 'badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 fs-xxs';
+      badgeEl.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3 py-2 fs-xxs fw-bold';
       badgeEl.innerHTML = '<i class="ph-check-circle me-1"></i> Evento Ativo';
     } else {
-      badgeEl.className = 'badge bg-secondary bg-opacity-10 text-secondary fw-bold px-3 py-2 fs-xxs';
-      badgeEl.innerHTML = '<i class="ph-lock me-1"></i> Evento Encerrado';
+      badgeEl.className = 'badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-2 fs-xxs fw-bold';
+      badgeEl.innerHTML = 'Evento realizado há: 02 Dias 16h 29m 27s';
     }
+  }
+
+  // Toggle selection dropdown vs title banner based on layout mode
+  const eventNav = document.getElementById('event-sidebar-nav');
+  const isEventManaged = eventNav && eventNav.style.display === 'block';
+
+  const selectContainer = document.getElementById('neg-select-container');
+  const titleContainer = document.getElementById('neg-event-title-container');
+  const titleText = document.getElementById('neg-event-title-text');
+
+  if (isEventManaged && window.currentManagedEventId) {
+    if (selectContainer) selectContainer.style.display = 'none';
+    if (titleContainer) titleContainer.style.display = 'block';
+    if (titleText) titleText.textContent = `ID.${ev.id} - ${ev.name}`;
+  } else {
+    if (selectContainer) selectContainer.style.display = 'block';
+    if (titleContainer) titleContainer.style.display = 'none';
   }
   
   // Render tables
@@ -6201,76 +6924,396 @@ window.renderFinancialPDVSubReport = function() {
 
 // --- 6.1 PDV MODULE ---
 let PDVS_DATA = [
-  { id: 1, name: "Bilheteria Shopping Mueller", operator: "Mariana Souza", status: "Aberto", sales: 12450.00 },
-  { id: 2, name: "Quiosque Teatro Guaíra", operator: "Carlos Andrade", status: "Aberto", sales: 8320.00 },
-  { id: 3, name: "Totem Autoatendimento", operator: "Sistema Auto", status: "Aberto", sales: 4150.00 },
-  { id: 4, name: "Bilheteria Física Teatro Positivo", operator: "Paula Santos", status: "Fechado", sales: 0.00 }
+  { id: 1, name: "Shopping Mueller", operators: 8, salesCount: 846, revenue: 46520.00, ticket: 54.99, status: "🟢", pix: 15420.00, credit: 22840.00, debit: 5880.00, cash: 2380.00, cancel: 420.00, refund: 0.00, caixas: 4, time: "01:42" },
+  { id: 2, name: "Teatro Positivo", operators: 6, salesCount: 612, revenue: 38740.00, ticket: 63.30, status: "🟢", pix: 13180.00, credit: 18960.00, debit: 4860.00, cash: 1740.00, cancel: 280.00, refund: 0.00, caixas: 3, time: "01:18" },
+  { id: 3, name: "Teatro Guaíra", operators: 7, salesCount: 735, revenue: 42380.00, ticket: 57.66, status: "🟢", pix: 14900.00, credit: 19460.00, debit: 5620.00, cash: 2400.00, cancel: 0.00, refund: 180.00, caixas: 4, time: "01:30" },
+  { id: 4, name: "Teatro Fernanda Montenegro", operators: 5, salesCount: 418, revenue: 24960.00, ticket: 59.71, status: "🟢", pix: 8520.00, credit: 12640.00, debit: 2140.00, cash: 1660.00, cancel: 0.00, refund: 0.00, caixas: 2, time: "01:25" },
+  { id: 5, name: "Família Pavê", operators: 4, salesCount: 322, revenue: 18950.00, ticket: 58.85, status: "🟢", pix: 6340.00, credit: 9120.00, debit: 2130.00, cash: 1360.00, cancel: 0.00, refund: 0.00, caixas: 2, time: "01:20" },
+  { id: 6, name: "Venda Online", operators: 0, salesCount: 493, revenue: 13300.00, ticket: 26.98, status: "🟢", pix: 5920.00, credit: 6520.00, debit: 860.00, cash: 0.00, cancel: 1120.00, refund: 500.00, caixas: 0, time: "00:05" }
 ];
 
-function renderPDVs() {
-  const tbody = document.getElementById('pdv-table-body');
+let CAIXAS_DATA = [
+  { id: "CX-001", pdv: "Shopping Mueller", operator: "Ana Paula", status: "🟢", sales: 214, value: 11820.00 },
+  { id: "CX-002", pdv: "Shopping Mueller", operator: "João Carlos", status: "🟢", sales: 206, value: 10940.00 },
+  { id: "CX-003", pdv: "Teatro Positivo", operator: "Carlos Henrique", status: "🟢", sales: 184, value: 12450.00 },
+  { id: "CX-004", pdv: "Teatro Guaíra", operator: "Juliana Costa", status: "🟢", sales: 228, value: 13920.00 },
+  { id: "CX-005", pdv: "Teatro Fernanda Montenegro", operator: "Ricardo Souza", status: "🟢", sales: 151, value: 8920.00 },
+  { id: "CX-006", pdv: "Família Pavê", operator: "Fernanda Lima", status: "🟢", sales: 136, value: 8140.00 }
+];
+
+let PAYMETHODS_DATA = [
+  { method: "💳 Crédito", count: 1654, value: 86540.00, share: "46,82%" },
+  { method: "📱 PIX", count: 1182, value: 64280.00, share: "34,78%" },
+  { method: "💳 Débito", count: 428, value: 22630.00, share: "12,24%" },
+  { method: "💵 Dinheiro", count: 162, value: 11400.00, share: "6,16%" }
+];
+
+window.pdvPaymethodsChart = null;
+
+window.initPDVFinanceiroModule = function() {
+  renderPDVExecutiveTable();
+  renderPDVCaixasTable();
+  renderPDVConciliationTable();
+  renderPDVPaymethodsTable();
+  renderPDVPaymethodsChart();
+  updatePDVTotalIndicators();
+};
+
+function renderPDVExecutiveTable() {
+  const tbody = document.getElementById('pdv-executive-rows');
   if (!tbody) return;
   tbody.innerHTML = '';
   PDVS_DATA.forEach(pdv => {
     const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => window.viewPDVDetail(pdv.name);
     tr.innerHTML = `
-      <td class="fw-bold text-dark">${pdv.name}</td>
-      <td>${pdv.operator}</td>
-      <td>
-        <span class="badge ${pdv.status === 'Aberto' ? 'bg-success' : 'bg-secondary'}">${pdv.status}</span>
-      </td>
-      <td class="font-monospace fw-bold text-success">R$ ${pdv.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-      <td>
-        <button class="btn btn-xs ${pdv.status === 'Aberto' ? 'btn-outline-danger' : 'btn-outline-success'} py-0.5 px-2 fw-bold me-1" onclick="window.togglePDVStatus(${pdv.id})">
-          ${pdv.status === 'Aberto' ? 'Fechar' : 'Abrir'}
-        </button>
-        <button class="btn btn-xs btn-outline-warning py-0.5 px-2 fw-bold" onclick="window.sangriaPDV(${pdv.id})" ${pdv.status === 'Fechado' ? 'disabled' : ''}>
-          Sangria
-        </button>
+      <td class="fw-bold text-dark"><i class="ph-storefront me-1 text-muted"></i> ${pdv.name}</td>
+      <td class="text-center fw-semibold">${pdv.operators > 0 ? pdv.operators : '—'}</td>
+      <td class="text-center font-monospace">${pdv.salesCount}</td>
+      <td class="text-end fw-bold text-success font-monospace">R$ ${pdv.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-end text-muted font-monospace">R$ ${pdv.ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-center fs-xxs">${pdv.status}</td>
+      <td class="text-center">
+        <button class="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold" onclick="event.stopPropagation(); window.viewPDVDetail('${pdv.name}')">Detalhes</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-window.togglePDVStatus = function(id) {
-  const pdv = PDVS_DATA.find(p => p.id === id);
-  if (pdv) {
-    pdv.status = pdv.status === 'Aberto' ? 'Fechado' : 'Aberto';
-    if (pdv.status === 'Fechado') pdv.sales = 0.00;
-    renderPDVs();
-  }
-};
+function renderPDVCaixasTable() {
+  const tbody = document.getElementById('pdv-caixas-rows');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  CAIXAS_DATA.forEach(cx => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-bold text-primary font-monospace">${cx.id}</td>
+      <td>${cx.pdv}</td>
+      <td>${cx.operator}</td>
+      <td class="text-center fs-xxs">${cx.status}</td>
+      <td class="text-center font-monospace">${cx.sales}</td>
+      <td class="text-end fw-bold font-monospace text-dark">R$ ${cx.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-center">
+        <button class="btn btn-xs btn-outline-warning py-0 px-1" onclick="window.sangriaPDVCaixa('${cx.id}')">Sangria</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-window.sangriaPDV = function(id) {
-  const pdv = PDVS_DATA.find(p => p.id === id);
-  if (pdv) {
-    const amountStr = prompt(`Informe o valor da sangria para o caixa do PDV "${pdv.name}":`);
-    if (amountStr === null) return;
-    const amount = parseFloat(amountStr);
-    if (isNaN(amount) || amount <= 0 || amount > pdv.sales) {
-      alert("Valor inválido! Insira um valor maior que zero e menor ou igual ao saldo de vendas.");
-      return;
+function renderPDVConciliationTable() {
+  const tbody = document.getElementById('pdv-conciliation-rows');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  PDVS_DATA.forEach(pdv => {
+    if (pdv.name === "Venda Online") return; // Keep only physical matching the model
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-semibold text-dark">${pdv.name}</td>
+      <td class="text-end font-monospace">R$ ${pdv.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-end font-monospace">R$ ${pdv.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-end font-monospace text-success">R$ 0,00</td>
+      <td class="text-center text-success"><i class="ph-check-circle-fill"></i></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderPDVPaymethodsTable() {
+  const tbody = document.getElementById('pdv-paymethods-rows');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  PAYMETHODS_DATA.forEach(pm => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="fw-semibold text-dark">${pm.method}</td>
+      <td class="text-center font-monospace">${pm.count}</td>
+      <td class="text-end font-monospace text-dark fw-bold">R$ ${pm.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+      <td class="text-end font-monospace text-primary fw-semibold">${pm.share}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderPDVPaymethodsChart() {
+  const ctxEl = document.getElementById('c-pdv-paymethods-chart');
+  if (!ctxEl) return;
+  const ctx = ctxEl.getContext('2d');
+  if (!ctx) return;
+  
+  if (window.pdvPaymethodsChart) {
+    window.pdvPaymethodsChart.destroy();
+  }
+  
+  window.pdvPaymethodsChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Crédito', 'PIX', 'Débito', 'Dinheiro'],
+      datasets: [{
+        data: [86540.00, 64280.00, 22630.00, 11400.00],
+        backgroundColor: ['#3b82f6', '#f59e0b', '#06b6d4', '#10b981'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { boxWidth: 10, font: { size: 9 } }
+        }
+      }
     }
-    pdv.sales -= amount;
-    alert(`Sangria de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} efetuada com sucesso!`);
-    renderPDVs();
+  });
+}
+
+window.viewPDVDetail = function(pdvName) {
+  const pdv = PDVS_DATA.find(p => p.name === pdvName);
+  if (!pdv) return;
+  
+  const title = document.getElementById('pdv-detail-title');
+  const revenue = document.getElementById('pdv-detail-revenue');
+  const sold = document.getElementById('pdv-detail-sold');
+  const pix = document.getElementById('pdv-detail-pix');
+  const credit = document.getElementById('pdv-detail-credit');
+  const debit = document.getElementById('pdv-detail-debit');
+  const cash = document.getElementById('pdv-detail-cash');
+  const cancel = document.getElementById('pdv-detail-cancel');
+  const refund = document.getElementById('pdv-detail-refund');
+  const estornoRow = document.getElementById('pdv-detail-estorno-row');
+  const caixas = document.getElementById('pdv-detail-caixas');
+  const time = document.getElementById('pdv-detail-time');
+  
+  if (title) title.textContent = pdv.name;
+  if (revenue) revenue.textContent = `R$ ${pdv.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (sold) sold.textContent = pdv.salesCount;
+  if (pix) pix.textContent = `R$ ${pdv.pix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (credit) credit.textContent = `R$ ${pdv.credit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (debit) debit.textContent = `R$ ${pdv.debit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (cash) cash.textContent = `R$ ${pdv.cash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (cancel) cancel.textContent = `R$ ${pdv.cancel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (refund) refund.textContent = `R$ ${pdv.refund.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (caixas) caixas.textContent = pdv.caixas > 0 ? pdv.caixas : '—';
+  if (time) time.textContent = pdv.time;
+  
+  if (estornoRow) {
+    estornoRow.style.display = pdv.refund > 0 ? 'flex' : 'none';
   }
 };
 
+window.sangriaPDVCaixa = function(cxId) {
+  const cx = CAIXAS_DATA.find(c => c.id === cxId);
+  if (!cx) return;
+  const amountStr = prompt(`Informe o valor da sangria para o Caixa "${cx.id}" (${cx.operator}):`, "1000.00");
+  if (amountStr === null) return;
+  const amount = parseFloat(amountStr);
+  if (isNaN(amount) || amount <= 0 || amount > cx.value) {
+    alert("Valor inválido! Insira um valor maior que zero e menor ou igual ao acumulado em caixa.");
+    return;
+  }
+  
+  cx.value -= amount;
+  
+  // Find associated PDV and decrease cash
+  const pdv = PDVS_DATA.find(p => p.name === cx.pdv);
+  if (pdv) {
+    pdv.cash = Math.max(0, pdv.cash - amount);
+    pdv.revenue -= amount;
+  }
+  
+  alert(`Sangria de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} efetuada no Caixa ${cx.id}!`);
+  initPDVFinanceiroModule();
+};
+
+window.simulatePDVSale = function() {
+  // Choose random PDV
+  const activePdvs = PDVS_DATA.filter(p => p.name !== "Venda Online");
+  const pdv = activePdvs[Math.floor(Math.random() * activePdvs.length)];
+  
+  // Choose payment method
+  const methods = ['Crédito', 'PIX', 'Débito', 'Dinheiro'];
+  const method = methods[Math.floor(Math.random() * methods.length)];
+  
+  const ticketVal = parseFloat((Math.random() * 50 + 30).toFixed(2));
+  
+  // Update PDV dataset
+  pdv.salesCount += 1;
+  pdv.revenue += ticketVal;
+  pdv.ticket = parseFloat((pdv.revenue / pdv.salesCount).toFixed(2));
+  
+  if (method === 'Crédito') {
+    pdv.credit += ticketVal;
+    PAYMETHODS_DATA[0].count += 1;
+    PAYMETHODS_DATA[0].value += ticketVal;
+  } else if (method === 'PIX') {
+    pdv.pix += ticketVal;
+    PAYMETHODS_DATA[1].count += 1;
+    PAYMETHODS_DATA[1].value += ticketVal;
+  } else if (method === 'Débito') {
+    pdv.debit += ticketVal;
+    PAYMETHODS_DATA[2].count += 1;
+    PAYMETHODS_DATA[2].value += ticketVal;
+  } else {
+    pdv.cash += ticketVal;
+    PAYMETHODS_DATA[3].count += 1;
+    PAYMETHODS_DATA[3].value += ticketVal;
+  }
+  
+  // Update a random Caixa of that PDV
+  const caixas = CAIXAS_DATA.filter(c => c.pdv === pdv.name);
+  if (caixas.length > 0) {
+    const cx = caixas[Math.floor(Math.random() * caixas.length)];
+    cx.sales += 1;
+    cx.value += ticketVal;
+  }
+  
+  // Log message
+  const logEl = document.getElementById('pdv-simulation-log');
+  if (logEl) {
+    logEl.innerHTML = `<span class="text-success"><i class="ph-circle-fill fs-xxs"></i> [Simulação]</span> Venda de R$ ${ticketVal.toFixed(2)} no PDV "${pdv.name}" via ${method}.`;
+  }
+  
+  // Re-run indicators & renders
+  initPDVFinanceiroModule();
+  window.viewPDVDetail(pdv.name);
+
+  // Flash row to indicate update
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#pdv-executive-rows tr');
+    rows.forEach(r => {
+      if (r.cells[0] && r.cells[0].textContent.includes(pdv.name)) {
+        r.classList.add('flash-update');
+        setTimeout(() => {
+          r.classList.remove('flash-update');
+        }, 800);
+      }
+    });
+  }, 50);
+};
+
+function updatePDVTotalIndicators() {
+  let totalRevenue = 0;
+  let totalSold = 0;
+  let totalPix = 0;
+  let totalCards = 0;
+  let totalCash = 0;
+  let totalCancel = 0;
+  let totalRefund = 0;
+  
+  PDVS_DATA.forEach(p => {
+    totalRevenue += p.revenue;
+    totalSold += p.salesCount;
+    totalPix += p.pix;
+    totalCards += (p.credit + p.debit);
+    totalCash += p.cash;
+    totalCancel += p.cancel;
+    totalRefund += p.refund;
+  });
+  
+  const revenueEl = document.getElementById('pdv-kpi-revenue');
+  const soldEl = document.getElementById('pdv-kpi-sold');
+  const ticketEl = document.getElementById('pdv-kpi-ticket');
+  const pixEl = document.getElementById('pdv-kpi-pix');
+  const cardsEl = document.getElementById('pdv-kpi-cards');
+  const cashEl = document.getElementById('pdv-kpi-cash');
+  const cancelEl = document.getElementById('pdv-kpi-cancel');
+  const refundsEl = document.getElementById('pdv-kpi-refunds');
+  
+  if (revenueEl) revenueEl.textContent = `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (soldEl) soldEl.textContent = totalSold.toLocaleString('pt-BR');
+  if (ticketEl) ticketEl.textContent = `R$ ${(totalRevenue / totalSold).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (pixEl) pixEl.textContent = `R$ ${totalPix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (cardsEl) cardsEl.textContent = `R$ ${totalCards.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (cashEl) cashEl.textContent = `R$ ${totalCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (cancelEl) cancelEl.textContent = `R$ ${totalCancel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (refundsEl) refundsEl.textContent = `R$ ${totalRefund.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  
+  // Re-calculate paymethod percentages
+  const grandTotalPay = PAYMETHODS_DATA.reduce((sum, item) => sum + item.value, 0);
+  PAYMETHODS_DATA.forEach(item => {
+    item.share = `${((item.value / grandTotalPay) * 100).toFixed(2)}%`.replace('.', ',');
+  });
+}
+
+// Keep backwards-compatibility for existing references
 window.addNewPDV = function() {
-  const name = prompt("Nome do Ponto de Venda (PDV):");
-  if (!name) return;
-  const operator = prompt("Nome do Operador Responsável:");
-  if (!operator) return;
+  openModal('add-new-pdv-modal');
+};
+
+window.saveNewCompletePDV = function(e) {
+  if (e) e.preventDefault();
+  
+  const name = document.getElementById('add-pdv-name').value;
+  const ops = parseInt(document.getElementById('add-pdv-ops').value) || 1;
+  const caixasCount = parseInt(document.getElementById('add-pdv-caixas').value) || 1;
+  const operator = document.getElementById('add-pdv-operator-name').value;
+  const status = document.getElementById('add-pdv-status').value;
+  const time = document.getElementById('add-pdv-time').value;
+  
+  const pix = parseFloat(document.getElementById('add-pdv-pix').value) || 0;
+  const credit = parseFloat(document.getElementById('add-pdv-credit').value) || 0;
+  const debit = parseFloat(document.getElementById('add-pdv-debit').value) || 0;
+  const cash = parseFloat(document.getElementById('add-pdv-cash').value) || 0;
+  
+  const totalRev = pix + credit + debit + cash;
+  
+  // Calculate a simulated average salesCount based on ticket
+  const simulatedSales = Math.max(1, Math.round(totalRev / 54.00)) || 0;
+  const ticket = simulatedSales > 0 ? parseFloat((totalRev / simulatedSales).toFixed(2)) : 0.00;
+  
+  // 1. Add to PDVS_DATA
   PDVS_DATA.push({
     id: Date.now(),
     name: name,
-    operator: operator,
-    status: "Aberto",
-    sales: 0.00
+    operators: ops,
+    salesCount: simulatedSales,
+    revenue: totalRev,
+    ticket: ticket,
+    status: status,
+    pix: pix,
+    credit: credit,
+    debit: debit,
+    cash: cash,
+    cancel: 0.00,
+    refund: 0.00,
+    caixas: caixasCount,
+    time: time
   });
-  renderPDVs();
+  
+  // 2. Add to CAIXAS_DATA
+  CAIXAS_DATA.push({
+    id: `CX-${Math.floor(Math.random() * 900 + 100)}`,
+    pdv: name,
+    operator: operator,
+    status: status,
+    sales: simulatedSales,
+    value: totalRev
+  });
+  
+  // 3. Accumulate to global PAYMETHODS_DATA
+  PAYMETHODS_DATA[0].count += Math.round(simulatedSales * 0.45);
+  PAYMETHODS_DATA[0].value += credit;
+  
+  PAYMETHODS_DATA[1].count += Math.round(simulatedSales * 0.35);
+  PAYMETHODS_DATA[1].value += pix;
+  
+  PAYMETHODS_DATA[2].count += Math.round(simulatedSales * 0.15);
+  PAYMETHODS_DATA[2].value += debit;
+  
+  PAYMETHODS_DATA[3].count += Math.round(simulatedSales * 0.05);
+  PAYMETHODS_DATA[3].value += cash;
+  
+  // Reset Form & UI
+  alert(`PDV Completo "${name}" cadastrado com sucesso!`);
+  closeModal('add-new-pdv-modal');
+  document.getElementById('modal-add-new-pdv-form').reset();
+  
+  // Refresh UI
+  initPDVFinanceiroModule();
+  window.viewPDVDetail(name);
 };
 
 // --- 6.2 REFUNDS / CDC MODULE ---
@@ -6386,48 +7429,660 @@ window.addNewCustomPay = function() {
   renderCustomPayRules();
 };
 
-// --- 6.5 OPERATORS & SMART GATEWAY ROUTING ---
-let OPERATORS_DATA = [
-  { id: "stone", name: "Stone Pagamentos", approval: 92.4, volume: 154300.00, mdr: "2.10%", status: "Ativo" },
-  { id: "cielo", name: "Cielo S.A.", approval: 89.1, volume: 92100.00, mdr: "2.35%", status: "Ativo" },
-  { id: "rede", name: "Rede Card", approval: 90.5, volume: 43200.00, mdr: "2.20%", status: "Ativo" },
-  { id: "pagseguro", name: "PagSeguro", approval: 87.8, volume: 12400.00, mdr: "2.50%", status: "Ativo" }
-];
+// --- 6.5 GATEWAY DE PAGAMENTOS (ERP GRADE CONFIG) ---
+window.gatewayTab = 'config';
 
-window.primaryGateway = "stone";
-window.secondaryGateway = "cielo";
+window.addNewGatewayProvider = function(e) {
+  if (e) e.preventDefault();
+  
+  const name = document.getElementById('new-gw-name').value;
+  const fee = parseFloat(document.getElementById('new-gw-fee').value).toFixed(2);
+  const settlement = document.getElementById('new-gw-settlement').value;
+  
+  const selectEl = document.getElementById('gw-main-provider');
+  if (selectEl) {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = `${name} (Taxa ${fee}%) - ${settlement}`;
+    selectEl.appendChild(opt);
+    selectEl.value = name;
+  }
+  
+  alert(`Gateway "${name}" adicionado com sucesso e selecionado como canal ativo!`);
+  closeModal('add-new-gateway-modal');
+  document.getElementById('modal-add-new-gateway-form').reset();
+};
 
-function renderOperators() {
-  const tbody = document.getElementById('operators-table-body');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  OPERATORS_DATA.forEach(op => {
-    let nameHtml = op.name;
-    if (op.id === window.primaryGateway) {
-      nameHtml += ` <span class="badge bg-success ms-2 font-monospace" style="font-size: 9px; padding: 2px 4px;">[PRINCIPAL]</span>`;
-    } else if (op.id === window.secondaryGateway) {
-      nameHtml += ` <span class="badge bg-warning text-dark ms-2 font-monospace" style="font-size: 9px; padding: 2px 4px;">[BACKUP]</span>`;
+function switchGatewayTab(e, tabId) {
+  if (e) e.preventDefault();
+  
+  // Update sidebar active classes
+  const links = document.querySelectorAll('#gateway-menu-list .nav-link');
+  links.forEach(l => {
+    l.classList.remove('active', 'fw-bold', 'text-dark');
+    l.classList.add('text-muted');
+  });
+
+  const activeLink = Array.from(links).find(l => {
+    const onclickAttr = l.getAttribute('onclick');
+    return onclickAttr && onclickAttr.includes(`'${tabId}'`);
+  });
+  if (activeLink) {
+    activeLink.classList.add('active', 'fw-bold', 'text-dark');
+    activeLink.classList.remove('text-muted');
+  }
+
+  // Hide/Show tab panes
+  const panes = document.querySelectorAll('.gateway-tab-pane');
+  panes.forEach(p => p.style.display = 'none');
+  
+  const activePane = document.getElementById(`gw-tab-${tabId}`);
+  if (activePane) {
+    activePane.style.display = 'block';
+  }
+
+  // Render charts if tab is reports
+  if (tabId === 'reports') {
+    setTimeout(renderGatewayCharts, 50);
+  }
+}
+window.switchGatewayTab = switchGatewayTab;
+
+window.toggleGatewayEnv = function(env) {
+  // Sync the radios
+  const globalProd = document.getElementById('gw-env-prod');
+  const globalSand = document.getElementById('gw-env-sandbox');
+  const tab1Prod = document.getElementById('gw-config-env');
+  const tab1Sand = document.getElementById('gw-config-env'); // In our HTML we have select, not radio
+  
+  if (env === 'production') {
+    if (globalProd) globalProd.checked = true;
+    const configEnv = document.getElementById('gw-config-env');
+    if (configEnv) configEnv.value = 'production';
+  } else {
+    if (globalSand) globalSand.checked = true;
+    const configEnv = document.getElementById('gw-config-env');
+    if (configEnv) configEnv.value = 'sandbox';
+  }
+  
+  alert(`Ambiente alterado para: ${env.toUpperCase()}`);
+};
+
+window.testGatewayConnection = function() {
+  alert("Testando conexão com o Gateway de Pagamentos...\n\nStatus: Conectado com sucesso!\nTempo de Resposta: 480ms\nVersão API: v2.8");
+};
+
+window.onGatewayProviderChange = function(providerName) {
+  alert(`Gateway principal alterado para: ${providerName}\nAs taxas e MDR médios foram reajustados.`);
+};
+
+window.saveGatewayGeneralConfig = function() {
+  alert("Configurações Gerais de Gateway salvas com sucesso!");
+};
+
+window.saveGatewayCredentials = function() {
+  alert("Credenciais do Gateway criptografadas e salvas com sucesso no chaveiro de segurança!");
+};
+
+window.testGatewayAPI = function() {
+  alert("Enviando requisição de teste para API (POST /v2.8/status)...\n\nHTTP status: 200 OK\nPayload validado.");
+};
+
+window.validateGatewayCredentials = function() {
+  alert("Validando chaves de assinatura de Webhooks e API Tokens...\n\nChaves válidas!");
+};
+
+window.saveGatewayCards = function() {
+  alert("Bandeiras ativas salvas!");
+};
+
+window.saveGatewayInstallments = function() {
+  alert("Regras de Parcelamento e Juros salvas com sucesso!");
+};
+
+window.saveGatewayPIX = function() {
+  const pixKey = document.getElementById('pix-key-val').value;
+  alert(`Configuração PIX atualizada!\nChave cadastrada: ${pixKey}`);
+};
+
+window.saveGatewayBoletos = function() {
+  alert("Configuração de emissão de boletos salva com sucesso!");
+};
+
+window.saveGatewayAntifraud = function() {
+  alert("Regras de Antifraude e Blacklist aplicadas com sucesso!");
+};
+
+window.addGatewayWebhook = function() {
+  const url = prompt("Digite a URL de retorno para o novo webhook:", "https://erp.diskingressos.com.br/api/custom-webhook");
+  if (url) {
+    const tbody = document.getElementById('gw-webhooks-table-body');
+    if (tbody) {
+      const row = `
+        <tr>
+          <td class="fw-semibold">Evento Customizado</td>
+          <td><code style="font-size: 11px;">${url}</code></td>
+          <td><span class="text-success"><i class="ph-check-bold"></i> Ativo</span></td>
+          <td class="text-end">
+            <button class="btn btn-xs btn-outline-secondary py-0.5 px-1.5" onclick="window.testWebhook('custom.event')">Testar</button>
+            <button class="btn btn-xs btn-outline-danger py-0.5 px-1.5" onclick="window.deleteWebhook(this)">Excluir</button>
+          </td>
+        </tr>
+      `;
+      tbody.insertAdjacentHTML('beforeend', row);
+      alert("Webhook adicionado com sucesso!");
     }
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="fw-bold text-dark">${nameHtml}</td>
-      <td class="fw-bold text-success">${op.approval}%</td>
-      <td class="font-monospace fw-bold">R$ ${op.volume.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-      <td>${op.mdr}</td>
-      <td><span class="badge bg-success">${op.status}</span></td>
+  }
+};
+
+window.testWebhook = function(eventName) {
+  alert(`Disparando simulação de payload de teste para o evento: "${eventName}"...\n\nWebhook entregue (HTTP 200).`);
+};
+
+window.deleteWebhook = function(btn) {
+  if (confirm("Deseja realmente excluir este Webhook?")) {
+    const row = btn.closest('tr');
+    if (row) row.remove();
+  }
+};
+
+window.runConciliationNow = function() {
+  alert("Iniciando varredura de extratos eletrônicos nas adquirentes...\n\nProcessamento completo! Nenhuma nova divergência encontrada.");
+};
+
+window.exportConciliationExcel = function() {
+  alert("Exportando demonstrativo de conciliação bancária em formato EXCEL (.xlsx)...");
+};
+
+window.exportConciliationPDF = function() {
+  alert("Gerando PDF do demonstrativo consolidado de conciliação bancária...");
+};
+
+window.triggerNewRefund = function() {
+  const pedido = prompt("Digite o número do pedido para estorno:", "#15254");
+  if (pedido) {
+    const valor = prompt("Digite o valor a ser estornado (ou deixe vazio para estorno total):", "120,00");
+    if (valor) {
+      alert(`Solicitação de estorno enviada com sucesso para a operadora!\nPedido: ${pedido} - Valor: R$ ${valor}\nStatus: Processado.`);
+    }
+  }
+};
+
+// 1. CONFIGURAÇÕES ADICIONAIS
+window.setGatewayActiveStatus = function(active) {
+  const statusEl = document.getElementById('gw-config-status');
+  if (statusEl) {
+    statusEl.value = active ? 'ativo' : 'inativo';
+  }
+  const badge = document.getElementById('gw-header-status-badge');
+  const footerLabel = document.getElementById('gw-footer-status-label');
+  if (active) {
+    if (badge) {
+      badge.className = 'badge bg-success bg-opacity-10 text-success fw-bold me-1';
+      badge.innerHTML = '<i class="ph-circle-fill me-1 fs-xxs"></i>Online';
+    }
+    if (footerLabel) {
+      footerLabel.className = 'text-success fw-bold';
+      footerLabel.innerHTML = '<i class="ph-circle-fill me-1 fs-xxs"></i>Online';
+    }
+    alert("Gateway de Pagamento ATIVADO!");
+  } else {
+    if (badge) {
+      badge.className = 'badge bg-danger bg-opacity-10 text-danger fw-bold me-1';
+      badge.innerHTML = '<i class="ph-circle-fill me-1 fs-xxs"></i>Offline';
+    }
+    if (footerLabel) {
+      footerLabel.className = 'text-danger fw-bold';
+      footerLabel.innerHTML = '<i class="ph-circle-fill me-1 fs-xxs"></i>Offline';
+    }
+    alert("Gateway de Pagamento DESATIVADO!");
+  }
+};
+
+window.restoreGatewayDefaults = function() {
+  const companyEl = document.getElementById('gw-config-company');
+  const branchEl = document.getElementById('gw-config-branch');
+  const timeoutEl = document.getElementById('gw-config-timeout');
+  const urlEl = document.getElementById('gw-config-url');
+  const webhookEl = document.getElementById('gw-config-webhook');
+  
+  if (companyEl) companyEl.value = "DiskIngressos Entretenimento S.A.";
+  if (branchEl) branchEl.value = "Filial Curitiba Centro";
+  if (timeoutEl) timeoutEl.value = "30";
+  if (urlEl) urlEl.value = "https://api.mercadopago.com/v1";
+  if (webhookEl) webhookEl.value = "https://erp.diskingressos.com.br/api/gateway/callback";
+  alert("Configurações originais restauradas!");
+};
+
+// 2. CREDENCIAIS ADICIONAIS
+window.generateNewAPIToken = function() {
+  const rand = Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const privateToken = document.getElementById('gw-private-token');
+  if (privateToken) {
+    privateToken.value = rand;
+    alert(`Novo token gerado: ${rand}`);
+  }
+};
+
+window.copyPrivateAPIToken = function() {
+  const privateToken = document.getElementById('gw-private-token');
+  if (privateToken && privateToken.value) {
+    navigator.clipboard.writeText(privateToken.value).then(() => {
+      alert("Token Privado copiado para a área de transferência!");
+    }).catch(() => {
+      alert("Copiado: " + privateToken.value);
+    });
+  } else {
+    alert("Nenhum token gerado para copiar.");
+  }
+};
+
+// 3. CARTÕES ACEITOS ADICIONAIS
+window.setGatewayCardChecks = function(checked) {
+  const items = document.querySelectorAll('.brand-check-item');
+  items.forEach(it => it.checked = checked);
+  alert(checked ? "Todas as bandeiras selecionadas!" : "Todas as bandeiras desmarcadas!");
+};
+
+window.updateGatewayBrandsTable = function() {
+  const tbody = document.getElementById('gw-cards-table-body');
+  if (tbody) {
+    tbody.innerHTML = '';
+    const brands = ['Visa', 'Mastercard', 'Elo', 'Amex', 'Hipercard', 'Diners', 'Discover', 'Cabal'];
+    brands.forEach(br => {
+      const isChecked = document.getElementById('c-' + br.toLowerCase())?.checked;
+      if (isChecked) {
+        tbody.innerHTML += `
+          <tr>
+            <td class="fw-bold">${br}</td>
+            <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+            <td><span class="text-success"><i class="ph-check-bold"></i> Sim</span></td>
+            <td><span class="badge bg-success bg-opacity-10 text-success">Ativo</span></td>
+          </tr>
+        `;
+      }
+    });
+  }
+  alert("Lista de bandeiras atualizada com sucesso!");
+};
+
+// 4. PIX ADICIONAIS
+window.generatePixQRCodeDemo = function() {
+  alert("QR Code Dinâmico do PIX gerado para o teste!\nPayload: " + document.getElementById('pix-copiapaste').value);
+};
+
+window.testPixTransaction = function() {
+  alert("Transação PIX Simulada!\nStatus: Pago instantaneamente.");
+};
+
+window.consultPixStatus = function() {
+  alert("Consulta PIX: Transação pendente de pagamento.");
+};
+
+window.cancelPixTransaction = function() {
+  alert("Transação PIX cancelada com sucesso.");
+};
+
+// 5. BOLETOS ADICIONAIS
+window.emitBoletoDemo = function() {
+  alert("Boleto emitido com sucesso!\nBanco: Banco do Brasil\nLinha Digitável: 00190.00009 02388.410007 00000.100017 9 99010000012000");
+};
+
+window.cancelBoletoDemo = function() {
+  alert("Boleto cancelado no banco emissor!");
+};
+
+window.downloadBoletoDemo = function() {
+  alert("Baixando PDF do boleto bancário...");
+};
+
+window.reemitBoletoDemo = function() {
+  alert("Boleto reemitido com nova data de vencimento!");
+};
+
+window.sendBoletoEmail = function() {
+  alert("Boleto enviado para o e-mail do comprador!");
+};
+
+// 6. PARCELAMENTO ADICIONAIS
+window.addInstallmentRow = function() {
+  const tbody = document.getElementById('gw-installment-table-rows');
+  if (tbody) {
+    const nextIdx = tbody.children.length + 1;
+    tbody.innerHTML += `
+      <tr>
+        <td>${nextIdx}x</td>
+        <td class="fw-bold text-danger">${(1.99 + nextIdx * 0.5).toFixed(2)}%</td>
+        <td class="text-center"><input type="checkbox" checked></td>
+        <td class="text-center"><input type="checkbox"></td>
+      </tr>
     `;
-    tbody.appendChild(tr);
+    alert("Nova regra de parcela adicionada!");
+  }
+};
+
+window.deleteInstallmentRow = function() {
+  const tbody = document.getElementById('gw-installment-table-rows');
+  if (tbody && tbody.children.length > 1) {
+    tbody.lastElementChild.remove();
+    alert("Última parcela removida.");
+  }
+};
+
+window.duplicateInstallmentConfig = function() {
+  alert("Configuração de parcelamento duplicada!");
+};
+
+// 7. ANTIFRAUDE ADICIONAIS
+window.testAntifraudAPI = function() {
+  alert("Enviando requisição de teste para ClearSale V3...\n\nHTTP status: 200 OK\nStatus da API: Online");
+};
+
+window.updateBlacklistData = function() {
+  alert("Lista de CPFs e Cartões bloqueados atualizada com sucesso!");
+};
+
+// 8. WEBHOOKS ADICIONAIS
+window.testWebhook = function(eventName) {
+  alert(`Disparando simulação de payload de teste para o evento: "${eventName}"...\n\nWebhook entregue (HTTP 200).`);
+};
+
+window.viewWebhookPayload = function(eventName) {
+  alert(`Payload JSON Simulado para "${eventName}":\n\n{\n  "event": "${eventName}",\n  "timestamp": "2026-07-15T10:00:00Z",\n  "data": {\n    "id": "pay_9284812",\n    "status": "approved",\n    "amount": 120.00\n  }\n}`);
+};
+
+window.resendWebhookEvent = function(eventName) {
+  alert(`Reenviando evento "${eventName}" para o endpoint cadastrado...\n\nStatus: Reentregue com sucesso.`);
+};
+
+// 9. CONCILIAÇÃO ADICIONAIS
+window.reconcileRow = function(btn) {
+  const row = btn.closest('tr');
+  if (row) {
+    const statusCol = row.querySelector('.badge');
+    if (statusCol) {
+      statusCol.className = 'badge bg-success bg-opacity-10 text-success';
+      statusCol.textContent = 'Conciliado';
+    }
+    const diffCol = row.cells[5];
+    if (diffCol) {
+      diffCol.className = 'font-monospace text-success';
+      diffCol.textContent = 'R$ 0,00';
+    }
+    alert("Venda conciliada com sucesso!");
+  }
+};
+
+window.ignoreConciliationRow = function(btn) {
+  const row = btn.closest('tr');
+  if (row) {
+    const statusCol = row.querySelector('.badge');
+    if (statusCol) {
+      statusCol.className = 'badge bg-secondary bg-opacity-10 text-secondary';
+      statusCol.textContent = 'Ignorado';
+    }
+    alert("Divergência ignorada.");
+  }
+};
+
+window.exportConciliationExcel = function() {
+  alert("Exportando demonstrativo de conciliação bancária em formato EXCEL (.xlsx)...");
+};
+
+window.exportConciliationPDF = function() {
+  alert("Gerando PDF do demonstrativo consolidado de conciliação bancária...");
+};
+
+window.refreshConciliationData = function() {
+  alert("Dados de conciliação financeira recarregados.");
+};
+
+// 10. ESTORNOS ADICIONAIS
+window.triggerPartialRefund = function() {
+  const pedido = prompt("Digite o número do pedido para estorno parcial:", "#15255");
+  if (pedido) {
+    const valor = prompt("Digite o valor do estorno parcial:", "40,00");
+    if (valor) {
+      alert(`Estorno parcial de R$ ${valor} aprovado para o pedido ${pedido}!`);
+    }
+  }
+};
+
+window.cancelRefundDemo = function() {
+  alert("Solicitação de estorno cancelada.");
+};
+
+window.consultRefundStatus = function() {
+  alert("Status do estorno: Finalizado com sucesso.");
+};
+
+// 11. LOGS ADICIONAIS
+window.searchLogsData = function() {
+  alert("Filtrando logs de auditoria...");
+};
+
+window.clearLogFilters = function() {
+  alert("Filtros de log limpos.");
+};
+
+window.exportLogsCSV = function() {
+  alert("Exportando logs no formato CSV...");
+};
+
+window.downloadLogsJSON = function() {
+  alert("Baixando arquivo JSON de auditoria de logs...");
+};
+
+window.viewLogDetails = function(el) {
+  const row = el.closest('tr');
+  if (row) {
+    const eventName = row.cells[1].textContent;
+    alert(`Detalhes do Evento:\n\nEvento: ${eventName}\nPayload: ${row.cells[2].textContent}\nResposta API: ${row.cells[3]?.textContent || '200 OK'}`);
+  }
+};
+
+// 12. RELATÓRIOS ADICIONAIS
+window.exportReportsPDF = function() {
+  alert("Exportando relatório consolidado do Gateway de Pagamento em PDF...");
+};
+
+window.exportReportsExcel = function() {
+  alert("Exportando relatório consolidado do Gateway de Pagamento em EXCEL (.xlsx)...");
+};
+
+window.exportReportsCSV = function() {
+  alert("Exportando relatório em formato CSV...");
+};
+
+window.printReports = function() {
+  window.print();
+};
+
+window.refreshGatewayDashboard = function() {
+  renderGatewayCharts();
+  alert("Dashboard atualizado com sucesso!");
+};
+
+window.agendarRelatorio = function() {
+  alert("Relatório agendado com sucesso!");
+};
+
+window.enviarPorEmail = function() {
+  alert("Relatório enviado por e-mail com sucesso!");
+};
+
+// BARRA DE AÇÕES GLOBAL
+window.globalAction = function(action) {
+  switch (action) {
+    case 'novo':
+      alert('Iniciando cadastro de uma nova configuração de Gateway...');
+      break;
+    case 'editar':
+      alert('Edição de configurações habilitada.');
+      break;
+    case 'salvar':
+      alert('Salvando todas as configurações do painel de Gateways...');
+      break;
+    case 'cancelar':
+      alert('Alterações descartadas.');
+      break;
+    case 'excluir':
+      if (confirm('Tem certeza que deseja excluir esta configuração de Gateway?')) {
+        alert('Configuração excluída com sucesso.');
+      }
+      break;
+    case 'pesquisar':
+      alert('Exibindo filtros de pesquisa avançada...');
+      break;
+    case 'atualizar':
+      alert('Dados sincronizados com sucesso.');
+      break;
+    case 'importar':
+      alert('Selecione um arquivo JSON/XML para importar.');
+      break;
+    case 'exportar':
+      alert('Exportando configurações do Gateway (formato JSON)...');
+      break;
+    case 'historico':
+      alert('Exibindo log de alterações e auditoria de configurações.');
+      break;
+    case 'ajuda':
+      alert('Abrindo central de documentação e ajuda do Gateway.');
+      break;
+    default:
+      console.log('Action not mapped:', action);
+  }
+};
+
+// Charts
+window.gwCharts = {};
+
+function renderGatewayCharts() {
+  const chartConfigs = [
+    {
+      id: 'c-gw-payments-day',
+      type: 'line',
+      data: {
+        labels: ['05/07', '06/07', '07/07', '08/07', '09/07', '10/07'],
+        datasets: [{
+          label: 'Pagamentos (R$)',
+          data: [120000, 135000, 110000, 142000, 168000, 152320],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.05)',
+          tension: 0.2,
+          fill: true
+        }]
+      }
+    },
+    {
+      id: 'c-gw-app-neg',
+      type: 'bar',
+      data: {
+        labels: ['Aprovados', 'Negados'],
+        datasets: [{
+          data: [1245, 23],
+          backgroundColor: ['#10b981', '#ef4444']
+        }]
+      }
+    },
+    {
+      id: 'c-gw-card-brands',
+      type: 'doughnut',
+      data: {
+        labels: ['Visa', 'Mastercard', 'Elo', 'Outros'],
+        datasets: [{
+          data: [55, 30, 10, 5],
+          backgroundColor: ['#1e3a8a', '#ea580c', '#f59e0b', '#6b7280']
+        }]
+      }
+    },
+    {
+      id: 'c-gw-pix-card',
+      type: 'pie',
+      data: {
+        labels: ['PIX', 'Cartão', 'Boleto'],
+        datasets: [{
+          data: [430, 815, 203],
+          backgroundColor: ['#f59e0b', '#8b5cf6', '#06b6d4']
+        }]
+      }
+    },
+    {
+      id: 'c-gw-chargebacks',
+      type: 'line',
+      data: {
+        labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+        datasets: [{
+          label: 'Chargebacks',
+          data: [0, 1, 0, 0, 1, 0, 0],
+          borderColor: '#ef4444',
+          tension: 0.1
+        }]
+      }
+    },
+    {
+      id: 'c-gw-net-revenue',
+      type: 'bar',
+      data: {
+        labels: ['Mai', 'Jun', 'Jul'],
+        datasets: [{
+          label: 'Receita Bruta (R$)',
+          data: [1200000, 1400000, 1543200],
+          backgroundColor: '#10b981'
+        }]
+      }
+    },
+    {
+      id: 'c-gw-installments',
+      type: 'doughnut',
+      data: {
+        labels: ['1x', '2x-6x', '7x-12x'],
+        datasets: [{
+          data: [45, 35, 20],
+          backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899']
+        }]
+      }
+    },
+    {
+      id: 'c-gw-response-time',
+      type: 'line',
+      data: {
+        labels: ['10h', '11h', '12h', '13h', '14h'],
+        datasets: [{
+          label: 'API latency (ms)',
+          data: [450, 480, 520, 460, 480],
+          borderColor: '#06b6d4',
+          tension: 0.3
+        }]
+      }
+    }
+  ];
+
+  chartConfigs.forEach(conf => {
+    const el = document.getElementById(conf.id);
+    if (!el) return;
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+    if (window.gwCharts[conf.id]) {
+      window.gwCharts[conf.id].destroy();
+    }
+    window.gwCharts[conf.id] = new Chart(ctx, {
+      type: conf.type,
+      data: conf.data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: conf.type === 'doughnut' || conf.type === 'pie', labels: { font: { size: 8 } } }
+        },
+        scales: {
+          y: { display: conf.type !== 'doughnut' && conf.type !== 'pie', ticks: { font: { size: 7 } } },
+          x: { display: conf.type !== 'doughnut' && conf.type !== 'pie', ticks: { font: { size: 7 } } }
+        }
+      }
+    });
   });
 }
-
-window.saveGatewayConfig = function(e) {
-  if (e) e.preventDefault();
-  window.primaryGateway = document.getElementById('gw-primary').value;
-  window.secondaryGateway = document.getElementById('gw-secondary').value;
-  renderOperators();
-  alert("Configurações do Gateway salvas e Roteamento Inteligente de Custos aplicado com sucesso!");
-  closeModal('gateway-config');
-};
 
 // --- 6.6 ADVANCED MODULE MANAGEMENT ---
 let ADVANCED_RECEBER = [
@@ -6538,3 +8193,13 @@ window.payExpense = function(id) {
     }
   }
 };
+
+// Global Window exposures for inline HTML handlers (type="module" scoping workaround)
+window.switchActiveView = switchActiveView;
+window.selectRepasseBankCard = selectRepasseBankCard;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.createUiCard = createUiCard;
+window.createUiTable = createUiTable;
+window.createUiModal = createUiModal;
+window.createUiChart = createUiChart;

@@ -2,11 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-const projectDir = __dirname;
+const projectDir = path.join(__dirname, '..', '..');
 
 const bootstrapCode = fs.readFileSync(path.join(projectDir, 'assets', 'js', 'bootstrap', 'bootstrap.bundle.min.js'), 'utf8');
 const limitlessAppCode = fs.readFileSync(path.join(projectDir, 'limitless_assets', 'js', 'app.js'), 'utf8');
-const appCode = fs.readFileSync(path.join(projectDir, 'app.js'), 'utf8');
+const appCode = fs.readFileSync(path.join(projectDir, 'src', 'app.js'), 'utf8');
 
 const html = fs.readFileSync(path.join(projectDir, 'index.html'), 'utf8');
 
@@ -27,7 +27,13 @@ window.Chart = function() {
 // Evaluate in order
 dom.window.eval(bootstrapCode);
 dom.window.eval(limitlessAppCode);
-dom.window.eval(appCode);
+// Strip ES imports for JSDOM eval
+const cleanAppCode = appCode.replace(/import\s+[^;]+;/g, '');
+window.createUiCard = () => window.document.createElement('div');
+window.createUiTable = () => window.document.createElement('div');
+window.createUiModal = () => window.document.createElement('div');
+window.createUiChart = () => null;
+dom.window.eval(cleanAppCode);
 
 console.log("Simulating DOMContentLoaded...");
 const event = new window.Event('DOMContentLoaded');

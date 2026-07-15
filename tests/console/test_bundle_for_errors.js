@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-const projectDir = 'C:\\Users\\vinad\\.gemini\\antigravity\\scratch\\creative-dashboard';
+const projectDir = path.join(__dirname, '..', '..');
 const htmlPath = path.join(projectDir, 'dist', 'index.html');
 
 // Find the JS file dynamically in dist/assets

@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM, VirtualConsole } = require('jsdom');
 
-const distDir = path.join(__dirname, 'dist');
+const projectDir = path.join(__dirname, '..', '..');
+const distDir = path.join(projectDir, 'dist');
 const htmlPath = path.join(distDir, 'index.html');
 
 if (!fs.existsSync(htmlPath)) {
