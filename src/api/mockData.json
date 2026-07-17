@@ -1,0 +1,627 @@
+{
+  "dashboard": {
+    "status": "OK",
+    "version": "1.0.5",
+    "environment": "development",
+    "lastSync": "2026-07-16T10:46:44-03:00",
+    "user": {
+      "email": "vinicius.casagrande@diskingressos.com.br",
+      "name": "Vinicius Casagrande",
+      "role": "Administrador Financeiro"
+    }
+  },
+  "cards": [
+    {
+      "id": "receita-total",
+      "title": "Receita Total",
+      "value": "R$ 443.346,90",
+      "change": "+12.4% vs mês anterior",
+      "icon": "ph-coins",
+      "trend": "up"
+    },
+    {
+      "id": "ingressos-vendidos",
+      "title": "Ingressos Vendidos",
+      "value": "3.426",
+      "change": "+8.2% vs mês anterior",
+      "icon": "ph-ticket",
+      "trend": "up"
+    },
+    {
+      "id": "ticket-medio",
+      "title": "Ticket Médio",
+      "value": "R$ 129,40",
+      "change": "+3.8% vs mês anterior",
+      "icon": "ph-calculator",
+      "trend": "up"
+    },
+    {
+      "id": "saques-pendentes",
+      "title": "Saques Pendentes",
+      "value": "R$ 10.000,00",
+      "change": "1 solicitação pendente",
+      "icon": "ph-clock-counter-clockwise",
+      "trend": "neutral"
+    }
+  ],
+  "graficos": {
+    "salesMonthly": {
+      "labels": [
+        "Jan",
+        "Fev",
+        "Mar",
+        "Abr",
+        "Mai",
+        "Jun",
+        "Jul"
+      ],
+      "data": [
+        12000,
+        14500,
+        11000,
+        15200,
+        19000,
+        17800,
+        20721
+      ]
+    },
+    "accessDaily": {
+      "labels": [
+        "Seg",
+        "Ter",
+        "Qua",
+        "Qui",
+        "Sex",
+        "Sáb",
+        "Dom"
+      ],
+      "data": [
+        640,
+        810,
+        780,
+        920,
+        1100,
+        1400,
+        1200
+      ]
+    }
+  },
+  "kpis": {
+    "paymentsToday": 152320,
+    "approvedCount": 1245,
+    "deniedCount": 23,
+    "chargebacks": 2,
+    "pixCount": 430,
+    "cardCount": 815,
+    "approvalRate": 98.12
+  },
+  "fluxo-caixa": {
+    "receber": [
+      {
+        "id": 1,
+        "name": "Lucas Ferreira",
+        "event": "Teatro Guaíra Tour",
+        "value": 3400,
+        "status": "Pago"
+      },
+      {
+        "id": 2,
+        "name": "Clara Mendes",
+        "event": "Show Deive Leonardo",
+        "value": 1200,
+        "status": "Pago"
+      },
+      {
+        "id": 3,
+        "name": "Rodrigo Alencar",
+        "event": "Festival Rock & Art",
+        "value": 5800,
+        "status": "Atrasado"
+      }
+    ],
+    "pagar": [
+      {
+        "id": 1,
+        "vendor": "Som & Luz Equipamentos",
+        "value": 4500,
+        "due": "2026-07-20"
+      },
+      {
+        "id": 2,
+        "vendor": "Segurança SegTotal",
+        "value": 2300,
+        "due": "2026-07-18"
+      },
+      {
+        "id": 3,
+        "vendor": "Limpeza CleanEvent",
+        "value": 1200,
+        "due": "2026-07-22"
+      }
+    ],
+    "resumo": {
+      "totalReceber": 10400,
+      "totalPagar": 8000,
+      "saldoPrevisto": 2400
+    }
+  },
+  "previsoes": {
+    "previsaoReceitaProximoMes": "R$ 498.500,00",
+    "crescimentoEstimado": "12.5%",
+    "roiEstimado": "18.84%",
+    "insights": [
+      "O canal de vendas PIX continua crescendo rápido e pode atingir 50% do share de volume até o final do trimestre.",
+      "Recomendamos antecipar os recebíveis do evento 'Festival Rock & Art' para cobrir as despesas previstas de som e luz do dia 20.",
+      "A taxa de aprovação de cartões de crédito está excelente (98.12%), mas observe a incidência de chargebacks no Mercado Pago."
+    ]
+  },
+  "financeiro": {
+    "resumo": {
+      "saldoTotal": 312090.5,
+      "saldoDisponivel": 247550,
+      "saldoBloqueado": 64540.5,
+      "previsaoProximoPayout": "2026-07-25"
+    },
+    "saldos": {
+      "bancoDoBrasil": 145000,
+      "itau": 85000,
+      "carteiraVirtual": 18000,
+      "gatewayPendente": 64540.5
+    },
+    "movimentos": [
+      {
+        "id": 1,
+        "descricao": "Venda Ingresso ID.3368",
+        "tipo": "receita",
+        "valor": 150,
+        "data": "2026-07-16",
+        "status": "Pago",
+        "categoria": "Vendas"
+      },
+      {
+        "id": 2,
+        "descricao": "Serviço de Som & Luz",
+        "tipo": "despesa",
+        "valor": 2500,
+        "data": "2026-07-15",
+        "status": "Pago",
+        "categoria": "Infraestrutura"
+      },
+      {
+        "id": 3,
+        "descricao": "Patrocínio Cervejaria",
+        "tipo": "receita",
+        "valor": 15000,
+        "data": "2026-07-14",
+        "status": "Pago",
+        "categoria": "Patrocínio"
+      },
+      {
+        "id": 4,
+        "descricao": "Taxa de Gateway",
+        "tipo": "despesa",
+        "valor": 45.5,
+        "data": "2026-07-16",
+        "status": "Pago",
+        "categoria": "Taxas"
+      },
+      {
+        "id": 5,
+        "descricao": "Aluguel Gerador",
+        "tipo": "despesa",
+        "valor": 1200,
+        "data": "2026-07-18",
+        "status": "Pendente",
+        "categoria": "Equipamentos"
+      },
+      {
+        "id": 6,
+        "descricao": "Contratação Coffee Break",
+        "tipo": "despesa",
+        "valor": 450,
+        "data": "2026-07-16",
+        "status": "Pendente",
+        "categoria": "Alimentação"
+      }
+    ]
+  },
+  "receber": [
+    {
+      "id": 1,
+      "descricao": "Venda Ingresso Teatro Guaíra",
+      "valor": 3400,
+      "status": "recebido",
+      "data": "2026-07-10",
+      "metodo": "pix"
+    },
+    {
+      "id": 2,
+      "descricao": "Patrocínio Cerveja Premium",
+      "valor": 15000,
+      "status": "recebido",
+      "data": "2026-07-20",
+      "metodo": "boleto"
+    },
+    {
+      "id": 3,
+      "descricao": "Venda Lote Promocional Show Deive",
+      "valor": 1200,
+      "status": "recebido",
+      "data": "2026-07-12",
+      "metodo": "cartao"
+    },
+    {
+      "id": 4,
+      "descricao": "Ingressos Festival Rock",
+      "valor": 5800,
+      "status": "cancelado",
+      "data": "2026-07-14",
+      "metodo": "cartao"
+    },
+    {
+      "id": 5,
+      "descricao": "Patrocínio Arena",
+      "valor": 45000,
+      "status": "recebido",
+      "data": "2026-07-16",
+      "metodo": "pix"
+    },
+    {
+      "id": 6,
+      "descricao": "Patrocínio Arena",
+      "valor": 45000,
+      "status": "recebido",
+      "data": "2026-07-16",
+      "metodo": "pix"
+    }
+  ],
+  "pagar": [
+    {
+      "id": 1,
+      "descricao": "Fornecedor de Som e Palco",
+      "valor": 4500,
+      "status": "pago",
+      "dataVencimento": "2026-07-20"
+    },
+    {
+      "id": 2,
+      "descricao": "Serviço de Segurança Noturna",
+      "valor": 2300,
+      "status": "pendente",
+      "dataVencimento": "2026-07-18"
+    },
+    {
+      "id": 3,
+      "descricao": "Equipe de Limpeza CleanEvent",
+      "valor": 1200,
+      "status": "cancelado",
+      "dataVencimento": "2026-07-22"
+    }
+  ],
+  "fluxocaixa": {
+    "diario": [
+      {
+        "data": "2026-07-16",
+        "entradas": 15150,
+        "saidas": 2995.5,
+        "saldo": 12154.5
+      }
+    ],
+    "mensal": [
+      {
+        "mes": "2026-07",
+        "entradas": 443346.9,
+        "saidas": 12450,
+        "saldo": 430896.9
+      }
+    ],
+    "projecao": [
+      {
+        "mes": "2026-08",
+        "entradas": 498500,
+        "saidas": 15000,
+        "saldo": 483500
+      }
+    ],
+    "lancamentos": []
+  },
+  "bancos": {
+    "list": [
+      {
+        "id": 1,
+        "nome": "Banco do Brasil",
+        "agencia": "1234-5",
+        "conta": "67890-1",
+        "saldo": 145000
+      },
+      {
+        "id": 2,
+        "nome": "Itaú Unibanco",
+        "agencia": "5678",
+        "conta": "12345-6",
+        "saldo": 85000
+      }
+    ],
+    "extrato": [
+      {
+        "id": 1,
+        "bancoId": 1,
+        "data": "2026-07-16",
+        "descricao": "PIX Recebido",
+        "valor": 150,
+        "tipo": "credito",
+        "conciliado": true
+      }
+    ],
+    "conciliacoes": []
+  },
+  "pix": {
+    "chaves": [
+      {
+        "id": 1,
+        "chave": "financeiro@diskingressos.com.br",
+        "tipo": "email",
+        "status": "ativo"
+      }
+    ],
+    "cobrancas": [],
+    "devolucoes": []
+  },
+  "cartoes": {
+    "transacoes": [
+      {
+        "id": 1,
+        "bandeira": "Visa",
+        "valor": 250,
+        "status": "aprovado",
+        "parcelas": 1
+      },
+      {
+        "id": 2,
+        "bandeira": "Mastercard",
+        "valor": 600,
+        "status": "aprovado",
+        "parcelas": 3
+      }
+    ],
+    "parcelamentos": [
+      {
+        "id": 1,
+        "transacaoId": 2,
+        "parcelas": 3,
+        "valorParcela": 200
+      }
+    ]
+  },
+  "clientes": [
+    {
+      "id": 1,
+      "nome": "Carlos Souza",
+      "email": "carlos.souza@gmail.com",
+      "telefone": "(41) 99999-1111",
+      "status": "ativo"
+    }
+  ],
+  "fornecedores": [
+    {
+      "id": 1,
+      "nome": "Fornecedor Som e Luz",
+      "cnpj": "12.345.678/0001-90",
+      "status": "ativo"
+    }
+  ],
+  "eventos": [
+    {
+      "id": 719,
+      "titulo": "Rock concert com Luciano Reis",
+      "receita": 71976.2,
+      "vendas": 450,
+      "repasses": 15000
+    }
+  ],
+  "repasses": [
+    {
+      "id": 1,
+      "eventoId": 719,
+      "valor": 15000,
+      "status": "Pendente",
+      "dataSolicitacao": "2026-07-15"
+    }
+  ],
+  "planocontas": [
+    {
+      "id": 1,
+      "codigo": "1.01",
+      "descricao": "Receita de Ingressos"
+    },
+    {
+      "id": 2,
+      "codigo": "2.01",
+      "descricao": "Despesas com Segurança"
+    }
+  ],
+  "centrocustos": [
+    {
+      "id": 1,
+      "nome": "Marketing"
+    },
+    {
+      "id": 2,
+      "nome": "Logística e Segurança"
+    }
+  ],
+  "dre": {
+    "mensal": [
+      {
+        "id": 1,
+        "mes": "2026-07",
+        "receitaBruta": 443346.9,
+        "deducoes": 44334.69,
+        "receitaLiquida": 399012.21,
+        "custos": 12450,
+        "resultado": 386562.21
+      }
+    ],
+    "anual": [
+      {
+        "id": 1,
+        "ano": 2026,
+        "receitaBruta": 2540300,
+        "deducoes": 254030,
+        "resultado": 2286270
+      }
+    ],
+    "comparativo": [
+      {
+        "periodo": "Q2 vs Q1",
+        "crescimento": 15.4
+      }
+    ]
+  },
+  "relatorios": {
+    "list": [
+      {
+        "id": 1,
+        "nome": "DRE Mensal Completo",
+        "formato": "PDF"
+      }
+    ]
+  },
+  "usuarios": [
+    {
+      "id": 1,
+      "nome": "Vinicius Casagrande",
+      "email": "vinicius.casagrande@diskingressos.com.br",
+      "cargo": "Administrador"
+    }
+  ],
+  "logs": {
+    "auditoria": [
+      {
+        "id": 1,
+        "usuario": "Vinicius Casagrande",
+        "acao": "Aprovou repasse ID 1",
+        "data": "2026-07-16T10:45:00Z"
+      }
+    ],
+    "login": [
+      {
+        "id": 1,
+        "usuario": "Vinicius Casagrande",
+        "ip": "192.168.1.50",
+        "data": "2026-07-16T10:00:00Z"
+      }
+    ]
+  },
+  "config": {
+    "email": {
+      "smtp": "smtp.gmail.com",
+      "porta": 587
+    },
+    "pix": {
+      "chavePadrao": "financeiro@diskingressos.com.br"
+    },
+    "bancos": {
+      "carteiraPadrao": 1
+    },
+    "firebase": {
+      "isConfigured": true
+    }
+  },
+  "uploads": [],
+  "integracoes": {
+    "meta": {
+      "connected": true,
+      "pixelId": "123456789",
+      "updatedAt": "2026-07-15"
+    },
+    "google": {
+      "connected": true,
+      "trackingId": "UA-998877-1",
+      "updatedAt": "2026-07-16"
+    },
+    "asaas": {
+      "connected": true,
+      "apiKey": "sec_asaas_...",
+      "updatedAt": "2026-07-10"
+    },
+    "mercadopago": {
+      "connected": true,
+      "accessToken": "APP_USR-...",
+      "updatedAt": "2026-07-12"
+    },
+    "pagarme": {
+      "connected": false,
+      "apiKey": "",
+      "updatedAt": ""
+    },
+    "stone": {
+      "connected": true,
+      "merchantId": "stone-9912",
+      "updatedAt": "2026-07-14"
+    },
+    "cielo": {
+      "connected": false,
+      "merchantKey": "",
+      "updatedAt": ""
+    }
+  },
+  "analytics": {
+    "faturamento": {
+      "total": 595667.4,
+      "chart": [
+        15000,
+        18500,
+        22000,
+        19200,
+        24000,
+        28000,
+        32000
+      ]
+    },
+    "receita": {
+      "total": 443346.9,
+      "chart": [
+        12000,
+        14500,
+        11000,
+        15200,
+        19000,
+        17800,
+        20721
+      ]
+    },
+    "despesas": {
+      "total": 12450,
+      "chart": [
+        1200,
+        1500,
+        1800,
+        1100,
+        2200,
+        2100,
+        2550
+      ]
+    },
+    "lucro": {
+      "total": 430896.9,
+      "chart": [
+        10800,
+        13000,
+        9200,
+        14100,
+        16800,
+        15700,
+        18171
+      ]
+    },
+    "comparativos": {
+      "yoyGrowth": 14.8,
+      "prevMonthGrowth": 12.4
+    },
+    "previsoes": {
+      "agosto": 498500,
+      "setembro": 520000
+    }
+  }
+}

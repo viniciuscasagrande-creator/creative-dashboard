@@ -327,11 +327,7 @@ function initApp() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
+
 
 /* ==========================================================================
    1. Navigation & Sidebar UI
@@ -8203,3 +8199,10 @@ window.createUiCard = createUiCard;
 window.createUiTable = createUiTable;
 window.createUiModal = createUiModal;
 window.createUiChart = createUiChart;
+
+// Initialize app after all scope variables and functions are defined
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}

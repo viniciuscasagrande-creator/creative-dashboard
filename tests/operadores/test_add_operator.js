@@ -21,7 +21,7 @@ JSDOM.fromFile(htmlPath, {
   resources: "usable",
   virtualConsole
 }).then((dom) => {
-  const assetsDir = path.join(__dirname, 'dist', 'assets');
+  const assetsDir = path.join(projectDir, 'dist', 'assets');
   let jsCode = '';
   if (fs.existsSync(assetsDir)) {
     const files = fs.readdirSync(assetsDir);

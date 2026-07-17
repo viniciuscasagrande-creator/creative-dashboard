@@ -22,7 +22,7 @@ JSDOM.fromFile(htmlPath, {
   virtualConsole
 }).then((dom) => {
   // Find and eval the bundled JS file to mock type="module" execution
-  const assetsDir = path.join(__dirname, 'dist', 'assets');
+  const assetsDir = path.join(projectDir, 'dist', 'assets');
   let jsCode = '';
   if (fs.existsSync(assetsDir)) {
     const files = fs.readdirSync(assetsDir);

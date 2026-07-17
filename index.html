@@ -28,10 +28,7 @@
     <link rel="stylesheet" href="src/styles.css?v=20260714">
 </head>
 <body>
-    <!-- Subtle System Status Badge -->
-    <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.85); color: #22c55e; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 10px; z-index: 999999; border: 1px solid #15803d; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
-        🟢 System: OK | Build: 1.0.5
-    </div>
+
     <!-- Main Top Navbar (Limitless navbar) -->
     <div class="navbar navbar-dark navbar-expand-lg navbar-static border-bottom border-bottom-white border-opacity-10">
         <div class="container-fluid">
@@ -222,25 +219,25 @@
                                 <span class="badge bg-success align-self-center rounded-pill ms-auto">19</span>
                             </a>
                             <ul class="nav-group-sub collapse">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance"><i class="ph-wallet me-2"></i> Saldo</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass"><i class="ph-hand-coins me-2"></i> Solicitar Repasse</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-advance"><i class="ph-trend-up me-2"></i> Antecipações</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-advanced"><i class="ph-presentation-chart me-2"></i> Financeiro Advanced</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-conciliation"><i class="ph-scales me-2"></i> Conciliação Bancária</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-spread"><i class="ph-percent me-2"></i> Financeiro Spread</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-simulator"><i class="ph-calculator me-2"></i> Simulador de Spread</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-split"><i class="ph-arrows-split me-2"></i> Split Financeiro</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-statement"><i class="ph-receipt me-2"></i> Extrato</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses"><i class="ph-trend-down me-2"></i> Despesas</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-accounts"><i class="ph-bank me-2"></i> Contas Bancárias</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-bordero"><i class="ph-signature me-2"></i> Borderô</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-pdv"><i class="ph-storefront me-2"></i> Pontos de Venda (PDV)</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-paymethods"><i class="ph-credit-card me-2"></i> Métodos de Pagamento</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-custompay"><i class="ph-gear me-2"></i> Pagamentos Customizados</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance" onclick="if(window.switchActiveView) { window.switchActiveView('financial-balance'); event.preventDefault(); }"><i class="ph-wallet me-2"></i> Saldo</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass" onclick="if(window.switchActiveView) { window.switchActiveView('financial-repass'); event.preventDefault(); }"><i class="ph-hand-coins me-2"></i> Solicitar Repasse</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-advance" onclick="if(window.switchActiveView) { window.switchActiveView('financial-advance'); event.preventDefault(); }"><i class="ph-trend-up me-2"></i> Antecipações</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-advanced" onclick="if(window.switchActiveView) { window.switchActiveView('financial-advanced'); event.preventDefault(); }"><i class="ph-presentation-chart me-2"></i> Financeiro Advanced</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-conciliation" onclick="if(window.switchActiveView) { window.switchActiveView('financial-conciliation'); event.preventDefault(); }"><i class="ph-scales me-2"></i> Conciliação Bancária</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-spread" onclick="if(window.switchActiveView) { window.switchActiveView('financial-spread'); event.preventDefault(); }"><i class="ph-percent me-2"></i> Financeiro Spread</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-simulator" onclick="if(window.switchActiveView) { window.switchActiveView('financial-simulator'); event.preventDefault(); }"><i class="ph-calculator me-2"></i> Simulador de Spread</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-split" onclick="if(window.switchActiveView) { window.switchActiveView('financial-split'); event.preventDefault(); }"><i class="ph-arrows-split me-2"></i> Split Financeiro</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics" onclick="if(window.switchActiveView) { window.switchActiveView('financial-analytics'); event.preventDefault(); }"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-statement" onclick="if(window.switchActiveView) { window.switchActiveView('financial-statement'); event.preventDefault(); }"><i class="ph-receipt me-2"></i> Extrato</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses" onclick="if(window.switchActiveView) { window.switchActiveView('financial-expenses'); event.preventDefault(); }"><i class="ph-trend-down me-2"></i> Despesas</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-accounts" onclick="if(window.switchActiveView) { window.switchActiveView('financial-accounts'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Contas Bancárias</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-bordero" onclick="if(window.switchActiveView) { window.switchActiveView('financial-bordero'); event.preventDefault(); }"><i class="ph-signature me-2"></i> Borderô</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-pdv" onclick="if(window.switchActiveView) { window.switchActiveView('financial-pdv'); event.preventDefault(); }"><i class="ph-storefront me-2"></i> Pontos de Venda (PDV)</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-paymethods" onclick="if(window.switchActiveView) { window.switchActiveView('financial-paymethods'); event.preventDefault(); }"><i class="ph-credit-card me-2"></i> Métodos de Pagamento</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-custompay" onclick="if(window.switchActiveView) { window.switchActiveView('financial-custompay'); event.preventDefault(); }"><i class="ph-gear me-2"></i> Pagamentos Customizados</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-negotiations" onclick="if(window.switchActiveView) { window.switchActiveView('financial-negotiations'); event.preventDefault(); }"><i class="ph-handshake me-2"></i> Negociações Financeiras</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-refunds"><i class="ph-arrow-counter-clockwise me-2"></i> Devoluções / Estornos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-operators"><i class="ph-shield-check me-2"></i> Operadoras de Cartão</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-refunds" onclick="if(window.switchActiveView) { window.switchActiveView('financial-refunds'); event.preventDefault(); }"><i class="ph-arrow-counter-clockwise me-2"></i> Devoluções / Estornos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-operators" onclick="if(window.switchActiveView) { window.switchActiveView('financial-operators'); event.preventDefault(); }"><i class="ph-shield-check me-2"></i> Operadoras de Cartão</a></li>
                             </ul>
                         </li>
 

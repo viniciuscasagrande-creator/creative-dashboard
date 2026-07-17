@@ -16,11 +16,34 @@ function fetchUrl(url) {
 
 console.log("Simulating full live browser load and click navigation...");
 
-Promise.all([
-  fetchUrl('https://financeiropdtnovo.web.app/'),
-  fetchUrl('https://financeiropdtnovo.web.app/assets/index-D0jhD8OW.js')
-]).then(([html, jsCode]) => {
-  console.log("Successfully fetched index.html and index.js from production URL!");
+fetchUrl('https://financeiropdtnovo.web.app/')
+  .then(html => {
+    // Parse HTML to extract the JS asset filename dynamically
+    const domForParsing = new JSDOM(html);
+    const scripts = domForParsing.window.document.querySelectorAll('script[type="module"]');
+    let jsAssetPath = '';
+    for (const srcAttr of Array.from(scripts).map(s => s.getAttribute('src'))) {
+      if (srcAttr && srcAttr.includes('assets/index-') && srcAttr.endsWith('.js')) {
+        jsAssetPath = srcAttr;
+        break;
+      }
+    }
+    
+    if (!jsAssetPath) {
+      throw new Error("Could not find dynamic index JS script in production HTML!");
+    }
+    
+    let jsUrl = jsAssetPath;
+    if (jsUrl.startsWith('./')) {
+      jsUrl = jsUrl.substring(2);
+    }
+    const fullJsUrl = `https://financeiropdtnovo.web.app/${jsUrl}`;
+    console.log(`Dynamically resolved production JS asset URL: ${fullJsUrl}`);
+    
+    return fetchUrl(fullJsUrl).then(jsCode => [html, jsCode]);
+  })
+  .then(([html, jsCode]) => {
+    console.log("Successfully fetched index.html and dynamic index.js from production URL!");
   
   // Mock Chart
   const chartMock = `
