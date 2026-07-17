@@ -857,6 +857,22 @@
                                     <p class="text-muted fs-xxs mb-3">Este são os dados da empresa responsável pelo evento. Ele aparecerá nos relatórios e comunicações internas.</p>
                                     
                                     <div class="row g-3">
+                                        <div class="col-12 mb-2">
+                                            <div class="card card-body p-2 bg-light border-0 shadow-none d-flex flex-row align-items-center gap-3 mb-0" style="border-radius: 8px;">
+                                                <div class="flex-shrink-0 text-primary">
+                                                    <i class="ph-buildings fs-3 border p-2 rounded bg-white"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <label class="form-label fw-bold fs-xxs text-dark text-uppercase mb-1">Selecionar Produtora Cadastrada (Auto-preenchimento)</label>
+                                                    <select id="wiz-prod-select" class="form-select form-select-sm fw-semibold" onchange="window.selectWizardProducer(this.value)">
+                                                        <option value="">-- Cadastrar novo (Preencher manualmente) --</option>
+                                                        <option value="prod-1">DiskIngressos Eventos Ltda (CNPJ: 08.123.456/0001-99)</option>
+                                                        <option value="prod-2">CWB Brasil Entretenimento (CNPJ: 12.987.654/0001-00)</option>
+                                                        <option value="prod-3">Seven Experience Agency (CNPJ: 45.555.666/0001-22)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold fs-xxs text-muted text-uppercase">CPF/CNPJ da produtora *</label>
                                             <input type="text" id="wiz-prod-cnpj" class="form-control" placeholder="Ex.: 00.000.000/0000-00" required>

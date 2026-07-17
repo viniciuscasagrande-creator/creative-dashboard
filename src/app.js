@@ -8200,6 +8200,73 @@ window.createUiTable = createUiTable;
 window.createUiModal = createUiModal;
 window.createUiChart = createUiChart;
 
+window.selectWizardProducer = function(val) {
+  const data = {
+    'prod-1': {
+      cnpj: '08.123.456/0001-99',
+      name: 'DiskIngressos Eventos Ltda',
+      resp: 'Vinicius Casagrande',
+      respCpf: '111.222.333-44',
+      email: 'contato@diskingressos.com.br',
+      phone: '(41) 3315-0808',
+      addr: 'Rua Sete de Setembro',
+      number: '3145',
+      cep: '80230-010',
+      city: 'Curitiba',
+      state: 'PR'
+    },
+    'prod-2': {
+      cnpj: '12.987.654/0001-00',
+      name: 'CWB Brasil Entretenimento',
+      resp: 'João da Silva',
+      respCpf: '222.333.444-55',
+      email: 'financeiro@cwbbrasil.com.br',
+      phone: '(41) 99888-7766',
+      addr: 'Avenida Batel',
+      number: '1230',
+      cep: '80420-090',
+      city: 'Curitiba',
+      state: 'PR'
+    },
+    'prod-3': {
+      cnpj: '45.555.666/0001-22',
+      name: 'Seven Experience Agency',
+      resp: 'Mariana Souza',
+      respCpf: '333.444.555-66',
+      email: 'producao@sevenexperience.com.br',
+      phone: '(41) 99111-2233',
+      addr: 'Rua Comendador Araújo',
+      number: '455',
+      cep: '80420-000',
+      city: 'Curitiba',
+      state: 'PR'
+    }
+  };
+
+  const prod = data[val];
+  const fields = {
+    'wiz-prod-cnpj': prod ? prod.cnpj : '',
+    'wiz-prod-name': prod ? prod.name : '',
+    'wiz-prod-resp': prod ? prod.resp : '',
+    'wiz-prod-resp-cpf': prod ? prod.respCpf : '',
+    'wiz-prod-email': prod ? prod.email : '',
+    'wiz-prod-phone': prod ? prod.phone : '',
+    'wiz-prod-addr': prod ? prod.addr : '',
+    'wiz-prod-number': prod ? prod.number : '',
+    'wiz-prod-cep': prod ? prod.cep : '',
+    'wiz-prod-city': prod ? prod.city : '',
+    'wiz-prod-state': prod ? prod.state : ''
+  };
+
+  for (const [id, value] of Object.entries(fields)) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+};
+
 // Initialize app after all scope variables and functions are defined
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
