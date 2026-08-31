@@ -797,9 +797,12 @@ tbody > .table-border-double > *, tfoot > .table-border-double > * {
 }
 .form-control-number {
   -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .form-control-number::-webkit-inner-spin-button, .form-control-number::-webkit-outer-spin-button {
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .form-control-plaintext:focus {

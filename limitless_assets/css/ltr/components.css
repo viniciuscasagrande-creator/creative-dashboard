@@ -315,9 +315,12 @@
   color: inherit;
   margin-left: calc(var(--s2-pills-spacer) * 2);
   -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .select2-selection--multiple .select2-search--inline .select2-search__field::-webkit-search-cancel-button {
   -webkit-appearance: none;
+  appearance: none;
 }
 .select2-selection--multiple .select2-search--inline .select2-search__field::-webkit-input-placeholder {
   color: var(--s2-placeholder-color);

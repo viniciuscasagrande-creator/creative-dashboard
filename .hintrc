@@ -20,7 +20,10 @@
       {
         "ignore": [
           "backdrop-filter",
-          "user-select"
+          "user-select",
+          "appearance",
+          "-webkit-appearance",
+          "-moz-appearance"
         ]
       }
     ]
