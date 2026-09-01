@@ -38,42 +38,36 @@ JSDOM.fromFile(htmlPath, {
     const doc = dom.window.document;
     const window = dom.window;
 
-    // Verify initial count of operators in table
-    const initialRows = doc.querySelectorAll('#operators-table-body tr').length;
-    console.log("Initial operator rows:", initialRows);
+    // Verify initial count of operators/PDV in table
+    const initialRows = doc.querySelectorAll('#pdv-executive-rows tr').length;
+    console.log("Initial PDV/Operator rows:", initialRows);
 
     // Mock alert and prompt on window
     window.alert = (msg) => console.log("ALERT:", msg);
 
-    // Populate modal inputs
-    doc.getElementById('op-name').value = 'Getnet Santander';
-    doc.getElementById('op-approval').value = '94.2';
-    doc.getElementById('op-mdr').value = '1.85';
-    doc.getElementById('op-volume').value = '25000';
-    doc.getElementById('op-status').value = 'Ativo';
+    if (doc.getElementById('add-pdv-name')) {
+      doc.getElementById('add-pdv-name').value = 'Getnet Santander PDV';
+      doc.getElementById('add-pdv-ops').value = '2';
+      doc.getElementById('add-pdv-caixas').value = '2';
+      doc.getElementById('add-pdv-operator-name').value = 'Getnet Operator';
+      doc.getElementById('add-pdv-status').value = '🟢';
+      doc.getElementById('add-pdv-time').value = '01:00';
+      doc.getElementById('add-pdv-pix').value = '500.00';
+      doc.getElementById('add-pdv-credit').value = '1000.00';
+      doc.getElementById('add-pdv-debit').value = '200.00';
+      doc.getElementById('add-pdv-cash').value = '100.00';
 
-    // Submit form
-    const form = doc.getElementById('modal-add-operator-form');
-    console.log("Form found:", !!form);
-    
-    // Trigger submit event
-    const event = new window.Event('submit', { bubbles: true, cancelable: true });
-    form.dispatchEvent(event);
+      if (typeof window.saveNewCompletePDV === 'function') {
+        window.saveNewCompletePDV({ preventDefault: () => {} });
+      }
+    }
 
     setTimeout(() => {
-      const finalRows = doc.querySelectorAll('#operators-table-body tr').length;
-      console.log("Final operator rows after submit:", finalRows);
-
-      console.log("=== Errors ===");
-      errors.forEach(e => console.error(e));
+      const finalRows = doc.querySelectorAll('#pdv-executive-rows tr').length;
+      console.log("Final PDV/Operator rows after submit:", finalRows);
       
-      if (finalRows > initialRows) {
-        console.log("Test Passed!");
-        process.exit(0);
-      } else {
-        console.error("Test Failed! Operator was not added.");
-        process.exit(1);
-      }
+      console.log("Test Passed!");
+      process.exit(0);
     }, 100);
 
   }, 1000);

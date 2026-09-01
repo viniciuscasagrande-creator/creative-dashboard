@@ -275,6 +275,7 @@ function initApp() {
   if (typeof initTicketModule === 'function') initTicketModule();
   if (typeof initWizardController === 'function') initWizardController();
   if (typeof initCouponModule === 'function') initCouponModule();
+  if (typeof initMarketingConfigModule === 'function') initMarketingConfigModule();
 
   // Store defaults for merging
   const EVENTS_DATA_DEFAULTS = [...EVENTS_DATA];
@@ -313,205 +314,725 @@ function initApp() {
             }
             if (typeof renderCouponsTable === 'function') renderCouponsTable();
           });
-        })
-    } else {
-      // Offline / fallback rendering directly
-      renderEventsTable();
-      if (typeof renderFinancialBalanceRows === 'function') renderFinancialBalanceRows();
-      if (typeof renderAgendaCalendarGrid === 'function') renderAgendaCalendarGrid();
-      if (typeof initAgendaGeneralModule === 'function') initAgendaGeneralModule();
-      if (typeof COUPONS_DATA !== 'undefined' && typeof renderCouponsTable === 'function') {
-        renderCouponsTable();
-      }
+        });
+    }
+  } else {
+    // Offline / fallback rendering directly
+    renderEventsTable();
+    if (typeof renderFinancialBalanceRows === 'function') renderFinancialBalanceRows();
+    if (typeof renderAgendaCalendarGrid === 'function') renderAgendaCalendarGrid();
+    if (typeof initAgendaGeneralModule === 'function') initAgendaGeneralModule();
+    if (typeof COUPONS_DATA !== 'undefined' && typeof renderCouponsTable === 'function') {
+      renderCouponsTable();
     }
   }
+
+  // Activate initial view based on URL hash or fallback to dashboard
+  const initialRoute = (window.location.hash || '').replace('#', '').trim() || 'dashboard';
+  navigateTo(initialRoute);
 }
 
 
 
 /* ==========================================================================
-   1. Navigation & Sidebar UI
+   1. Universal SPA Router & Navigation Controller (Fase 23.2)
    ========================================================================== */
+
+/**
+ * Standardized IDs for Marketing Submodules
+ */
+const MARKETING_PAGES = {
+  overview: "marketing-overview",
+  campaigns: "marketing-campaigns",
+  campaignCreate: "marketing-campaign-create",
+  campaignTemplates: "marketing-campaign-templates",
+  whatsapp: "marketing-whatsapp",
+  email: "marketing-email",
+  sms: "marketing-sms",
+  abandonedCart: "marketing-abandoned-cart",
+  audiences: "marketing-audiences",
+  coupons: "marketing-coupons",
+  utm: "marketing-utm",
+  pixel: "marketing-pixel",
+  ads: "marketing-ads",
+  automation: "marketing-automation",
+  reports: "marketing-reports"
+};
+window.MARKETING_PAGES = MARKETING_PAGES;
+
 function initViewSwitcher() {
   const subLinks = document.querySelectorAll('.submenu-link');
   
   subLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      
-      // Deactivate all links
-      subLinks.forEach(l => l.classList.remove('active'));
-      // Activate clicked
-      link.classList.add('active');
-      
-      // Mark parent category as active in Limitless layout
-      document.querySelectorAll('.nav-item-submenu').forEach(p => {
-        p.classList.remove('nav-item-open');
-      });
-      const parentLi = link.closest('.nav-item-submenu');
-      if (parentLi) {
-        parentLi.classList.add('nav-item-open');
+      const targetView = link.getAttribute('data-view') || (link.getAttribute('href') || '').replace('#', '');
+      if (targetView) {
+        navigateTo(targetView);
       }
-      
-      const targetView = link.getAttribute('data-view');
-      switchActiveView(targetView);
     });
   });
 }
 
 /**
- * Global function to switch active main view panel
+ * Log navigation events for diagnostics
  */
-function switchActiveView(viewId) {
-  // Hide all sections in main-content-area
-  const mainContent = document.getElementById('main-content');
-  const sections = mainContent.querySelectorAll('.page-section');
-  sections.forEach(sec => sec.style.display = 'none');
-  
-  let targetSection = null;
+function logNavigation(pageId) {
+  console.log({
+    module: "navigation",
+    page: pageId,
+    timestamp: new Date().toISOString()
+  });
+}
+window.logNavigation = logNavigation;
 
-  // View routing redirects & module-specific triggers
-  if (viewId === 'dashboard-agenda') {
-    targetSection = document.getElementById('view-agenda-annual');
-    viewId = 'agenda-annual';
-  } else if (viewId === 'agenda-annual') {
-    if (typeof initAgendaAnnualModule === 'function') initAgendaAnnualModule();
-  } else if (viewId === 'agenda-general') {
-    if (typeof initAgendaGeneralModule === 'function') initAgendaGeneralModule();
-  } else if (viewId.startsWith('marketing') || viewId.startsWith('mkt-') || viewId.startsWith('remkt-')) {
-    if (viewId === 'mkt-config' || viewId === 'marketing-config') {
-      targetSection = document.getElementById('view-mkt-config');
-      if (typeof initMarketingConfigModule === 'function') initMarketingConfigModule();
-    } else if (viewId === 'mkt-analytics' || viewId === 'marketing-analytics') {
-      targetSection = document.getElementById('view-mkt-analytics');
-      if (typeof renderMarketingAnalyticsCharts === 'function') {
-        setTimeout(() => renderMarketingAnalyticsCharts(), 50);
-      }
-    } else if (viewId === 'mkt-pixel' || viewId === 'marketing-pixels' || viewId === 'marketing-pixel') {
-      targetSection = document.getElementById('view-mkt-pixel');
-      if (typeof renderMarketingPixelCharts === 'function') {
-        setTimeout(() => renderMarketingPixelCharts(), 50);
-      }
-    } else if (viewId === 'remkt-audiences') {
-      targetSection = document.getElementById('view-remkt-audiences');
-    } else if (viewId === 'remkt-recovery') {
-      targetSection = document.getElementById('view-remkt-recovery');
-    } else if (viewId === 'remkt-campaigns') {
-      targetSection = document.getElementById('view-remkt-campaigns');
-    }
-  } else if (viewId === 'event-marketing') {
-    targetSection = document.getElementById('view-event-marketing');
-    if (typeof initEventMarketingModule === 'function') initEventMarketingModule();
-  } else if (viewId === 'global-consult-ticket' || viewId === 'event-consult-ticket' || viewId === 'event-cortesias') {
-    targetSection = document.getElementById(`view-${viewId}`);
-    if (typeof initTicketModule === 'function') initTicketModule();
-  } else if (viewId === 'events-cupons') {
-    targetSection = document.getElementById('view-events-cupons');
-    if (typeof initCouponModule === 'function') initCouponModule();
-  } else if (viewId.startsWith('accounting')) {
-    targetSection = document.getElementById('view-accounting');
-    if (viewId === 'accounting') {
-      setTimeout(() => {
-        if (typeof switchAccountingTab === 'function') switchAccountingTab(null, 'dashboard');
-      }, 50);
-    }
-  } else if (viewId === 'financial-negotiations') {
-    targetSection = document.getElementById('view-financial-negotiations');
-    if (typeof initNegotiationsPage === 'function') {
-      initNegotiationsPage();
-    }
-  }
+/**
+ * Display graceful error feedback if a route fails
+ */
+function showNavigationError(pageId) {
+  console.warn(`[Navigation] Erro ao abrir módulo: ${pageId}`);
 
-  // Try to find the section directly if not already found
-  if (!targetSection) {
-    targetSection = document.getElementById(`view-${viewId}`);
-  }
-  
-  // Fallbacks if the specific subtab view is a mock or grouped
-  if (!targetSection) {
-    if (viewId.startsWith('dashboard')) {
-      targetSection = document.getElementById('view-dashboard-main');
-    } else if (viewId.startsWith('events')) {
-      targetSection = document.getElementById('view-events-list');
-      
-      if (viewId === 'events-new') {
-        openModal('new-event');
-      }
-    } else if (viewId === 'financial-negotiations') {
-      targetSection = document.getElementById('view-financial-negotiations');
-      if (typeof initNegotiationsPage === 'function') {
-        initNegotiationsPage();
-      }
-    } else if (['financial-balance', 'financial-repass', 'financial-repasses', 'financial-advance', 'financial-statement', 'financial-expenses', 'financial-accounts', 'financial-bordero', 'financial-pdv'].includes(viewId)) {
-      let actualViewId = viewId;
-      if (viewId === 'financial-repasses') actualViewId = 'financial-repass';
-      targetSection = document.getElementById('view-' + actualViewId);
-      if (viewId === 'financial-pdv') {
-        setTimeout(() => {
-          if (typeof initPDVFinanceiroModule === 'function') initPDVFinanceiroModule();
-        }, 50);
-      }
-    } else if (viewId.startsWith('reports')) {
-      targetSection = document.getElementById('view-reports-sales');
-      
-      let subtabName = 'sales';
-      if (viewId === 'reports-financial') subtabName = 'financial';
-      else if (viewId === 'reports-attendees') subtabName = 'attendees';
-      else if (viewId === 'reports-checkin') subtabName = 'checkin';
-      else if (viewId === 'reports-marketing') subtabName = 'sales';
-      else if (viewId === 'reports-exports') subtabName = 'sales';
-      else if (viewId === 'reports-sales') subtabName = 'sales';
-      
-      activateReportsSubtab(subtabName);
-    } else if (viewId.startsWith('settings')) {
-      targetSection = document.getElementById('view-settings-profile');
-      
-      // Map settings viewIds to HTML settings keys
-      let settingPaneName = 'perfil';
-      const suffix = viewId.split('-')[1];
-      if (suffix === 'profile') settingPaneName = 'perfil';
-      else if (suffix === 'company') settingPaneName = 'empresa';
-      else if (suffix === 'users') settingPaneName = 'usuarios';
-      else if (suffix === 'integrations') settingPaneName = 'integracoes';
-      else if (suffix === 'notifications') settingPaneName = 'notificacoes';
-      else if (suffix === 'security') settingPaneName = 'seguranca';
-      
-      activateSettingsPane(settingPaneName);
-    }
-  }
-  
-  if (targetSection) {
-    targetSection.style.display = 'flex';
-  }
+  const errorBox = document.getElementById("navigation-error");
+  const errorMsg = document.getElementById("navigation-error-msg");
 
-  // Sync sidebar active links and parent submenus
+  if (errorBox) {
+    if (errorMsg) {
+      errorMsg.innerHTML = `Não foi possível abrir esta área. Código: <strong>${escapeHtml(pageId)}</strong>`;
+    }
+    errorBox.style.display = "block";
+    errorBox.classList.remove("hidden");
+    
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+      if (errorBox) errorBox.style.display = "none";
+    }, 5000);
+  }
+}
+window.showNavigationError = showNavigationError;
+
+/**
+ * Toggle submenu collapse state
+ */
+function toggleSubmenu(menuId) {
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+
+  menu.classList.toggle("hidden");
+  menu.classList.toggle("submenu-open");
+  
+  if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menu, { toggle: true });
+  }
+}
+window.toggleSubmenu = toggleSubmenu;
+
+/**
+ * Sync active class states and expand parent accordions
+ */
+function updateActiveMenu(pageId) {
   const subLinks = document.querySelectorAll('.submenu-link');
   subLinks.forEach(link => {
     const dataView = link.getAttribute('data-view');
-    if (dataView === viewId) {
+    const href = (link.getAttribute('href') || '').replace(/^#\/?/, '');
+    
+    if (dataView === pageId || href === pageId) {
       subLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
       
       const parentLi = link.closest('.nav-item-submenu');
       if (parentLi) {
-        document.querySelectorAll('.nav-item-submenu').forEach(p => {
-          if (p !== parentLi) {
-            p.classList.remove('nav-item-open');
-            const sub = p.querySelector('.nav-group-sub');
-            if (sub && typeof bootstrap !== 'undefined') {
-              bootstrap.Collapse.getOrCreateInstance(sub, { toggle: false }).hide();
-            }
-          }
-        });
         parentLi.classList.add('nav-item-open');
         const sub = parentLi.querySelector('.nav-group-sub');
-        if (sub && typeof bootstrap !== 'undefined') {
+        if (sub && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
           bootstrap.Collapse.getOrCreateInstance(sub, { toggle: false }).show();
         }
       }
     }
   });
 }
+window.updateActiveMenu = updateActiveMenu;
+
+/**
+ * Universal Central Navigation Controller
+ */
+function navigateTo(pageId) {
+  if (!pageId) pageId = 'dashboard';
+  pageId = pageId.replace(/^#\/?/, '').trim().toLowerCase();
+  
+  logNavigation(pageId);
+
+  // Aliases and Route Map
+  const routeMap = {
+    '': 'dashboard-main',
+    'dashboard': 'dashboard-main',
+    'dashboard-main': 'dashboard-main',
+    'agenda': 'agenda-annual',
+    'agenda-annual': 'agenda-annual',
+    'agenda-general': 'agenda-general',
+    'dashboard-indicators': 'dashboard-indicators',
+    'indicadores': 'dashboard-indicators',
+
+    'eventos': 'events-list',
+    'events': 'events-list',
+    'events-list': 'events-list',
+    'events-new': 'events-new',
+    'novo-evento': 'events-new',
+    'events-lotes': 'events-lotes',
+    'lotes': 'events-lotes',
+    'events-cupons': 'marketing-coupons',
+    'cupons': 'marketing-coupons',
+    'events-checkin': 'events-checkin',
+    'checkin': 'events-checkin',
+    'events-attendees': 'events-attendees',
+    'participantes': 'events-attendees',
+    'events-page': 'events-page',
+
+    'consulta': 'global-consult-ticket',
+    'global-consult-ticket': 'global-consult-ticket',
+    'event-consult-ticket': 'event-consult-ticket',
+    'cortesias': 'event-cortesias',
+
+    // Marketing Module Standardized Routes
+    'marketing': 'marketing-overview',
+    'marketing-overview': 'marketing-overview',
+    'mkt-analytics': 'marketing-overview',
+    'marketing-analytics': 'marketing-overview',
+    
+    'marketing-campaigns': 'marketing-campaigns',
+    'marketing-campanhas': 'marketing-campaigns',
+    'campanhas': 'marketing-campaigns',
+    'remkt-campaigns': 'marketing-campaigns',
+    
+    'marketing-campaign-create': 'marketing-campaigns',
+    'marketing-campaign-templates': 'marketing-campaign-templates',
+    
+    'marketing-whatsapp': 'marketing-whatsapp',
+    'whatsapp': 'marketing-whatsapp',
+    'whatsapp-marketing': 'marketing-whatsapp',
+    
+    'marketing-email': 'marketing-email',
+    'email': 'marketing-email',
+    'email-marketing': 'marketing-email',
+    
+    'marketing-sms': 'marketing-sms',
+    'sms': 'marketing-sms',
+    'sms-marketing': 'marketing-sms',
+    
+    'marketing-abandoned-cart': 'marketing-abandoned-cart',
+    'marketing-recuperacao': 'marketing-abandoned-cart',
+    'carrinho-abandonado': 'marketing-abandoned-cart',
+    'remkt-recovery': 'marketing-abandoned-cart',
+    
+    'marketing-audiences': 'marketing-audiences',
+    'marketing-publicos': 'marketing-audiences',
+    'publicos': 'marketing-audiences',
+    'remkt-audiences': 'marketing-audiences',
+    
+    'marketing-coupons': 'marketing-coupons',
+    
+    'marketing-utm': 'marketing-utm',
+    'utm': 'marketing-utm',
+    'mkt-utm': 'marketing-utm',
+    
+    'marketing-pixel': 'marketing-pixel',
+    'pixel': 'marketing-pixel',
+    'mkt-pixel': 'marketing-pixel',
+    
+    'marketing-config': 'mkt-config',
+    'mkt-config': 'mkt-config',
+    
+    'marketing-ads': 'marketing-ads',
+    'marketing-diskads': 'marketing-ads',
+    'diskads': 'marketing-ads',
+    
+    'marketing-automation': 'marketing-automation',
+    'automacao': 'marketing-automation',
+    
+    'marketing-reports': 'marketing-reports',
+    'marketing-relatorios': 'marketing-reports',
+    'event-marketing': 'event-marketing',
+
+    // Financial Routes
+    'financeiro': 'financial-dashboard',
+    'financial-dashboard': 'financial-dashboard',
+    'financial-balance': 'financial-balance',
+    'saldo': 'financial-balance',
+    'financial-repass': 'financial-repass',
+    'financial-advance': 'financial-advance',
+    'financial-negotiations': 'financial-negotiations',
+    'financial-statement': 'financial-statement',
+    'financial-expenses': 'financial-expenses',
+    'financial-accounts': 'financial-accounts',
+    'financial-bordero': 'financial-bordero',
+    'financial-pdv': 'financial-pdv',
+    'financial-paymethods': 'financial-paymethods',
+    'financial-custompay': 'financial-custompay',
+    'financial-refunds': 'financial-refunds',
+    'financial-operators': 'financial-operators',
+    'financial-analytics': 'financial-analytics',
+
+    // Accounting Routes
+    'contabilidade': 'accounting',
+    'accounting': 'accounting',
+    'accounting-disk': 'accounting',
+
+    // Reports Routes
+    'relatorios': 'reports-sales',
+    'reports': 'reports-sales',
+    'reports-sales': 'reports-sales',
+
+    // Settings Routes
+    'configuracoes': 'settings-profile',
+    'settings': 'settings-profile',
+    'settings-profile': 'settings-profile'
+  };
+
+  let resolvedId = routeMap[pageId] || pageId;
+
+  // Hide all sections in page
+  const pages = document.querySelectorAll('.page-section, .app-page');
+  pages.forEach(page => {
+    page.style.display = 'none';
+    page.classList.add('hidden');
+    page.classList.remove('active-page');
+  });
+
+  let target = document.getElementById(resolvedId) || document.getElementById(`view-${resolvedId}`);
+
+  if (!target) {
+    showNavigationError(pageId);
+    // Fallback to main dashboard
+    target = document.getElementById('view-dashboard-main') || document.getElementById('dashboard-main');
+  }
+
+  if (target) {
+    target.style.display = 'flex';
+    target.style.flexDirection = 'column';
+    target.style.width = '100%';
+    target.classList.remove('hidden');
+    target.classList.add('active-page');
+  }
+
+  // Trigger module-specific initializers
+  if (resolvedId === 'marketing-overview') {
+    setTimeout(renderMarketingOverviewCharts, 50);
+  } else if (resolvedId === 'mkt-config') {
+    if (typeof initMarketingConfigModule === 'function') initMarketingConfigModule();
+  } else if (resolvedId === 'marketing-pixel' || resolvedId === 'mkt-pixel') {
+    if (typeof initMarketingPixelModule === 'function') initMarketingPixelModule();
+  } else if (resolvedId === 'marketing-audiences') {
+    if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
+  } else if (resolvedId === 'marketing-abandoned-cart') {
+    if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
+  } else if (resolvedId === 'marketing-campaigns') {
+    if (typeof initRemarketingCampaignsModule === 'function') initRemarketingCampaignsModule();
+  } else if (resolvedId === 'event-marketing') {
+    if (typeof initEventMarketingModule === 'function') initEventMarketingModule();
+  } else if (resolvedId === 'financial-negotiations') {
+    if (typeof initNegotiationsPage === 'function') initNegotiationsPage();
+  }
+
+  // Header title synchronization
+  const titlesMap = {
+    'dashboard-main': { title: 'Painel de Controle', sub: 'Bem-vindo de volta! Visualize as métricas operacionais consolidadas.' },
+    'agenda-annual': { title: 'Agenda Anual', sub: 'Planejamento e visualização cronológica de todos os eventos.' },
+    'events-list': { title: 'Lista de Eventos', sub: 'Gerenciamento de eventos cadastrados na plataforma.' },
+    'marketing-overview': { title: 'Marketing — Visão Geral Executiva', sub: 'Painel integrado de tráfego, ROAS, conversões e faturamento atribuído.' },
+    'marketing-campaigns': { title: 'Marketing — Central de Campanhas', sub: 'Gestão de campanhas multicanal, orçamentos e ROAS.' },
+    'marketing-campaign-templates': { title: 'Marketing — Campanhas Prontas', sub: 'Modelos de alta conversão recomendados para disparo em 1 clique.' },
+    'marketing-whatsapp': { title: 'Marketing — WhatsApp Oficial', sub: 'Disparos via Meta Cloud API com alta entregabilidade e sem banimento.' },
+    'marketing-email': { title: 'Marketing — E-mail Marketing', sub: 'Disparos em massa, newsletters e automações de conversão.' },
+    'marketing-sms': { title: 'Marketing — SMS Marketing', sub: 'Comunicação ultra-rápida direto no smartphone com links curtos.' },
+    'marketing-abandoned-cart': { title: 'Marketing — Recuperação de Carrinho', sub: 'Motor automatizado de resgate de pedidos e vendas pendentes.' },
+    'marketing-audiences': { title: 'Marketing — Públicos e Segmentação', sub: 'Gestão de audiências inteligentes e sincronização com Meta & Google.' },
+    'marketing-coupons': { title: 'Marketing — Cupons Promocionais', sub: 'Vouchers de desconto para influenciadores, parceiros e promoções.' },
+    'marketing-utm': { title: 'Marketing — Gerador de Links UTM', sub: 'Rastreamento completo de origem de tráfego, mídias e campanhas.' },
+    'marketing-pixel': { title: 'Marketing — Pixel & Analytics', sub: 'Status de conexão Meta CAPI, GA4, TikTok e monitoramento em tempo real.' },
+    'mkt-config': { title: 'Marketing — Configuração de Pixels', sub: 'Configuração de tokens e parâmetros de rastreamento.' },
+    'marketing-ads': { title: 'Marketing — Disk Ads', sub: 'Mídia patrocinada no portal DiskIngressos, Push e banners.' },
+    'marketing-automation': { title: 'Marketing — Automação de Marketing', sub: 'Fluxos automatizados e gatilhos comportamentais em tempo real.' },
+    'marketing-reports': { title: 'Marketing — Relatórios de BI', sub: 'Atribuição multitoque, CAC, LTV e demonstrativo de resultados.' },
+    'financial-dashboard': { title: 'Financeiro', sub: 'Visão geral financeira, faturamento e repasses.' },
+    'financial-negotiations': { title: 'Negociações Financeiras', sub: 'Simulação e borderô operacional de eventos.' },
+    'reports-sales': { title: 'Relatórios de Vendas', sub: 'Relatórios consolidados de bilheteria e faturamento.' }
+  };
+
+  const headerInfo = titlesMap[resolvedId] || titlesMap['dashboard-main'];
+  if (headerInfo) {
+    const titleEl = document.getElementById('active-view-title');
+    const subEl = document.getElementById('active-view-subtitle');
+    if (titleEl) titleEl.textContent = headerInfo.title;
+    if (subEl) subEl.textContent = headerInfo.sub;
+  }
+
+  // Update active states on sidebar menu
+  updateActiveMenu(pageId);
+
+  // Update browser history and session storage
+  try {
+    history.replaceState({ page: pageId }, '', `#${pageId}`);
+    sessionStorage.setItem('currentPage', pageId);
+  } catch (e) {}
+
+  // Trigger chart resize
+  setTimeout(() => {
+    if (typeof triggerGlobalChartResize === 'function') triggerGlobalChartResize();
+  }, 100);
+}
+window.navigateTo = navigateTo;
+window.switchActiveView = navigateTo;
+
+/**
+ * ==========================================================================
+ * FASE 23.3: MARKETING OPERATIONAL DASHBOARD CONTROLLER & ENGINE
+ * ==========================================================================
+ */
+
+const marketingFilters = {
+  period: "30d",
+  eventId: "all",
+  producerId: "all",
+  channel: "all",
+  campaignId: "all"
+};
+window.marketingFilters = marketingFilters;
+
+function setMarketingPeriod(period) {
+  marketingFilters.period = period;
+  
+  // Update UI active buttons
+  const btnGroup = document.getElementById("mkt-period-btn-group");
+  if (btnGroup) {
+    const buttons = btnGroup.querySelectorAll("button");
+    buttons.forEach(btn => {
+      btn.classList.remove("btn-primary", "fw-bold", "active");
+      btn.classList.add("btn-outline-secondary");
+    });
+    
+    // Highlight matched button
+    buttons.forEach(btn => {
+      const text = btn.textContent.toLowerCase();
+      if ((period === 'today' && text.includes('hoje')) ||
+          (period === '7d' && text.includes('7')) ||
+          (period === '30d' && text.includes('30')) ||
+          (period === '90d' && text.includes('90')) ||
+          (period === 'custom' && text.includes('personalizado'))) {
+        btn.classList.remove("btn-outline-secondary");
+        btn.classList.add("btn-primary", "fw-bold", "active");
+      }
+    });
+  }
+  
+  refreshMarketingDashboard();
+}
+window.setMarketingPeriod = setMarketingPeriod;
+
+function setMarketingFilter(key, value) {
+  marketingFilters[key] = value;
+  refreshMarketingDashboard();
+}
+window.setMarketingFilter = setMarketingFilter;
+
+function resetMarketingFilters() {
+  marketingFilters.period = "30d";
+  marketingFilters.eventId = "all";
+  marketingFilters.producerId = "all";
+  marketingFilters.channel = "all";
+  marketingFilters.campaignId = "all";
+
+  const evSelect = document.getElementById("mkt-filter-event");
+  const prodSelect = document.getElementById("mkt-filter-producer");
+  const chanSelect = document.getElementById("mkt-filter-channel");
+  if (evSelect) evSelect.value = "all";
+  if (prodSelect) prodSelect.value = "all";
+  if (chanSelect) chanSelect.value = "all";
+
+  setMarketingPeriod("30d");
+}
+window.resetMarketingFilters = resetMarketingFilters;
+
+/**
+ * Score calculation rule for campaigns
+ */
+function calculateCampaignScore(roas, ctr, conversionRate) {
+  if (roas >= 7 && conversionRate >= 5) {
+    return "excellent";
+  }
+  if (roas >= 4) {
+    return "good";
+  }
+  if (roas >= 2) {
+    return "warning";
+  }
+  return "critical";
+}
+window.calculateCampaignScore = calculateCampaignScore;
+
+/**
+ * Main Data Dispatcher & Refresher for Operational Marketing Dashboard
+ */
+let activeMktOverviewCharts = {};
+
+async function refreshMarketingDashboard() {
+  try {
+    // Generate/Compute context-aware metrics based on filters
+    const multiplier = marketingFilters.period === 'today' ? 0.08 :
+                       marketingFilters.period === '7d' ? 0.28 :
+                       marketingFilters.period === '90d' ? 2.85 : 1.0;
+
+    const data = {
+      kpis: {
+        revenue: Math.round(284750 * multiplier),
+        revenueDiff: '+18,4%',
+        investment: Math.round(36820 * multiplier),
+        investmentDiff: '+7,2%',
+        roas: (7.73).toFixed(2),
+        roasDiff: '+1,2x',
+        conversions: Math.round(1842 * multiplier),
+        conversionsDiff: '+12,8%',
+        cpa: (19.99).toFixed(2),
+        cpaDiff: '-8,3%',
+        recoveredRevenue: Math.round(42680 * multiplier),
+        recoveredDiff: '+22,1%'
+      },
+      goals: {
+        revenuePct: Math.min(100, Math.round(81 * (multiplier === 1 ? 1 : multiplier))),
+        convPct: Math.min(100, Math.round(73 * (multiplier === 1 ? 1 : multiplier))),
+        roasPct: "+28% acima",
+        cartsPct: Math.min(100, Math.round(85 * (multiplier === 1 ? 1 : multiplier)))
+      }
+    };
+
+    renderMarketingKPIs(data.kpis);
+    renderMarketingGoals(data.goals);
+    renderRevenueChart();
+    renderChannelsChart();
+
+  } catch (error) {
+    console.error("[Marketing Dashboard Error]", error);
+  }
+}
+window.refreshMarketingDashboard = refreshMarketingDashboard;
+
+function renderMarketingKPIs(kpis) {
+  const elRev = document.getElementById("mkt-kpi-revenue");
+  const elRevDiff = document.getElementById("mkt-kpi-revenue-diff");
+  const elInv = document.getElementById("mkt-kpi-investment");
+  const elInvDiff = document.getElementById("mkt-kpi-investment-diff");
+  const elRoas = document.getElementById("mkt-kpi-roas");
+  const elRoasDiff = document.getElementById("mkt-kpi-roas-diff");
+  const elConv = document.getElementById("mkt-kpi-conversions");
+  const elConvDiff = document.getElementById("mkt-kpi-conversions-diff");
+  const elCpa = document.getElementById("mkt-kpi-cpa");
+  const elCpaDiff = document.getElementById("mkt-kpi-cpa-diff");
+  const elRec = document.getElementById("mkt-kpi-recovered");
+  const elRecDiff = document.getElementById("mkt-kpi-recovered-diff");
+
+  if (elRev) elRev.textContent = `R$ ${Number(kpis.revenue).toLocaleString('pt-BR')}`;
+  if (elRevDiff) elRevDiff.textContent = kpis.revenueDiff;
+  if (elInv) elInv.textContent = `R$ ${Number(kpis.investment).toLocaleString('pt-BR')}`;
+  if (elInvDiff) elInvDiff.textContent = kpis.investmentDiff;
+  if (elRoas) elRoas.textContent = `${kpis.roas}x`;
+  if (elRoasDiff) elRoasDiff.textContent = kpis.roasDiff;
+  if (elConv) elConv.textContent = Number(kpis.conversions).toLocaleString('pt-BR');
+  if (elConvDiff) elConvDiff.textContent = kpis.conversionsDiff;
+  if (elCpa) elCpa.textContent = `R$ ${kpis.cpa.replace('.', ',')}`;
+  if (elCpaDiff) elCpaDiff.textContent = kpis.cpaDiff;
+  if (elRec) elRec.textContent = `R$ ${Number(kpis.recoveredRevenue).toLocaleString('pt-BR')}`;
+  if (elRecDiff) elRecDiff.textContent = kpis.recoveredDiff;
+}
+
+function renderMarketingGoals(goals) {
+  const revPct = document.getElementById("mkt-goal-revenue-pct");
+  const revBar = document.getElementById("mkt-goal-revenue-bar");
+  const convPct = document.getElementById("mkt-goal-conv-pct");
+  const convBar = document.getElementById("mkt-goal-conv-bar");
+  const roasPct = document.getElementById("mkt-goal-roas-pct");
+  const cartsPct = document.getElementById("mkt-goal-carts-pct");
+  const cartsBar = document.getElementById("mkt-goal-carts-bar");
+
+  if (revPct) revPct.textContent = `${goals.revenuePct}%`;
+  if (revBar) revBar.style.width = `${goals.revenuePct}%`;
+  if (convPct) convPct.textContent = `${goals.convPct}%`;
+  if (convBar) convBar.style.width = `${goals.convPct}%`;
+  if (roasPct) roasPct.textContent = goals.roasPct;
+  if (cartsPct) cartsPct.textContent = `${goals.cartsPct}%`;
+  if (cartsBar) cartsBar.style.width = `${goals.cartsPct}%`;
+}
+
+function renderRevenueChart() {
+  if (typeof Chart === 'undefined') return;
+  const ctx = document.getElementById('chart-mkt-revenue-investment');
+  if (!ctx) return;
+
+  if (activeMktOverviewCharts['revenue-investment']) {
+    activeMktOverviewCharts['revenue-investment'].destroy();
+  }
+
+  activeMktOverviewCharts['revenue-investment'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['01 Ago', '05 Ago', '10 Ago', '15 Ago', '20 Ago', '25 Ago', '30 Ago'],
+      datasets: [
+        {
+          label: 'Receita Atribuída (R$)',
+          data: [31200, 38500, 42900, 54200, 47800, 52150, 18000],
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.12)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#10b981'
+        },
+        {
+          label: 'Investimento em Mídia (R$)',
+          data: [4200, 4800, 5400, 6800, 5900, 6200, 3520],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.08)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          pointBackgroundColor: '#f59e0b'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 12, padding: 12, font: { size: 11, weight: 'bold' } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) label += ': ';
+              if (context.parsed.y !== null) {
+                label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR');
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            callback: function(value) {
+              return 'R$ ' + (value >= 1000 ? (value / 1000) + 'k' : value);
+            },
+            font: { size: 10 }
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function renderChannelsChart() {
+  if (typeof Chart === 'undefined') return;
+  const ctx = document.getElementById('chart-mkt-conversions-channel');
+  if (!ctx) return;
+
+  if (activeMktOverviewCharts['conversions-channel']) {
+    activeMktOverviewCharts['conversions-channel'].destroy();
+  }
+
+  const channelData = {
+    labels: ['WhatsApp (34%)', 'Meta Ads (27%)', 'Google Ads (18%)', 'E-mail (11%)', 'Orgânico (7%)', 'SMS (3%)'],
+    datasets: [{
+      data: [34, 27, 18, 11, 7, 3],
+      backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#06b6d4', '#64748b', '#f97316'],
+      hoverOffset: 6,
+      borderWidth: 2,
+      borderColor: '#ffffff'
+    }]
+  };
+
+  activeMktOverviewCharts['conversions-channel'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: channelData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: { boxWidth: 10, padding: 8, font: { size: 10.5 } }
+        }
+      },
+      onClick: (e, elements) => {
+        if (elements && elements.length > 0) {
+          const index = elements[0].index;
+          const channelsMap = ['whatsapp', 'meta', 'google', 'email', 'organic', 'sms'];
+          selectMarketingChannel(channelsMap[index]);
+        }
+      }
+    }
+  });
+}
+
+function selectMarketingChannel(channelKey) {
+  const details = {
+    whatsapp: { name: 'WhatsApp Marketing', conv: '618 conversões', revenue: 'R$ 93.420', roas: '10,2x', icon: 'ph-whatsapp-logo text-success' },
+    meta: { name: 'Meta Ads (CAPI)', conv: '724 conversões', revenue: 'R$ 98.740', roas: '6,66x', icon: 'ph-meta-logo text-primary' },
+    google: { name: 'Google Ads', conv: '328 conversões', revenue: 'R$ 61.340', roas: '7,25x', icon: 'ph-google-logo text-danger' },
+    email: { name: 'E-mail Marketing', conv: '114 conversões', revenue: 'R$ 21.320', roas: '7,89x', icon: 'ph-envelope-simple text-info' },
+    organic: { name: 'Orgânico / Direto', conv: '42 conversões', revenue: 'R$ 6.340', roas: '∞', icon: 'ph-leaf text-success' },
+    sms: { name: 'SMS Marketing', conv: '16 conversões', revenue: 'R$ 3.590', roas: '2,11x', icon: 'ph-chat-circle-dots text-orange' }
+  };
+
+  const info = details[channelKey] || details.whatsapp;
+  const box = document.getElementById('mkt-channel-detail-box');
+  if (box) {
+    box.innerHTML = `
+      <div class="d-flex justify-content-between fw-bold text-dark">
+        <span><i class="${info.icon} me-1"></i> ${info.name}</span>
+        <span class="text-success">${info.conv}</span>
+      </div>
+      <div class="d-flex justify-content-between text-muted fs-xxs mt-0.5">
+        <span>Receita: <strong>${info.revenue}</strong></span>
+        <span>ROAS: <strong class="text-primary">${info.roas}</strong></span>
+      </div>
+    `;
+  }
+}
+window.selectMarketingChannel = selectMarketingChannel;
+
+function renderMarketingOverviewCharts() {
+  refreshMarketingDashboard();
+}
+window.renderMarketingOverviewCharts = renderMarketingOverviewCharts;
+
+// Listen to URL hash and browser history popstate
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash.replace(/^#\/?/, '').trim();
+  if (hash) {
+    navigateTo(hash);
+  }
+});
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.page) {
+    navigateTo(e.state.page);
+  }
+});
 
 /* ==========================================================================
    2. Events Module Logic
@@ -2377,6 +2898,72 @@ function openUtmBuilderModal() {
 }
 window.openUtmBuilderModal = openUtmBuilderModal;
 
+function initMarketingAnalyticsModule() {
+  const eventSelect = document.getElementById('mkt-analytics-event-selector');
+  if (eventSelect && typeof EVENTS_DATA !== 'undefined' && EVENTS_DATA.length > 0) {
+    const currentVal = eventSelect.value || String(EVENTS_DATA[0].id);
+    eventSelect.innerHTML = `<option value="all">Consolidado - Todos os Eventos</option>` +
+      EVENTS_DATA.map(ev => `<option value="${ev.id}">${ev.id} - ${ev.name}</option>`).join('');
+    eventSelect.value = currentVal;
+    loadMarketingAnalyticsData(eventSelect.value);
+  } else {
+    loadMarketingAnalyticsData('all');
+  }
+}
+window.initMarketingAnalyticsModule = initMarketingAnalyticsModule;
+
+function loadMarketingAnalyticsData(eventId) {
+  const ev = (typeof EVENTS_DATA !== 'undefined' && eventId !== 'all') ? EVENTS_DATA.find(e => String(e.id) === String(eventId)) : null;
+  const banner = document.getElementById('mkt-analytics-banner-details');
+  if (banner) {
+    if (ev) {
+      banner.innerHTML = `
+        <div><i class="ph-calendar text-primary me-1"></i> Data: <strong>${ev.date || 'Em breve'}</strong></div>
+        <div><i class="ph-map-pin text-danger me-1"></i> Local: <strong>${ev.location || 'Curitiba - PR'}</strong></div>
+        <div><span class="badge bg-success"><i class="ph-check-circle me-1"></i> Vendas: ${ev.salesCount || 0}</span></div>
+      `;
+    } else {
+      banner.innerHTML = `<div><span class="badge bg-primary">Consolidado Geral de Todos os Eventos</span></div>`;
+    }
+  }
+
+  // Calculate dynamic KPIs
+  const salesCount = ev ? (ev.salesCount || 100) : 2078;
+  const revenue = ev ? (ev.revenue || 12000) : 248440;
+  const pageViews = Math.max(salesCount * 11 + 500, 1850);
+  const uniqueViews = Math.round(pageViews * 0.79);
+  const activeUsers = Math.round(uniqueViews * 0.71);
+  const avgTicket = salesCount > 0 ? (revenue / salesCount) : 119.56;
+  const conversionRate = pageViews > 0 ? ((salesCount / pageViews) * 100).toFixed(2) : '15.38';
+
+  const elViews = document.getElementById('mkt-analytics-kpi-views');
+  if (elViews) elViews.textContent = pageViews.toLocaleString('pt-BR');
+
+  const elUnique = document.getElementById('mkt-analytics-kpi-unique');
+  if (elUnique) elUnique.textContent = uniqueViews.toLocaleString('pt-BR');
+
+  const elActive = document.getElementById('mkt-analytics-kpi-active');
+  if (elActive) elActive.textContent = activeUsers.toLocaleString('pt-BR');
+
+  const elTime = document.getElementById('mkt-analytics-kpi-time');
+  if (elTime) elTime.textContent = '52s';
+
+  const elTickets = document.getElementById('mkt-analytics-kpi-tickets');
+  if (elTickets) elTickets.textContent = salesCount.toLocaleString('pt-BR');
+
+  const elRevenue = document.getElementById('mkt-analytics-kpi-revenue');
+  if (elRevenue) elRevenue.textContent = `R$ ${revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const elTicket = document.getElementById('mkt-analytics-kpi-ticket');
+  if (elTicket) elTicket.textContent = `R$ ${avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const elConv = document.getElementById('mkt-analytics-kpi-conv');
+  if (elConv) elConv.textContent = `${conversionRate}%`;
+
+  setTimeout(() => renderMarketingAnalyticsCharts(eventId), 50);
+}
+window.loadMarketingAnalyticsData = loadMarketingAnalyticsData;
+
 function initEventMarketingModule() {
   const sub = document.getElementById('event-marketing-subtitle');
   if (sub && typeof currentManagedEvent !== 'undefined' && currentManagedEvent) {
@@ -2385,8 +2972,7 @@ function initEventMarketingModule() {
 }
 window.initEventMarketingModule = initEventMarketingModule;
 
-function renderMarketingAnalyticsCharts() {
-  // Helpers to prevent memory leaks by destroying previous chart instances
+function renderMarketingAnalyticsCharts(eventId) {
   const chartsToInit = [
     { id: 'chart-analytics-funnel', type: 'bar', labels: ['Compra', 'Iniciou compra', 'Adicionou ao carrinho', 'Engajamento do usuário', 'Primeiras visitas (usuários únicos)', 'Visualizações'], datasets: [{ label: 'Visualizações', data: [661, 1388, 2358, 6154, 11389, 18911], backgroundColor: '#3b82f6', borderRadius: 4 }], options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } },
     { id: 'chart-analytics-age', type: 'bar', labels: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'], datasets: [{ label: 'Porcentagem %', data: [22.7, 41.5, 18.5, 9.1, 5.6, 2.6], backgroundColor: '#10b981', borderRadius: 4 }], options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } },
@@ -2416,7 +3002,7 @@ function renderMarketingAnalyticsCharts() {
 
   chartsToInit.forEach(chartConfig => {
     const ctx = document.getElementById(chartConfig.id);
-    if (ctx) {
+    if (ctx && typeof Chart !== 'undefined') {
       if (activeMktCharts[chartConfig.id]) activeMktCharts[chartConfig.id].destroy();
       activeMktCharts[chartConfig.id] = new Chart(ctx, {
         type: chartConfig.type,
@@ -2429,6 +3015,7 @@ function renderMarketingAnalyticsCharts() {
     }
   });
 }
+window.renderMarketingAnalyticsCharts = renderMarketingAnalyticsCharts;
 
 // ==========================================
 // EVENT CREATION WIZARD CONTROLLER
@@ -2597,6 +3184,62 @@ if (document.readyState === 'loading') {
   initWizardController();
 }
 
+function initMarketingPixelModule() {
+  const eventSelect = document.getElementById('mkt-pixel-event-selector');
+  if (eventSelect && typeof EVENTS_DATA !== 'undefined' && EVENTS_DATA.length > 0) {
+    const currentVal = eventSelect.value || String(EVENTS_DATA[0].id);
+    eventSelect.innerHTML = `<option value="all">Pixel Geral - Todos os Eventos</option>` +
+      EVENTS_DATA.map(ev => `<option value="${ev.id}">${ev.id} - ${ev.name}</option>`).join('');
+    eventSelect.value = currentVal;
+    loadMarketingPixelData(eventSelect.value);
+  } else {
+    loadMarketingPixelData('all');
+  }
+}
+window.initMarketingPixelModule = initMarketingPixelModule;
+
+function loadMarketingPixelData(eventId) {
+  const ev = (typeof EVENTS_DATA !== 'undefined' && eventId !== 'all') ? EVENTS_DATA.find(e => String(e.id) === String(eventId)) : null;
+  const banner = document.getElementById('mkt-pixel-banner-details');
+  if (banner) {
+    if (ev) {
+      banner.innerHTML = `
+        <div><i class="ph-calendar text-primary me-1"></i> Data: <strong>${ev.date || 'Em breve'}</strong></div>
+        <div><i class="ph-map-pin text-danger me-1"></i> Local: <strong>${ev.location || 'Curitiba - PR'}</strong></div>
+        <div><span class="badge bg-success"><i class="ph-check-circle me-1"></i> Meta CAPI Conectado</span></div>
+      `;
+    } else {
+      banner.innerHTML = `<div><span class="badge bg-primary">Pixel Geral (Consolidado)</span></div>`;
+    }
+  }
+
+  const salesCount = ev ? (ev.salesCount || 100) : 661;
+  const totalDisparos = Math.max(salesCount * 28 + 1200, 3500);
+  const cartAbandonQty = Math.round(salesCount * 0.22);
+  const checkoutAbandonQty = Math.round(salesCount * 0.09);
+
+  const elTotal = document.getElementById('mkt-pixel-kpi-total');
+  if (elTotal) elTotal.textContent = totalDisparos.toLocaleString('pt-BR');
+
+  const elCart = document.getElementById('mkt-pixel-kpi-cart-abandon');
+  if (elCart) elCart.textContent = '9,2%';
+
+  const elCartSub = document.getElementById('mkt-pixel-kpi-cart-abandon-sub');
+  if (elCartSub) elCartSub.textContent = `${cartAbandonQty} carrinhos abandonados`;
+
+  const elCheckout = document.getElementById('mkt-pixel-kpi-checkout-abandon');
+  if (elCheckout) elCheckout.textContent = '4,1%';
+
+  const elCheckoutSub = document.getElementById('mkt-pixel-kpi-checkout-abandon-sub');
+  if (elCheckoutSub) elCheckoutSub.textContent = `${checkoutAbandonQty} abandonos no checkout`;
+
+  const elConv = document.getElementById('mkt-pixel-kpi-conversion');
+  if (elConv) elConv.textContent = '14,8%';
+
+  setTimeout(() => renderMarketingPixelCharts(eventId), 50);
+}
+window.loadMarketingPixelData = loadMarketingPixelData;
+
 function switchPixelTab(tab) {
   const paidTab = document.getElementById('tab-pixel-paid');
   const orgTab = document.getElementById('tab-pixel-organic');
@@ -2621,20 +3264,15 @@ function switchPixelTab(tab) {
     if (paidPane) paidPane.style.display = 'none';
     if (orgPane) orgPane.style.display = 'block';
     
-    // Render organic charts when visible
     renderMarketingPixelCharts();
   }
 }
 window.switchPixelTab = switchPixelTab;
 
-function renderMarketingPixelCharts() {
-  // Only render if Organic tab is selected and visible
-  const orgPane = document.getElementById('pane-pixel-organic');
-  if (!orgPane || orgPane.style.display === 'none') return;
-
+function renderMarketingPixelCharts(eventId) {
   // 1. Disparos por Dia
   const dailyCtx = document.getElementById('chart-pixel-daily');
-  if (dailyCtx) {
+  if (dailyCtx && typeof Chart !== 'undefined') {
     if (activeMktCharts['pixel-daily']) activeMktCharts['pixel-daily'].destroy();
     activeMktCharts['pixel-daily'] = new Chart(dailyCtx, {
       type: 'line',
@@ -2672,7 +3310,7 @@ function renderMarketingPixelCharts() {
 
   // 2. Disparos por Hora
   const hourlyCtx = document.getElementById('chart-pixel-hourly');
-  if (hourlyCtx) {
+  if (hourlyCtx && typeof Chart !== 'undefined') {
     if (activeMktCharts['pixel-hourly']) activeMktCharts['pixel-hourly'].destroy();
     activeMktCharts['pixel-hourly'] = new Chart(hourlyCtx, {
       type: 'line',
@@ -2710,7 +3348,7 @@ function renderMarketingPixelCharts() {
 
   // 3. Distribuição de Eventos
   const distCtx = document.getElementById('chart-pixel-distribution');
-  if (distCtx) {
+  if (distCtx && typeof Chart !== 'undefined') {
     if (activeMktCharts['pixel-distribution']) activeMktCharts['pixel-distribution'].destroy();
     activeMktCharts['pixel-distribution'] = new Chart(distCtx, {
       type: 'doughnut',
@@ -2729,6 +3367,34 @@ function renderMarketingPixelCharts() {
     });
   }
 }
+window.renderMarketingPixelCharts = renderMarketingPixelCharts;
+
+// ==========================================
+// REMARKETING AUDIENCES & RECOVERY MODULES
+// ==========================================
+
+let REMARKETING_AUDIENCES_DATA = [
+  { id: 1, name: "Carrinho Abandonado (24 Horas)", source: "Meta Pixel", size: "142 contatos", syncDate: "Hoje, 10:24", color: "primary" },
+  { id: 2, name: "Visitantes da Página (7 dias) - Sem Compra", source: "Meta Pixel", size: "582 contatos", syncDate: "Hoje, 09:15", color: "primary" },
+  { id: 3, name: "Compradores Recorrentes (Últimos 90 dias)", source: "Banco Interno", size: "1.250 contatos", syncDate: "Ontem, 18:30", color: "success" },
+  { id: 4, name: "Público Semelhante (Lookalike 1% - Compradores)", source: "Meta Pixel", size: "150.000 contatos", syncDate: "Há 2 dias", color: "primary" },
+  { id: 5, name: "Visualizaram Ingressos VIP - Sem Conversão", source: "Google Ads (GA4)", size: "318 contatos", syncDate: "Hoje, 11:00", color: "info" }
+];
+
+function initRemarketingAudiencesModule() {
+  // Can be hooked to dynamic rendering if container exists
+}
+window.initRemarketingAudiencesModule = initRemarketingAudiencesModule;
+
+function initRemarketingRecoveryModule() {
+  // Cart recovery initializer
+}
+window.initRemarketingRecoveryModule = initRemarketingRecoveryModule;
+
+function initRemarketingCampaignsModule() {
+  // Campaigns module initializer
+}
+window.initRemarketingCampaignsModule = initRemarketingCampaignsModule;
 
 /* ==========================================================================
    6. Ticket Management & Courtesy Issuance Module
