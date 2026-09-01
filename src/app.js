@@ -457,15 +457,17 @@ window.updateActiveMenu = updateActiveMenu;
  */
 function navigateTo(pageId) {
   if (!pageId) pageId = 'dashboard';
-  pageId = pageId.replace(/^#\/?/, '').trim().toLowerCase();
-  
-  logNavigation(pageId);
+  console.log('[NAVIGATION] Abrindo:', pageId);
 
-  // Aliases and Route Map
+  // Normalize pageId
+  const cleanId = String(pageId).replace(/^#\/?/, '').trim().toLowerCase();
+
+  // Unified Route Map for Aliases and Identifiers
   const routeMap = {
     '': 'dashboard-main',
     'dashboard': 'dashboard-main',
     'dashboard-main': 'dashboard-main',
+    'view-dashboard-main': 'dashboard-main',
     'agenda': 'agenda-annual',
     'agenda-annual': 'agenda-annual',
     'agenda-general': 'agenda-general',
@@ -497,57 +499,61 @@ function navigateTo(pageId) {
     'marketing-overview': 'marketing-overview',
     'mkt-analytics': 'marketing-overview',
     'marketing-analytics': 'marketing-overview',
-    
+    'marketing-dashboard': 'marketing-overview',
+
     'marketing-campaigns': 'marketing-campaigns',
     'marketing-campanhas': 'marketing-campaigns',
     'campanhas': 'marketing-campaigns',
     'remkt-campaigns': 'marketing-campaigns',
-    
-    'marketing-campaign-create': 'marketing-campaigns',
+
+    'marketing-campaign-create': 'marketing-campaign-create',
     'marketing-campaign-templates': 'marketing-campaign-templates',
-    
+
     'marketing-whatsapp': 'marketing-whatsapp',
     'whatsapp': 'marketing-whatsapp',
     'whatsapp-marketing': 'marketing-whatsapp',
-    
+
     'marketing-email': 'marketing-email',
     'email': 'marketing-email',
     'email-marketing': 'marketing-email',
-    
+
     'marketing-sms': 'marketing-sms',
     'sms': 'marketing-sms',
     'sms-marketing': 'marketing-sms',
-    
+
     'marketing-abandoned-cart': 'marketing-abandoned-cart',
     'marketing-recuperacao': 'marketing-abandoned-cart',
     'carrinho-abandonado': 'marketing-abandoned-cart',
+    'carrinho': 'marketing-abandoned-cart',
     'remkt-recovery': 'marketing-abandoned-cart',
-    
+
     'marketing-audiences': 'marketing-audiences',
     'marketing-publicos': 'marketing-audiences',
     'publicos': 'marketing-audiences',
     'remkt-audiences': 'marketing-audiences',
-    
+
     'marketing-coupons': 'marketing-coupons',
-    
+    'marketing-cupons': 'marketing-coupons',
+
     'marketing-utm': 'marketing-utm',
     'utm': 'marketing-utm',
     'mkt-utm': 'marketing-utm',
-    
+
     'marketing-pixel': 'marketing-pixel',
     'pixel': 'marketing-pixel',
     'mkt-pixel': 'marketing-pixel',
-    
-    'marketing-config': 'mkt-config',
-    'mkt-config': 'mkt-config',
-    
+
+    'marketing-config': 'marketing-pixel',
+    'mkt-config': 'marketing-pixel',
+
     'marketing-ads': 'marketing-ads',
     'marketing-diskads': 'marketing-ads',
     'diskads': 'marketing-ads',
-    
+
     'marketing-automation': 'marketing-automation',
     'automacao': 'marketing-automation',
-    
+    'marketing-automacao': 'marketing-automation',
+
     'marketing-reports': 'marketing-reports',
     'marketing-relatorios': 'marketing-reports',
     'event-marketing': 'event-marketing',
@@ -572,9 +578,9 @@ function navigateTo(pageId) {
     'financial-analytics': 'financial-analytics',
 
     // Accounting Routes
-    'contabilidade': 'accounting',
-    'accounting': 'accounting',
-    'accounting-disk': 'accounting',
+    'contabilidade': 'accounting-disk',
+    'accounting': 'accounting-disk',
+    'accounting-disk': 'accounting-disk',
 
     // Reports Routes
     'relatorios': 'reports-sales',
@@ -587,434 +593,77 @@ function navigateTo(pageId) {
     'settings-profile': 'settings-profile'
   };
 
-  let resolvedId = routeMap[pageId] || pageId;
+  const resolvedId = routeMap[cleanId] || cleanId;
 
-  // Hide all sections in page
-  const pages = document.querySelectorAll('.page-section, .app-page');
+  // 1. Hide all pages / sections
+  const pages = document.querySelectorAll('.app-page, .page-section');
   pages.forEach(page => {
-    page.style.display = 'none';
     page.classList.add('hidden');
     page.classList.remove('active-page');
+    page.style.display = 'none';
   });
 
-  let target = document.getElementById(resolvedId) || document.getElementById(`view-${resolvedId}`);
+  // 2. Find target element
+  let target = document.getElementById(resolvedId) ||
+               document.getElementById('view-' + resolvedId) ||
+               document.getElementById(cleanId) ||
+               document.getElementById('view-' + cleanId);
 
   if (!target) {
+    console.error(`[NAVIGATION ERROR] Página não encontrada: ${pageId} (resolvido: ${resolvedId})`);
     showNavigationError(pageId);
     // Fallback to main dashboard
-    target = document.getElementById('view-dashboard-main') || document.getElementById('dashboard-main');
+    target = document.getElementById('view-dashboard-main') || document.getElementById('dashboard-main') || document.getElementById('dashboard');
   }
 
   if (target) {
+    target.classList.remove('hidden');
+    target.classList.add('active-page');
     target.style.display = 'flex';
     target.style.flexDirection = 'column';
     target.style.width = '100%';
-    target.classList.remove('hidden');
-    target.classList.add('active-page');
   }
 
-  // Trigger module-specific initializers
+  // 3. Update active menu state
+  updateActiveMenu(resolvedId);
+
+  // 4. Update browser URL history and session
+  try {
+    history.replaceState({ page: resolvedId }, '', '#' + resolvedId);
+    sessionStorage.setItem('currentPage', resolvedId);
+  } catch (e) {
+    console.warn("Could not update history state", e);
+  }
+
+  // 5. Trigger module-specific initializers
   if (resolvedId === 'marketing-overview') {
     setTimeout(renderMarketingOverviewCharts, 50);
-  } else if (resolvedId === 'mkt-config') {
-    if (typeof initMarketingConfigModule === 'function') initMarketingConfigModule();
-  } else if (resolvedId === 'marketing-pixel' || resolvedId === 'mkt-pixel') {
+  } else if (resolvedId === 'marketing-pixel' || resolvedId === 'mkt-pixel' || resolvedId === 'marketing-config') {
     if (typeof initMarketingPixelModule === 'function') initMarketingPixelModule();
   } else if (resolvedId === 'marketing-audiences') {
     if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
   } else if (resolvedId === 'marketing-abandoned-cart') {
     if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
   } else if (resolvedId === 'marketing-campaigns') {
-    if (typeof initRemarketingCampaignsModule === 'function') initRemarketingCampaignsModule();
+    if (typeof initMultichannelCampaignsModule === 'function') initMultichannelCampaignsModule();
+  } else if (resolvedId === 'marketing-campaign-create') {
+    if (typeof initCampaignWizard === 'function') initCampaignWizard();
+  } else if (resolvedId === 'marketing-automation') {
+    if (typeof initMarketingAutomationModule === 'function') initMarketingAutomationModule();
+  } else if (resolvedId === 'marketing-whatsapp') {
+    if (typeof initWhatsAppMarketingModule === 'function') initWhatsAppMarketingModule();
+  } else if (resolvedId === 'marketing-email') {
+    if (typeof initEmailMarketingModule === 'function') initEmailMarketingModule();
   } else if (resolvedId === 'event-marketing') {
     if (typeof initEventMarketingModule === 'function') initEventMarketingModule();
   } else if (resolvedId === 'financial-negotiations') {
     if (typeof initNegotiationsPage === 'function') initNegotiationsPage();
   }
 
-  // Header title synchronization
-  const titlesMap = {
-    'dashboard-main': { title: 'Painel de Controle', sub: 'Bem-vindo de volta! Visualize as métricas operacionais consolidadas.' },
-    'agenda-annual': { title: 'Agenda Anual', sub: 'Planejamento e visualização cronológica de todos os eventos.' },
-    'events-list': { title: 'Lista de Eventos', sub: 'Gerenciamento de eventos cadastrados na plataforma.' },
-    'marketing-overview': { title: 'Marketing — Visão Geral Executiva', sub: 'Painel integrado de tráfego, ROAS, conversões e faturamento atribuído.' },
-    'marketing-campaigns': { title: 'Marketing — Central de Campanhas', sub: 'Gestão de campanhas multicanal, orçamentos e ROAS.' },
-    'marketing-campaign-templates': { title: 'Marketing — Campanhas Prontas', sub: 'Modelos de alta conversão recomendados para disparo em 1 clique.' },
-    'marketing-whatsapp': { title: 'Marketing — WhatsApp Oficial', sub: 'Disparos via Meta Cloud API com alta entregabilidade e sem banimento.' },
-    'marketing-email': { title: 'Marketing — E-mail Marketing', sub: 'Disparos em massa, newsletters e automações de conversão.' },
-    'marketing-sms': { title: 'Marketing — SMS Marketing', sub: 'Comunicação ultra-rápida direto no smartphone com links curtos.' },
-    'marketing-abandoned-cart': { title: 'Marketing — Recuperação de Carrinho', sub: 'Motor automatizado de resgate de pedidos e vendas pendentes.' },
-    'marketing-audiences': { title: 'Marketing — Públicos e Segmentação', sub: 'Gestão de audiências inteligentes e sincronização com Meta & Google.' },
-    'marketing-coupons': { title: 'Marketing — Cupons Promocionais', sub: 'Vouchers de desconto para influenciadores, parceiros e promoções.' },
-    'marketing-utm': { title: 'Marketing — Gerador de Links UTM', sub: 'Rastreamento completo de origem de tráfego, mídias e campanhas.' },
-    'marketing-pixel': { title: 'Marketing — Pixel & Analytics', sub: 'Status de conexão Meta CAPI, GA4, TikTok e monitoramento em tempo real.' },
-    'mkt-config': { title: 'Marketing — Configuração de Pixels', sub: 'Configuração de tokens e parâmetros de rastreamento.' },
-    'marketing-ads': { title: 'Marketing — Disk Ads', sub: 'Mídia patrocinada no portal DiskIngressos, Push e banners.' },
-    'marketing-automation': { title: 'Marketing — Automação de Marketing', sub: 'Fluxos automatizados e gatilhos comportamentais em tempo real.' },
-    'marketing-reports': { title: 'Marketing — Relatórios de BI', sub: 'Atribuição multitoque, CAC, LTV e demonstrativo de resultados.' },
-    'financial-dashboard': { title: 'Financeiro', sub: 'Visão geral financeira, faturamento e repasses.' },
-    'financial-negotiations': { title: 'Negociações Financeiras', sub: 'Simulação e borderô operacional de eventos.' },
-    'reports-sales': { title: 'Relatórios de Vendas', sub: 'Relatórios consolidados de bilheteria e faturamento.' }
-  };
-
-  const headerInfo = titlesMap[resolvedId] || titlesMap['dashboard-main'];
-  if (headerInfo) {
-    const titleEl = document.getElementById('active-view-title');
-    const subEl = document.getElementById('active-view-subtitle');
-    if (titleEl) titleEl.textContent = headerInfo.title;
-    if (subEl) subEl.textContent = headerInfo.sub;
-  }
-
-  // Update active states on sidebar menu
-  updateActiveMenu(pageId);
-
-  // Update browser history and session storage
-  try {
-    history.replaceState({ page: pageId }, '', `#${pageId}`);
-    sessionStorage.setItem('currentPage', pageId);
-  } catch (e) {}
-
-  // Trigger chart resize
-  setTimeout(() => {
-    if (typeof triggerGlobalChartResize === 'function') triggerGlobalChartResize();
-  }, 100);
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 window.navigateTo = navigateTo;
 window.switchActiveView = navigateTo;
-
-/**
- * ==========================================================================
- * FASE 23.3: MARKETING OPERATIONAL DASHBOARD CONTROLLER & ENGINE
- * ==========================================================================
- */
-
-const marketingFilters = {
-  period: "30d",
-  eventId: "all",
-  producerId: "all",
-  channel: "all",
-  campaignId: "all"
-};
-window.marketingFilters = marketingFilters;
-
-function setMarketingPeriod(period) {
-  marketingFilters.period = period;
-  
-  // Update UI active buttons
-  const btnGroup = document.getElementById("mkt-period-btn-group");
-  if (btnGroup) {
-    const buttons = btnGroup.querySelectorAll("button");
-    buttons.forEach(btn => {
-      btn.classList.remove("btn-primary", "fw-bold", "active");
-      btn.classList.add("btn-outline-secondary");
-    });
-    
-    // Highlight matched button
-    buttons.forEach(btn => {
-      const text = btn.textContent.toLowerCase();
-      if ((period === 'today' && text.includes('hoje')) ||
-          (period === '7d' && text.includes('7')) ||
-          (period === '30d' && text.includes('30')) ||
-          (period === '90d' && text.includes('90')) ||
-          (period === 'custom' && text.includes('personalizado'))) {
-        btn.classList.remove("btn-outline-secondary");
-        btn.classList.add("btn-primary", "fw-bold", "active");
-      }
-    });
-  }
-  
-  refreshMarketingDashboard();
-}
-window.setMarketingPeriod = setMarketingPeriod;
-
-function setMarketingFilter(key, value) {
-  marketingFilters[key] = value;
-  refreshMarketingDashboard();
-}
-window.setMarketingFilter = setMarketingFilter;
-
-function resetMarketingFilters() {
-  marketingFilters.period = "30d";
-  marketingFilters.eventId = "all";
-  marketingFilters.producerId = "all";
-  marketingFilters.channel = "all";
-  marketingFilters.campaignId = "all";
-
-  const evSelect = document.getElementById("mkt-filter-event");
-  const prodSelect = document.getElementById("mkt-filter-producer");
-  const chanSelect = document.getElementById("mkt-filter-channel");
-  if (evSelect) evSelect.value = "all";
-  if (prodSelect) prodSelect.value = "all";
-  if (chanSelect) chanSelect.value = "all";
-
-  setMarketingPeriod("30d");
-}
-window.resetMarketingFilters = resetMarketingFilters;
-
-/**
- * Score calculation rule for campaigns
- */
-function calculateCampaignScore(roas, ctr, conversionRate) {
-  if (roas >= 7 && conversionRate >= 5) {
-    return "excellent";
-  }
-  if (roas >= 4) {
-    return "good";
-  }
-  if (roas >= 2) {
-    return "warning";
-  }
-  return "critical";
-}
-window.calculateCampaignScore = calculateCampaignScore;
-
-/**
- * Main Data Dispatcher & Refresher for Operational Marketing Dashboard
- */
-let activeMktOverviewCharts = {};
-
-async function refreshMarketingDashboard() {
-  try {
-    // Generate/Compute context-aware metrics based on filters
-    const multiplier = marketingFilters.period === 'today' ? 0.08 :
-                       marketingFilters.period === '7d' ? 0.28 :
-                       marketingFilters.period === '90d' ? 2.85 : 1.0;
-
-    const data = {
-      kpis: {
-        revenue: Math.round(284750 * multiplier),
-        revenueDiff: '+18,4%',
-        investment: Math.round(36820 * multiplier),
-        investmentDiff: '+7,2%',
-        roas: (7.73).toFixed(2),
-        roasDiff: '+1,2x',
-        conversions: Math.round(1842 * multiplier),
-        conversionsDiff: '+12,8%',
-        cpa: (19.99).toFixed(2),
-        cpaDiff: '-8,3%',
-        recoveredRevenue: Math.round(42680 * multiplier),
-        recoveredDiff: '+22,1%'
-      },
-      goals: {
-        revenuePct: Math.min(100, Math.round(81 * (multiplier === 1 ? 1 : multiplier))),
-        convPct: Math.min(100, Math.round(73 * (multiplier === 1 ? 1 : multiplier))),
-        roasPct: "+28% acima",
-        cartsPct: Math.min(100, Math.round(85 * (multiplier === 1 ? 1 : multiplier)))
-      }
-    };
-
-    renderMarketingKPIs(data.kpis);
-    renderMarketingGoals(data.goals);
-    renderRevenueChart();
-    renderChannelsChart();
-
-  } catch (error) {
-    console.error("[Marketing Dashboard Error]", error);
-  }
-}
-window.refreshMarketingDashboard = refreshMarketingDashboard;
-
-function renderMarketingKPIs(kpis) {
-  const elRev = document.getElementById("mkt-kpi-revenue");
-  const elRevDiff = document.getElementById("mkt-kpi-revenue-diff");
-  const elInv = document.getElementById("mkt-kpi-investment");
-  const elInvDiff = document.getElementById("mkt-kpi-investment-diff");
-  const elRoas = document.getElementById("mkt-kpi-roas");
-  const elRoasDiff = document.getElementById("mkt-kpi-roas-diff");
-  const elConv = document.getElementById("mkt-kpi-conversions");
-  const elConvDiff = document.getElementById("mkt-kpi-conversions-diff");
-  const elCpa = document.getElementById("mkt-kpi-cpa");
-  const elCpaDiff = document.getElementById("mkt-kpi-cpa-diff");
-  const elRec = document.getElementById("mkt-kpi-recovered");
-  const elRecDiff = document.getElementById("mkt-kpi-recovered-diff");
-
-  if (elRev) elRev.textContent = `R$ ${Number(kpis.revenue).toLocaleString('pt-BR')}`;
-  if (elRevDiff) elRevDiff.textContent = kpis.revenueDiff;
-  if (elInv) elInv.textContent = `R$ ${Number(kpis.investment).toLocaleString('pt-BR')}`;
-  if (elInvDiff) elInvDiff.textContent = kpis.investmentDiff;
-  if (elRoas) elRoas.textContent = `${kpis.roas}x`;
-  if (elRoasDiff) elRoasDiff.textContent = kpis.roasDiff;
-  if (elConv) elConv.textContent = Number(kpis.conversions).toLocaleString('pt-BR');
-  if (elConvDiff) elConvDiff.textContent = kpis.conversionsDiff;
-  if (elCpa) elCpa.textContent = `R$ ${kpis.cpa.replace('.', ',')}`;
-  if (elCpaDiff) elCpaDiff.textContent = kpis.cpaDiff;
-  if (elRec) elRec.textContent = `R$ ${Number(kpis.recoveredRevenue).toLocaleString('pt-BR')}`;
-  if (elRecDiff) elRecDiff.textContent = kpis.recoveredDiff;
-}
-
-function renderMarketingGoals(goals) {
-  const revPct = document.getElementById("mkt-goal-revenue-pct");
-  const revBar = document.getElementById("mkt-goal-revenue-bar");
-  const convPct = document.getElementById("mkt-goal-conv-pct");
-  const convBar = document.getElementById("mkt-goal-conv-bar");
-  const roasPct = document.getElementById("mkt-goal-roas-pct");
-  const cartsPct = document.getElementById("mkt-goal-carts-pct");
-  const cartsBar = document.getElementById("mkt-goal-carts-bar");
-
-  if (revPct) revPct.textContent = `${goals.revenuePct}%`;
-  if (revBar) revBar.style.width = `${goals.revenuePct}%`;
-  if (convPct) convPct.textContent = `${goals.convPct}%`;
-  if (convBar) convBar.style.width = `${goals.convPct}%`;
-  if (roasPct) roasPct.textContent = goals.roasPct;
-  if (cartsPct) cartsPct.textContent = `${goals.cartsPct}%`;
-  if (cartsBar) cartsBar.style.width = `${goals.cartsPct}%`;
-}
-
-function renderRevenueChart() {
-  if (typeof Chart === 'undefined') return;
-  const ctx = document.getElementById('chart-mkt-revenue-investment');
-  if (!ctx) return;
-
-  if (activeMktOverviewCharts['revenue-investment']) {
-    activeMktOverviewCharts['revenue-investment'].destroy();
-  }
-
-  activeMktOverviewCharts['revenue-investment'] = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['01 Ago', '05 Ago', '10 Ago', '15 Ago', '20 Ago', '25 Ago', '30 Ago'],
-      datasets: [
-        {
-          label: 'Receita Atribuída (R$)',
-          data: [31200, 38500, 42900, 54200, 47800, 52150, 18000],
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.12)',
-          fill: true,
-          tension: 0.35,
-          borderWidth: 2.5,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          pointBackgroundColor: '#10b981'
-        },
-        {
-          label: 'Investimento em Mídia (R$)',
-          data: [4200, 4800, 5400, 6800, 5900, 6200, 3520],
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245, 158, 11, 0.08)',
-          fill: true,
-          tension: 0.35,
-          borderWidth: 2,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          pointBackgroundColor: '#f59e0b'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        intersect: false,
-        mode: 'index'
-      },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: { boxWidth: 12, padding: 12, font: { size: 11, weight: 'bold' } }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              let label = context.dataset.label || '';
-              if (label) label += ': ';
-              if (context.parsed.y !== null) {
-                label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR');
-              }
-              return label;
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          grid: { color: 'rgba(0,0,0,0.05)' },
-          ticks: {
-            callback: function(value) {
-              return 'R$ ' + (value >= 1000 ? (value / 1000) + 'k' : value);
-            },
-            font: { size: 10 }
-          }
-        },
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 10 } }
-        }
-      }
-    }
-  });
-}
-
-function renderChannelsChart() {
-  if (typeof Chart === 'undefined') return;
-  const ctx = document.getElementById('chart-mkt-conversions-channel');
-  if (!ctx) return;
-
-  if (activeMktOverviewCharts['conversions-channel']) {
-    activeMktOverviewCharts['conversions-channel'].destroy();
-  }
-
-  const channelData = {
-    labels: ['WhatsApp (34%)', 'Meta Ads (27%)', 'Google Ads (18%)', 'E-mail (11%)', 'Orgânico (7%)', 'SMS (3%)'],
-    datasets: [{
-      data: [34, 27, 18, 11, 7, 3],
-      backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#06b6d4', '#64748b', '#f97316'],
-      hoverOffset: 6,
-      borderWidth: 2,
-      borderColor: '#ffffff'
-    }]
-  };
-
-  activeMktOverviewCharts['conversions-channel'] = new Chart(ctx, {
-    type: 'doughnut',
-    data: channelData,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '68%',
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: { boxWidth: 10, padding: 8, font: { size: 10.5 } }
-        }
-      },
-      onClick: (e, elements) => {
-        if (elements && elements.length > 0) {
-          const index = elements[0].index;
-          const channelsMap = ['whatsapp', 'meta', 'google', 'email', 'organic', 'sms'];
-          selectMarketingChannel(channelsMap[index]);
-        }
-      }
-    }
-  });
-}
-
-function selectMarketingChannel(channelKey) {
-  const details = {
-    whatsapp: { name: 'WhatsApp Marketing', conv: '618 conversões', revenue: 'R$ 93.420', roas: '10,2x', icon: 'ph-whatsapp-logo text-success' },
-    meta: { name: 'Meta Ads (CAPI)', conv: '724 conversões', revenue: 'R$ 98.740', roas: '6,66x', icon: 'ph-meta-logo text-primary' },
-    google: { name: 'Google Ads', conv: '328 conversões', revenue: 'R$ 61.340', roas: '7,25x', icon: 'ph-google-logo text-danger' },
-    email: { name: 'E-mail Marketing', conv: '114 conversões', revenue: 'R$ 21.320', roas: '7,89x', icon: 'ph-envelope-simple text-info' },
-    organic: { name: 'Orgânico / Direto', conv: '42 conversões', revenue: 'R$ 6.340', roas: '∞', icon: 'ph-leaf text-success' },
-    sms: { name: 'SMS Marketing', conv: '16 conversões', revenue: 'R$ 3.590', roas: '2,11x', icon: 'ph-chat-circle-dots text-orange' }
-  };
-
-  const info = details[channelKey] || details.whatsapp;
-  const box = document.getElementById('mkt-channel-detail-box');
-  if (box) {
-    box.innerHTML = `
-      <div class="d-flex justify-content-between fw-bold text-dark">
-        <span><i class="${info.icon} me-1"></i> ${info.name}</span>
-        <span class="text-success">${info.conv}</span>
-      </div>
-      <div class="d-flex justify-content-between text-muted fs-xxs mt-0.5">
-        <span>Receita: <strong>${info.revenue}</strong></span>
-        <span>ROAS: <strong class="text-primary">${info.roas}</strong></span>
-      </div>
-    `;
-  }
-}
-window.selectMarketingChannel = selectMarketingChannel;
 
 function renderMarketingOverviewCharts() {
   refreshMarketingDashboard();
@@ -1033,6 +682,2236 @@ window.addEventListener('popstate', (e) => {
     navigateTo(e.state.page);
   }
 });
+
+
+/**
+ * ==========================================================================
+ * FASE 23.4: CENTRAL DE CAMPANHAS MULTICANAL & WIZARD ENGINE
+ * ==========================================================================
+ */
+
+let CAMPAIGNS_DATA = [
+  {
+    id: "camp-001",
+    name: "Virada de Lote Rock Curitiba",
+    objective: "Virada de Lote",
+    event: "Show de Rock Curitiba",
+    eventId: 2,
+    channels: ["whatsapp", "meta", "push"],
+    audience: "Interessados 7 dias",
+    audienceCount: 32480,
+    budget: 6800,
+    revenue: 47900,
+    roas: 7.04,
+    conversions: 462,
+    score: "excellent",
+    status: "active",
+    startAt: "2026-08-25",
+    endAt: "2026-09-05",
+    channelMetrics: {
+      whatsapp: { sent: 18420, clicks: 4280, sales: 240, revenue: 24800 },
+      meta: { impressions: 280000, clicks: 12400, sales: 182, roas: 6.8, revenue: 19100 },
+      push: { sent: 14200, clicks: 3100, sales: 40, revenue: 4000 }
+    }
+  },
+  {
+    id: "camp-002",
+    name: "Últimos Ingressos VIP Summer",
+    objective: "Últimos Ingressos",
+    event: "Festival Summer 2026",
+    eventId: 1,
+    channels: ["whatsapp", "meta"],
+    audience: "Compradores Anteriores",
+    audienceCount: 12580,
+    budget: 2500,
+    revenue: 19420,
+    roas: 7.76,
+    conversions: 284,
+    score: "excellent",
+    status: "active",
+    startAt: "2026-08-28",
+    endAt: "2026-09-02",
+    channelMetrics: {
+      whatsapp: { sent: 12580, clicks: 3890, sales: 210, revenue: 14500 },
+      meta: { impressions: 140000, clicks: 5400, sales: 74, roas: 7.6, revenue: 4920 }
+    }
+  },
+  {
+    id: "camp-003",
+    name: "Festival Verão Sunset Search",
+    objective: "Vender Ingressos",
+    event: "Festival Sunset",
+    eventId: 3,
+    channels: ["google", "meta"],
+    audience: "Busca Qualificada",
+    audienceCount: 45000,
+    budget: 5600,
+    revenue: 32180,
+    roas: 5.75,
+    conversions: 328,
+    score: "good",
+    status: "active",
+    startAt: "2026-08-15",
+    endAt: "2026-09-10",
+    channelMetrics: {
+      google: { impressions: 85000, clicks: 6800, sales: 210, revenue: 21000 },
+      meta: { impressions: 180000, clicks: 7200, sales: 118, roas: 5.2, revenue: 11180 }
+    }
+  },
+  {
+    id: "camp-004",
+    name: "Clientes VIP Early Bird",
+    objective: "Clientes VIP",
+    event: "Arena Music",
+    eventId: 4,
+    channels: ["email", "whatsapp"],
+    audience: "Compradores Recorrentes VIP",
+    audienceCount: 3450,
+    budget: 980,
+    revenue: 15640,
+    roas: 15.96,
+    conversions: 194,
+    score: "excellent",
+    status: "active",
+    startAt: "2026-08-20",
+    endAt: "2026-09-01",
+    channelMetrics: {
+      email: { sent: 3450, opens: 2180, clicks: 890, sales: 120, revenue: 9800 },
+      whatsapp: { sent: 1200, clicks: 420, sales: 74, revenue: 5840 }
+    }
+  },
+  {
+    id: "camp-005",
+    name: "Recuperação Automática Carrinho Zap",
+    objective: "Recuperar Carrinhos",
+    event: "Teatro Guaíra - Orquestra",
+    eventId: 5,
+    channels: ["whatsapp", "email"],
+    audience: "Carrinhos 24 Horas",
+    audienceCount: 1428,
+    budget: 1100,
+    revenue: 14850,
+    roas: 13.50,
+    conversions: 148,
+    score: "excellent",
+    status: "active",
+    startAt: "2026-08-01",
+    endAt: "2026-08-31",
+    channelMetrics: {
+      whatsapp: { sent: 1428, clicks: 680, sales: 112, revenue: 11200 },
+      email: { sent: 1428, opens: 720, clicks: 240, sales: 36, revenue: 3650 }
+    }
+  },
+  {
+    id: "camp-006",
+    name: "Aviso Contagem Regressiva 7 Dias",
+    objective: "Divulgar Evento",
+    event: "Festival Summer 2026",
+    eventId: 1,
+    channels: ["whatsapp", "push"],
+    audience: "Confirmados e Interessados",
+    audienceCount: 22000,
+    budget: 1400,
+    revenue: 9200,
+    roas: 6.57,
+    conversions: 92,
+    score: "good",
+    status: "scheduled",
+    startAt: "2026-09-13",
+    endAt: "2026-09-20",
+    channelMetrics: {}
+  },
+  {
+    id: "camp-007",
+    name: "Remarketing Lookalike 1%",
+    objective: "Remarketing",
+    event: "Show de Rock Curitiba",
+    eventId: 2,
+    channels: ["meta"],
+    audience: "Lookalike Compradores",
+    audienceCount: 150000,
+    budget: 3200,
+    revenue: 11820,
+    roas: 3.69,
+    conversions: 117,
+    score: "warning",
+    status: "paused",
+    startAt: "2026-08-10",
+    endAt: "2026-08-25",
+    channelMetrics: {
+      meta: { impressions: 220000, clicks: 4800, sales: 117, roas: 3.69, revenue: 11820 }
+    }
+  },
+  {
+    id: "camp-008",
+    name: "Flash Promo 24h SMS Especial",
+    objective: "Vender Ingressos",
+    event: "Stand-up Comedy Especial",
+    eventId: 6,
+    channels: ["sms", "email"],
+    audience: "Base de Humor Curitiba",
+    audienceCount: 28900,
+    budget: 750,
+    revenue: 6200,
+    roas: 8.26,
+    conversions: 96,
+    score: "excellent",
+    status: "completed",
+    startAt: "2026-08-18",
+    endAt: "2026-08-19",
+    channelMetrics: {
+      sms: { sent: 15000, clicks: 2100, sales: 58, revenue: 3800 },
+      email: { sent: 13900, opens: 4200, clicks: 920, sales: 38, revenue: 2400 }
+    }
+  }
+];
+window.CAMPAIGNS_DATA = CAMPAIGNS_DATA;
+
+let currentCampaignFilterStatus = 'all';
+
+function initMultichannelCampaignsModule() {
+  renderCampaignsTable();
+}
+window.initMultichannelCampaignsModule = initMultichannelCampaignsModule;
+
+function renderCampaignsTable(filterStatus = currentCampaignFilterStatus, searchQuery = '', channelFilter = 'all') {
+  const tbody = document.getElementById('mkt-campaigns-main-table-body');
+  if (!tbody) return;
+
+  const search = searchQuery.toLowerCase().trim();
+  
+  const filtered = CAMPAIGNS_DATA.filter(camp => {
+    if (filterStatus !== 'all' && camp.status !== filterStatus) return false;
+    if (channelFilter !== 'all' && !camp.channels.includes(channelFilter)) return false;
+    if (search && !camp.name.toLowerCase().includes(search) && !camp.event.toLowerCase().includes(search) && !camp.objective.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="text-center py-4 text-muted">
+          <i class="ph-magnifying-glass fs-2 mb-2 d-block text-secondary"></i>
+          Nenhuma campanha encontrada para os filtros selecionados.<br>
+          <button class="btn btn-primary btn-sm fw-bold mt-2" onclick="navigateTo('marketing-campaign-create')">+ Criar Nova Campanha</button>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(camp => {
+    // Channel Badges
+    const channelBadges = camp.channels.map(ch => {
+      if (ch === 'whatsapp') return `<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 me-1" title="WhatsApp"><i class="ph-whatsapp-logo"></i> Zap</span>`;
+      if (ch === 'meta') return `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 me-1" title="Meta Ads"><i class="ph-meta-logo"></i> Meta</span>`;
+      if (ch === 'google') return `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 me-1" title="Google Ads"><i class="ph-google-logo"></i> Google</span>`;
+      if (ch === 'email') return `<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 me-1" title="E-mail"><i class="ph-envelope-simple"></i> E-mail</span>`;
+      if (ch === 'sms') return `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-20 me-1" title="SMS"><i class="ph-chat-circle-dots"></i> SMS</span>`;
+      if (ch === 'push') return `<span class="badge bg-purple bg-opacity-10 text-purple border border-purple border-opacity-20 me-1" title="Push"><i class="ph-bell-ringing"></i> Push</span>`;
+      return `<span class="badge bg-light text-dark border me-1">${ch}</span>`;
+    }).join('');
+
+    // Score Badge
+    let scoreBadge = `<span class="badge bg-success">Excelente</span>`;
+    if (camp.score === 'good') scoreBadge = `<span class="badge bg-primary">Bom</span>`;
+    if (camp.score === 'warning') scoreBadge = `<span class="badge bg-warning text-dark">Atenção</span>`;
+    if (camp.score === 'critical') scoreBadge = `<span class="badge bg-danger">Crítico</span>`;
+
+    // Status Badge
+    let statusBadge = `<span class="badge bg-success">● Ativa</span>`;
+    if (camp.status === 'scheduled') statusBadge = `<span class="badge bg-info">Agendada</span>`;
+    if (camp.status === 'paused') statusBadge = `<span class="badge bg-warning text-dark">Pausada</span>`;
+    if (camp.status === 'completed') statusBadge = `<span class="badge bg-secondary">Finalizada</span>`;
+    if (camp.status === 'draft') statusBadge = `<span class="badge bg-light text-dark border">Rascunho</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark" style="cursor: pointer;" onclick="openCampaignDetailDrawer('${camp.id}')">${escapeHtml(camp.name)}</div>
+          <span class="fs-xxs text-muted">${escapeHtml(camp.objective)}</span>
+        </td>
+        <td>
+          <span class="text-dark fw-semibold">${escapeHtml(camp.event)}</span>
+        </td>
+        <td>
+          <div class="d-flex flex-wrap gap-1">${channelBadges}</div>
+        </td>
+        <td>
+          <span class="fs-xs">${Number(camp.audienceCount).toLocaleString('pt-BR')} pessoas</span>
+        </td>
+        <td>
+          <span class="fw-semibold text-dark">R$ ${Number(camp.budget).toLocaleString('pt-BR')}</span>
+        </td>
+        <td>
+          <strong class="text-success">R$ ${Number(camp.revenue).toLocaleString('pt-BR')}</strong>
+        </td>
+        <td>
+          <span class="badge ${camp.roas >= 7 ? 'bg-success' : camp.roas >= 4 ? 'bg-primary' : 'bg-warning text-dark'}">${camp.roas}x</span>
+        </td>
+        <td>${scoreBadge}</td>
+        <td>${statusBadge}</td>
+        <td class="text-end">
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Ver Detalhes" onclick="openCampaignDetailDrawer('${camp.id}')"><i class="ph-eye"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="${camp.status === 'paused' ? 'Retomar' : 'Pausar'}" onclick="toggleCampaignStatus('${camp.id}')"><i class="${camp.status === 'paused' ? 'ph-play text-success' : 'ph-pause text-warning'}"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Duplicar Campanha" onclick="duplicateCampaign('${camp.id}')"><i class="ph-copy text-primary"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Finalizar" onclick="finishCampaign('${camp.id}')"><i class="ph-check"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+window.renderCampaignsTable = renderCampaignsTable;
+
+function filterCampaignsByStatus(status, event) {
+  if (event) event.preventDefault();
+  currentCampaignFilterStatus = status;
+
+  // Update tabs active styling
+  const tabs = document.querySelectorAll('#mkt-campaigns-status-tabs .nav-link');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (event && event.currentTarget) {
+    event.currentTarget.classList.add('active');
+  }
+
+  filterCampaignsTable();
+}
+window.filterCampaignsByStatus = filterCampaignsByStatus;
+
+function filterCampaignsTable() {
+  const search = document.getElementById('mkt-campaign-search-input')?.value || '';
+  const channel = document.getElementById('mkt-campaign-channel-filter')?.value || 'all';
+  renderCampaignsTable(currentCampaignFilterStatus, search, channel);
+}
+window.filterCampaignsTable = filterCampaignsTable;
+
+/**
+ * Campaign Detail Drawer Controller
+ */
+function openCampaignDetailDrawer(campaignId) {
+  const camp = CAMPAIGNS_DATA.find(c => c.id === campaignId);
+  if (!camp) return;
+
+  const titleEl = document.getElementById('drawer-campaign-title');
+  const bodyEl = document.getElementById('drawer-campaign-body');
+  if (titleEl) titleEl.textContent = camp.name;
+
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div class="mb-3">
+        <span class="badge ${camp.status === 'active' ? 'bg-success' : 'bg-warning text-dark'} mb-2">● ${camp.status.toUpperCase()}</span>
+        <h5 class="fw-bold text-dark mb-0">${escapeHtml(camp.name)}</h5>
+        <span class="text-muted fs-xs">${escapeHtml(camp.event)} • ${escapeHtml(camp.objective)}</span>
+      </div>
+
+      <!-- 4 Quick KPIs -->
+      <div class="row g-2 mb-3 text-center">
+        <div class="col-6">
+          <div class="p-2.5 bg-light rounded border">
+            <span class="fs-xxs text-muted d-block">Receita Atribuída</span>
+            <strong class="text-success fs-sm">R$ ${Number(camp.revenue).toLocaleString('pt-BR')}</strong>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-2.5 bg-light rounded border">
+            <span class="fs-xxs text-muted d-block">ROAS Consolidado</span>
+            <strong class="text-primary fs-sm">${camp.roas}x</strong>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-2.5 bg-light rounded border">
+            <span class="fs-xxs text-muted d-block">Conversões</span>
+            <strong class="text-dark fs-sm">${camp.conversions} vendas</strong>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-2.5 bg-light rounded border">
+            <span class="fs-xxs text-muted d-block">Público Atingido</span>
+            <strong class="text-dark fs-sm">${Number(camp.audienceCount).toLocaleString('pt-BR')}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance por Canal -->
+      <h6 class="fw-bold text-dark fs-xs border-bottom pb-1 mb-2">Performance Detalhada por Canal:</h6>
+      <div class="d-flex flex-column gap-2 mb-4">
+        ${camp.channels.includes('whatsapp') ? `
+          <div class="p-2.5 bg-white border rounded shadow-2xs">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-success fs-xs"><i class="ph-whatsapp-logo me-1"></i> WhatsApp</span>
+              <span class="badge bg-success">Alta Conversão</span>
+            </div>
+            <div class="row g-1 fs-xxs text-muted">
+              <div class="col-4">Enviados: <strong>18.420</strong></div>
+              <div class="col-4">Cliques: <strong>4.280</strong></div>
+              <div class="col-4 text-end">Vendas: <strong class="text-success">240</strong></div>
+            </div>
+          </div>
+        ` : ''}
+
+        ${camp.channels.includes('meta') ? `
+          <div class="p-2.5 bg-white border rounded shadow-2xs">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-primary fs-xs"><i class="ph-meta-logo me-1"></i> Meta Ads (CAPI)</span>
+              <span class="badge bg-primary">ROAS 6.8x</span>
+            </div>
+            <div class="row g-1 fs-xxs text-muted">
+              <div class="col-4">Impressões: <strong>280k</strong></div>
+              <div class="col-4">Cliques: <strong>12.4k</strong></div>
+              <div class="col-4 text-end">Vendas: <strong class="text-success">182</strong></div>
+            </div>
+          </div>
+        ` : ''}
+
+        ${camp.channels.includes('email') ? `
+          <div class="p-2.5 bg-white border rounded shadow-2xs">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-info fs-xs"><i class="ph-envelope-simple me-1"></i> E-mail Marketing</span>
+              <span class="badge bg-info">Abertura: 63%</span>
+            </div>
+            <div class="row g-1 fs-xxs text-muted">
+              <div class="col-4">Enviados: <strong>3.450</strong></div>
+              <div class="col-4">Cliques: <strong>890</strong></div>
+              <div class="col-4 text-end">Vendas: <strong class="text-success">120</strong></div>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Ações Operacionais -->
+      <div class="d-flex flex-column gap-2 pt-2 border-top">
+        <button class="btn btn-primary fw-bold btn-sm" onclick="alert('Abrindo editor da campanha ${camp.id}...')"><i class="ph-pencil me-1"></i> Editar Campanha</button>
+        <button class="btn btn-outline-secondary fw-bold btn-sm" onclick="duplicateCampaign('${camp.id}')"><i class="ph-copy me-1"></i> Duplicar Campanha</button>
+        <button class="btn btn-outline-warning text-dark fw-bold btn-sm" onclick="toggleCampaignStatus('${camp.id}')"><i class="ph-pause me-1"></i> ${camp.status === 'paused' ? 'Retomar Disparos' : 'Pausar Campanha'}</button>
+      </div>
+    `;
+  }
+
+  const drawerEl = document.getElementById('mktCampaignDetailDrawer');
+  if (drawerEl && typeof bootstrap !== 'undefined' && bootstrap.Offcanvas) {
+    bootstrap.Offcanvas.getOrCreateInstance(drawerEl).show();
+  }
+}
+window.openCampaignDetailDrawer = openCampaignDetailDrawer;
+
+function toggleCampaignStatus(campaignId) {
+  const camp = CAMPAIGNS_DATA.find(c => c.id === campaignId);
+  if (!camp) return;
+
+  camp.status = (camp.status === 'paused') ? 'active' : 'paused';
+  renderCampaignsTable();
+
+  console.log({
+    audit: camp.status === 'active' ? 'campaign_resumed' : 'campaign_paused',
+    campaignId: campaignId,
+    timestamp: new Date().toISOString()
+  });
+
+  alert(`Campanha "${camp.name}" foi ${camp.status === 'active' ? 'RETOMADA' : 'PAUSADA'} com sucesso!`);
+}
+window.toggleCampaignStatus = toggleCampaignStatus;
+
+function duplicateCampaign(campaignId) {
+  const source = CAMPAIGNS_DATA.find(c => c.id === campaignId);
+  if (!source) return;
+
+  const newId = `camp-${String(CAMPAIGNS_DATA.length + 1).padStart(3, '0')}`;
+  const duplicated = {
+    ...source,
+    id: newId,
+    name: `${source.name} (Cópia)`,
+    status: 'draft',
+    revenue: 0,
+    conversions: 0,
+    roas: 0
+  };
+
+  CAMPAIGNS_DATA.unshift(duplicated);
+  renderCampaignsTable();
+
+  console.log({
+    audit: 'campaign_duplicated',
+    sourceId: campaignId,
+    newId: newId,
+    timestamp: new Date().toISOString()
+  });
+
+  alert(`Campanha duplicada com sucesso como Rascunho: "${duplicated.name}"!`);
+}
+window.duplicateCampaign = duplicateCampaign;
+
+function finishCampaign(campaignId) {
+  const camp = CAMPAIGNS_DATA.find(c => c.id === campaignId);
+  if (!camp) return;
+
+  camp.status = 'completed';
+  renderCampaignsTable();
+  alert(`Campanha "${camp.name}" marcada como FINALIZADA.`);
+}
+window.finishCampaign = finishCampaign;
+
+function quickLaunchCampaignTemplate(templateKey) {
+  newCampaignWizardState.objective = templateKey;
+  navigateTo('marketing-campaign-create');
+}
+window.quickLaunchCampaignTemplate = quickLaunchCampaignTemplate;
+
+/**
+ * Multi-step Wizard Controller for Creating Multichannel Campaign
+ */
+let currentWizardStep = 1;
+const newCampaignWizardState = {
+  objective: "sell_tickets",
+  eventId: 1,
+  eventName: "Festival Summer 2026",
+  audienceType: "virada_lote",
+  audienceCount: 32480,
+  channels: ["whatsapp", "meta", "email", "push"],
+  title: "Virada de Lote — Festival Summer 2026",
+  body: "🔥 Últimos ingressos antes da virada de lote! O Festival Summer 2026 está com mais de 70% dos ingressos vendidos. Garanta o seu com preço de 1º lote antes que aumente.",
+  budget: 8000,
+  scheduleType: "now"
+};
+window.newCampaignWizardState = newCampaignWizardState;
+
+function initCampaignWizard() {
+  goToWizardStep(1);
+}
+window.initCampaignWizard = initCampaignWizard;
+
+function goToWizardStep(stepNum) {
+  if (stepNum < 1 || stepNum > 8) return;
+  currentWizardStep = stepNum;
+
+  // Update step panes visibility
+  for (let i = 1; i <= 8; i++) {
+    const pane = document.getElementById(`mkt-pane-step-${i}`);
+    if (pane) pane.style.display = (i === stepNum) ? 'block' : 'none';
+  }
+
+  // Update stepper UI
+  for (let i = 1; i <= 8; i++) {
+    const stepNav = document.getElementById(`step-nav-${i}`);
+    if (!stepNav) continue;
+    const circle = stepNav.querySelector('.mkt-step-circle');
+    const label = stepNav.querySelector('span');
+
+    if (i === stepNum) {
+      if (circle) {
+        circle.className = 'mkt-step-circle mb-1 mx-auto bg-primary text-white fw-bold rounded-circle d-flex align-items-center justify-content-center';
+      }
+      if (label) {
+        label.className = 'fs-xxs fw-bold text-dark d-block';
+      }
+    } else if (i < stepNum) {
+      if (circle) {
+        circle.className = 'mkt-step-circle mb-1 mx-auto bg-success text-white fw-bold rounded-circle d-flex align-items-center justify-content-center';
+        circle.innerHTML = '✓';
+      }
+      if (label) {
+        label.className = 'fs-xxs fw-semibold text-success d-block';
+      }
+    } else {
+      if (circle) {
+        circle.className = 'mkt-step-circle mb-1 mx-auto bg-light border text-muted fw-bold rounded-circle d-flex align-items-center justify-content-center';
+        circle.innerHTML = String(i);
+      }
+      if (label) {
+        label.className = 'fs-xxs fw-semibold text-muted d-block';
+      }
+    }
+  }
+
+  // Update Buttons
+  const btnPrev = document.getElementById('wiz-btn-prev');
+  const btnNext = document.getElementById('wiz-btn-next');
+  const btnPublish = document.getElementById('wiz-btn-publish');
+
+  if (btnPrev) btnPrev.style.display = (stepNum > 1) ? 'inline-flex' : 'none';
+  if (btnNext) btnNext.style.display = (stepNum < 8) ? 'inline-flex' : 'none';
+  if (btnPublish) btnPublish.style.display = (stepNum === 8) ? 'inline-flex' : 'none';
+}
+window.goToWizardStep = goToWizardStep;
+
+function nextWizardStep() {
+  if (currentWizardStep < 8) {
+    goToWizardStep(currentWizardStep + 1);
+  }
+}
+window.nextWizardStep = nextWizardStep;
+
+function prevWizardStep() {
+  if (currentWizardStep > 1) {
+    goToWizardStep(currentWizardStep - 1);
+  }
+}
+window.prevWizardStep = prevWizardStep;
+
+function selectCampaignObjective(objKey, el) {
+  newCampaignWizardState.objective = objKey;
+  const cards = document.querySelectorAll('.mkt-obj-card');
+  cards.forEach(c => c.classList.remove('active', 'border-primary', 'shadow-sm'));
+  if (el) {
+    el.classList.add('active', 'border-primary', 'shadow-sm');
+  }
+
+  // Auto-suggest channels & copy
+  if (objKey === 'abandoned_cart') {
+    newCampaignWizardState.title = "Recuperação de Carrinho Abandonado";
+    newCampaignWizardState.body = "🛒 Você esqueceu seus ingressos no carrinho! Finalize agora com 5% de desconto especial: disk.ing/resgate";
+  } else if (objKey === 'last_tickets') {
+    newCampaignWizardState.title = "Últimos Ingressos — Esgotando!";
+    newCampaignWizardState.body = "🔥 Faltam menos de 10% dos ingressos! Garanta o seu antes que esgote definitivamente.";
+  }
+}
+window.selectCampaignObjective = selectCampaignObjective;
+
+function selectWizardEvent(evId, el) {
+  newCampaignWizardState.eventId = evId;
+  const cards = document.querySelectorAll('.wiz-event-card');
+  cards.forEach(c => c.classList.remove('active', 'border-primary', 'shadow-sm'));
+  if (el) {
+    el.classList.add('active', 'border-primary', 'shadow-sm');
+  }
+}
+window.selectWizardEvent = selectWizardEvent;
+
+function updateEstimatedAudience() {
+  const type = document.getElementById('wiz-audience-type')?.value;
+  let count = 32480;
+  if (type === 'all') count = 84500;
+  else if (type === 'cart_24h') count = 1428;
+  else if (type === 'vip') count = 3450;
+  else if (type === 'inactive') count = 12480;
+
+  newCampaignWizardState.audienceCount = count;
+  const el = document.getElementById('wiz-estimated-audience-count');
+  if (el) el.textContent = `${count.toLocaleString('pt-BR')} pessoas`;
+}
+window.updateEstimatedAudience = updateEstimatedAudience;
+
+function toggleWizardChannel(channelKey, el) {
+  const chk = document.getElementById(`wiz-chk-${channelKey}`);
+  if (chk) {
+    chk.checked = !chk.checked;
+  }
+  if (el) {
+    el.classList.toggle('active');
+  }
+}
+window.toggleWizardChannel = toggleWizardChannel;
+
+function generateCampaignContentWithAI() {
+  const titleInput = document.getElementById('wiz-content-title');
+  const bodyInput = document.getElementById('wiz-content-body');
+  
+  if (titleInput) titleInput.value = "🚀 [VIRADA DE LOTE] Festival Summer 2026 — Últimas 24 Horas!";
+  if (bodyInput) bodyInput.value = "🎟️ Atenção: o lote atual do Festival Summer 2026 encerra hoje às 23:59! Garanta agora seu ingresso com valor promocional antes do reajuste de preço. Acesse pelo link exclusivo e aproveite!";
+
+  alert("✨ Conteúdo gerado com IA Copilot com base no evento e objetivo selecionados!");
+}
+window.generateCampaignContentWithAI = generateCampaignContentWithAI;
+
+function updateBudgetCalculations() {
+  const total = Number(document.getElementById('wiz-budget-total')?.value) || 8000;
+  newCampaignWizardState.budget = total;
+}
+window.updateBudgetCalculations = updateBudgetCalculations;
+
+function publishMultichannelCampaign() {
+  const newCamp = {
+    id: `camp-${String(CAMPAIGNS_DATA.length + 1).padStart(3, '0')}`,
+    name: document.getElementById('wiz-content-title')?.value || "Nova Campanha Multicanal",
+    objective: newCampaignWizardState.objective,
+    event: "Festival Summer 2026",
+    eventId: 1,
+    channels: ["whatsapp", "meta", "email", "push"],
+    audience: "Segmentação Inteligente",
+    audienceCount: newCampaignWizardState.audienceCount || 32480,
+    budget: newCampaignWizardState.budget || 8000,
+    revenue: 0,
+    roas: 0,
+    conversions: 0,
+    score: "excellent",
+    status: "active",
+    startAt: new Date().toISOString().split('T')[0],
+    endAt: "2026-09-15",
+    channelMetrics: {}
+  };
+
+  CAMPAIGNS_DATA.unshift(newCamp);
+
+  console.log({
+    audit: "campaign_published",
+    campaign: newCamp,
+    timestamp: new Date().toISOString()
+  });
+
+  alert(`🚀 Campanha "${newCamp.name}" publicada com sucesso em 4 canais simultâneos!`);
+  navigateTo('marketing-campaigns');
+}
+window.publishMultichannelCampaign = publishMultichannelCampaign;
+
+function saveCampaignAsDraft() {
+  alert("💾 Rascunho da campanha salvo com sucesso!");
+  navigateTo('marketing-campaigns');
+}
+window.saveCampaignAsDraft = saveCampaignAsDraft;
+
+
+
+/**
+ * ==========================================================================
+ * FASE 23.6: AUTOMAÇÃO DE MARKETING & JORNADAS INTELIGENTES ENGINE
+ * ==========================================================================
+ */
+
+let AUTOMATIONS_DATA = [
+  {
+    id: "auto-001",
+    name: "Recuperação de Carrinho 30 min",
+    trigger: "checkout.abandoned",
+    triggerName: "Carrinho Abandonado (15 min)",
+    processed: 8420,
+    conversions: 1284,
+    revenue: 218420,
+    roas: 24.99,
+    convRate: "15,2%",
+    status: "active",
+    channels: ["whatsapp", "email", "sms"]
+  },
+  {
+    id: "auto-002",
+    name: "Virada de Lote Automática 48h",
+    trigger: "lot.ending_48h",
+    triggerName: "Lote Encerra em 48 Horas",
+    processed: 18620,
+    conversions: 942,
+    revenue: 182800,
+    roas: 18.20,
+    convRate: "5,1%",
+    status: "active",
+    channels: ["email", "whatsapp", "push"]
+  },
+  {
+    id: "auto-003",
+    name: "Reativação de Inativos 90 dias",
+    trigger: "customer.inactive_90d",
+    triggerName: "Sem Compras há 90 Dias",
+    processed: 12480,
+    conversions: 382,
+    revenue: 61400,
+    roas: 12.40,
+    convRate: "3,1%",
+    status: "active",
+    channels: ["email", "whatsapp"]
+  },
+  {
+    id: "auto-004",
+    name: "Pós-Evento & Avaliação NPS",
+    trigger: "ticket.validated",
+    triggerName: "Ingresso Validado (Check-in)",
+    processed: 22140,
+    conversions: 410,
+    revenue: 48900,
+    roas: 16.50,
+    convRate: "1,8%",
+    status: "active",
+    channels: ["whatsapp", "email"]
+  },
+  {
+    id: "auto-005",
+    name: "Régua Pré-Evento (7d / 24h / 3h)",
+    trigger: "event.days_until_7",
+    triggerName: "Faltam 7 dias para o Evento",
+    processed: 14200,
+    conversions: 184,
+    revenue: 24500,
+    roas: 8.90,
+    convRate: "1,3%",
+    status: "active",
+    channels: ["email", "push"]
+  },
+  {
+    id: "auto-006",
+    name: "Boas-Vindas & Primeira Compra",
+    trigger: "customer.created",
+    triggerName: "Novo Cadastro no Portal",
+    processed: 9540,
+    conversions: 840,
+    revenue: 96800,
+    roas: 21.00,
+    convRate: "8,8%",
+    status: "active",
+    channels: ["email", "whatsapp"]
+  },
+  {
+    id: "auto-007",
+    name: "Aniversariante do Mês (15% OFF)",
+    trigger: "customer.birthday",
+    triggerName: "Aniversário do Cliente",
+    processed: 3120,
+    conversions: 420,
+    revenue: 54600,
+    roas: 34.00,
+    convRate: "13,4%",
+    status: "active",
+    channels: ["whatsapp", "email"]
+  },
+  {
+    id: "auto-008",
+    name: "Cliente VIP Early Bird (Score >= 90)",
+    trigger: "segment.vip_joined",
+    triggerName: "Cliente Atinge Score VIP",
+    processed: 2840,
+    conversions: 618,
+    revenue: 124800,
+    roas: 42.00,
+    convRate: "21,7%",
+    status: "active",
+    channels: ["whatsapp", "email"]
+  }
+];
+window.AUTOMATIONS_DATA = AUTOMATIONS_DATA;
+
+let AUTOMATION_TEMPLATES_DATA = [
+  {
+    id: "tpl_cart",
+    name: "Recuperação de Carrinho Abandonado",
+    tag: "Resgate",
+    color: "danger",
+    icon: "ph-shopping-cart",
+    desc: "Gatilho: checkout.abandoned ➔ Espera 30 min ➔ WhatsApp ➔ Espera 2h ➔ E-mail com cupom 5% ➔ Espera 20h ➔ SMS.",
+    channels: ["whatsapp", "email", "sms"]
+  },
+  {
+    id: "tpl_virada",
+    name: "Virada de Lote 48h",
+    tag: "Urgência",
+    color: "warning",
+    icon: "ph-clock",
+    desc: "Gatilho: Lote encerra em 48h ➔ E-mail interessados ➔ Espera 24h ➔ WhatsApp ➔ 2h antes Push.",
+    channels: ["email", "whatsapp", "push"]
+  },
+  {
+    id: "tpl_preevento",
+    name: "Régua Pré-Evento 7d / 24h / 3h",
+    tag: "Relacionamento",
+    color: "info",
+    icon: "ph-calendar-check",
+    desc: "Instruções de acesso, mapas, estacionamento e envio de QR Code direto no smartphone.",
+    channels: ["email", "whatsapp", "push"]
+  },
+  {
+    id: "tpl_posevento",
+    name: "Pós-Evento & Pesquisa de Satisfação NPS",
+    tag: "Fidelização",
+    color: "success",
+    icon: "ph-star",
+    desc: "Agradecimento 12h pós-evento ➔ Pesquisa NPS 24h ➔ Nota >= 9 cupom fidelidade / Nota < 9 tarefa SAC.",
+    channels: ["whatsapp", "email"]
+  },
+  {
+    id: "tpl_welcome",
+    name: "Boas-Vindas & Primeira Compra",
+    tag: "Onboarding",
+    color: "primary",
+    icon: "ph-handshake",
+    desc: "E-mail de boas-vindas ➔ Espera 2 dias ➔ Eventos recomendados ➔ Cupom de primeira compra.",
+    channels: ["email", "whatsapp"]
+  },
+  {
+    id: "tpl_reativacao",
+    name: "Reativação de Inativos 90 Dias",
+    tag: "Reengajamento",
+    color: "purple",
+    icon: "ph-arrows-counter-clockwise",
+    desc: "Campanha exclusiva para clientes sem compras há 90 dias com curadoria cultural e descontos.",
+    channels: ["email", "whatsapp"]
+  },
+  {
+    id: "tpl_aniversario",
+    name: "Aniversariante do Mês",
+    tag: "Benefício",
+    color: "warning",
+    icon: "ph-cake",
+    desc: "Disparo automático no dia do aniversário com cupom PARABENS15 de 15% OFF válido por 7 dias.",
+    channels: ["whatsapp", "email"]
+  },
+  {
+    id: "tpl_vip",
+    name: "Acesso Exclusivo Cliente VIP",
+    tag: "VIP",
+    color: "info",
+    icon: "ph-crown",
+    desc: "Score >= 90 ➔ Tag VIP ➔ Acesso antecipado à pré-venda de eventos mais concorridos.",
+    channels: ["whatsapp", "email"]
+  },
+  {
+    id: "tpl_estoque",
+    name: "Estoque Crítico (Últimos 10%)",
+    tag: "Escassez",
+    color: "danger",
+    icon: "ph-fire",
+    desc: "Ingressos restantes < 10% ➔ Disparo imediato de WhatsApp e Push avisando esgotamento.",
+    channels: ["whatsapp", "push"]
+  },
+  {
+    id: "tpl_abaixo_meta",
+    name: "Alerta & Campanha Venda Abaixo da Meta",
+    tag: "Otimização",
+    color: "secondary",
+    icon: "ph-chart-line-down",
+    desc: "Vendas < 80% do esperado ➔ Identifica público de interesse e sugere remarketing ao produtor.",
+    channels: ["email", "meta"]
+  }
+];
+window.AUTOMATION_TEMPLATES_DATA = AUTOMATION_TEMPLATES_DATA;
+
+let AUTOMATION_EXECUTIONS_DATA = [
+  {
+    customer: "Mariana Oliveira",
+    journey: "Recuperação de Carrinho",
+    step: "Esperando 30 minutos",
+    nextAction: "Enviar WhatsApp",
+    scheduledAt: "17:40:00",
+    status: "waiting"
+  },
+  {
+    customer: "Carlos Santos",
+    journey: "Recuperação de Carrinho",
+    step: "Compra Detectada",
+    nextAction: "Encerrar com Sucesso",
+    scheduledAt: "17:35:12",
+    status: "completed"
+  },
+  {
+    customer: "Fernanda Lima",
+    journey: "Virada de Lote 48h",
+    step: "Aguardando Leitura E-mail",
+    nextAction: "Enviar WhatsApp",
+    scheduledAt: "18:00:00",
+    status: "waiting"
+  },
+  {
+    customer: "Rodrigo Alves",
+    journey: "Boas-Vindas Novo Cadastro",
+    step: "E-mail Boas-Vindas Enviado",
+    nextAction: "Recomendar Eventos",
+    scheduledAt: "Amanhã às 10:00",
+    status: "running"
+  },
+  {
+    customer: "Juliana Rocha",
+    journey: "Aniversariante do Mês",
+    step: "Cupom PARABENS15 Gerado",
+    nextAction: "WhatsApp Parabéns",
+    scheduledAt: "Hoje às 09:00",
+    status: "completed"
+  },
+  {
+    customer: "Lucas Mendes",
+    journey: "Pós-Evento & NPS",
+    step: "NPS 10 Recebido",
+    nextAction: "Adicionar Tag Fidelidade",
+    scheduledAt: "17:15:00",
+    status: "completed"
+  }
+];
+
+let AUTOMATION_AUDIT_LOGS = [
+  { time: "17:38:12", event: "checkout.abandoned", execId: "exec_881920", customerId: "cus_9941", node: "node_wait_30m", result: "wait_started", idempotency: "OK (dedup_1)" },
+  { time: "17:35:12", event: "order.created", execId: "exec_881919", customerId: "cus_8812", node: "node_finish_conv", result: "conversion_detected", idempotency: "OK (dedup_1)" },
+  { time: "17:30:04", event: "ticket.validated", execId: "exec_881918", customerId: "cus_7714", node: "node_wait_12h", result: "wait_started", idempotency: "OK (dedup_1)" },
+  { time: "17:22:15", event: "lot.ending_48h", execId: "exec_881917", customerId: "cus_6650", node: "node_send_email", result: "message_sent", idempotency: "OK (dedup_1)" },
+  { time: "17:15:00", event: "customer.birthday", execId: "exec_881916", customerId: "cus_5512", node: "node_send_whatsapp", result: "message_sent", idempotency: "OK (dedup_1)" }
+];
+
+function initMarketingAutomationModule() {
+  renderAutomationsTable();
+  renderAutomationTemplates();
+  renderAutomationExecutions();
+  renderAutomationAuditLogs();
+}
+window.initMarketingAutomationModule = initMarketingAutomationModule;
+
+function renderAutomationsTable() {
+  const tbody = document.getElementById('mkt-automations-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = AUTOMATIONS_DATA.map(item => {
+    let statusBadge = `<span class="badge bg-success">● Ativa</span>`;
+    if (item.status === 'paused') statusBadge = `<span class="badge bg-warning text-dark">Pausada</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark" style="cursor: pointer;" onclick="openNewAutomationBuilder('${item.id}')">${escapeHtml(item.name)}</div>
+          <span class="fs-xxs text-muted">Canais: ${item.channels.join(', ')}</span>
+        </td>
+        <td>
+          <span class="badge bg-light text-dark border fs-xxs"><code>${escapeHtml(item.trigger)}</code></span>
+          <span class="fs-xxs text-muted d-block">${escapeHtml(item.triggerName)}</span>
+        </td>
+        <td><strong>${Number(item.processed).toLocaleString('pt-BR')}</strong> clientes</td>
+        <td><strong class="text-success">${Number(item.conversions).toLocaleString('pt-BR')}</strong></td>
+        <td><strong class="text-success">R$ ${Number(item.revenue).toLocaleString('pt-BR')}</strong></td>
+        <td><span class="badge bg-primary">${item.roas}x</span></td>
+        <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20">${item.convRate}</span></td>
+        <td>${statusBadge}</td>
+        <td class="text-end">
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Abrir Construtor" onclick="openNewAutomationBuilder('${item.id}')"><i class="ph-flow-arrow text-purple"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="${item.status === 'active' ? 'Pausar' : 'Retomar'}" onclick="toggleAutomationStatus('${item.id}')"><i class="${item.status === 'active' ? 'ph-pause text-warning' : 'ph-play text-success'}"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Relatório de Atribuição" onclick="alert('Exibindo métricas da jornada ${item.name}...')"><i class="ph-chart-line"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+window.renderAutomationsTable = renderAutomationsTable;
+
+function switchAutomationTab(tabKey, event) {
+  if (event) event.preventDefault();
+
+  const tabs = document.querySelectorAll('#mkt-automation-nav-tabs .nav-link');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+  const panes = document.querySelectorAll('.mkt-auto-pane');
+  panes.forEach(p => p.style.display = 'none');
+
+  const targetPane = document.getElementById(`mkt-pane-auto-${tabKey}`);
+  if (targetPane) targetPane.style.display = 'block';
+}
+window.switchAutomationTab = switchAutomationTab;
+
+function openNewAutomationBuilder(autoIdOrTemplateKey) {
+  switchAutomationTab('builder');
+  
+  const titleEl = document.getElementById('mkt-builder-flow-name');
+  if (titleEl) {
+    if (autoIdOrTemplateKey === 'auto-002' || autoIdOrTemplateKey === 'tpl_virada') {
+      titleEl.textContent = "Fluxo: Virada de Lote Automática (48h)";
+    } else if (autoIdOrTemplateKey === 'auto-003' || autoIdOrTemplateKey === 'tpl_reativacao') {
+      titleEl.textContent = "Fluxo: Reativação de Clientes Inativos (90 dias)";
+    } else if (autoIdOrTemplateKey === 'auto-004' || autoIdOrTemplateKey === 'tpl_posevento') {
+      titleEl.textContent = "Fluxo: Pós-Evento & Pesquisa NPS";
+    } else {
+      titleEl.textContent = "Fluxo: Recuperação de Carrinho Abandonado (30 min)";
+    }
+  }
+}
+window.openNewAutomationBuilder = openNewAutomationBuilder;
+
+function toggleAutomationStatus(autoId) {
+  const item = AUTOMATIONS_DATA.find(a => a.id === autoId);
+  if (!item) return;
+
+  item.status = (item.status === 'active') ? 'paused' : 'active';
+  renderAutomationsTable();
+  alert(`Jornada "${item.name}" foi ${item.status === 'active' ? 'ATIVADA' : 'PAUSADA'} com sucesso!`);
+}
+window.toggleAutomationStatus = toggleAutomationStatus;
+
+function addNewFlowBlock() {
+  const container = document.getElementById('mkt-flow-canvas-container');
+  if (!container) return;
+
+  const newBlockHtml = `
+    <div class="text-center py-2 text-primary fs-4"><i class="ph-arrow-down"></i></div>
+    <div class="card border shadow-sm p-3 w-100 bg-white" style="border-radius: 8px; border-left: 5px solid #8b5cf6 !important;">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="badge bg-purple text-white fs-xxs" style="background-color: #8b5cf6;">Ação Personalizada</span>
+        <button class="btn btn-xs btn-link text-danger p-0" onclick="this.closest('.card').previousElementSibling.remove(); this.closest('.card').remove();"><i class="ph-trash"></i></button>
+      </div>
+      <h6 class="fw-bold text-dark mb-1"><i class="ph-tag text-purple me-1"></i> Adicionar Tag CRM "Interessado VIP" &amp; Gerar Cupom</h6>
+      <span class="fs-xxs text-muted">Aplica a tag no CRM do cliente e cria voucher de 10% OFF com validade de 48h.</span>
+    </div>
+  `;
+
+  container.insertAdjacentHTML('beforeend', newBlockHtml);
+  alert("✨ Novo bloco de ação adicionado com sucesso ao fluxo!");
+}
+window.addNewFlowBlock = addNewFlowBlock;
+
+function simulateJourneyExecution() {
+  alert("🧪 [SIMULAÇÃO AO VIVO INICIADA]\n\n" +
+        "1. Cliente Teste: Mariana Oliveira (Origem: Checkout Abandonado)\n" +
+        "2. Gatilho detectado: checkout.abandoned (Valor: R$ 240,00)\n" +
+        "3. Janela de espera: 30 minutos (Simulada)\n" +
+        "4. Condição avaliada: Não comprou (NÃO ➔ Prosseguir)\n" +
+        "5. Ação executada: Disparo de WhatsApp com Link de Resgate\n" +
+        "6. Status: Simulação 100% aprovada sem falhas de integração!");
+}
+window.simulateJourneyExecution = simulateJourneyExecution;
+
+function activateAutomationFlow() {
+  alert("🚀 Automação ativada com sucesso!\n\n" +
+        "✓ Gatilhos configurados em tempo real\n" +
+        "✓ Frequência máxima de mensagens respeitada\n" +
+        "✓ Janela de envio configurada: 08:00 às 21:00\n" +
+        "✓ Idempotência ativada (Sem disparos duplicados)");
+  switchAutomationTab('journeys');
+}
+window.activateAutomationFlow = activateAutomationFlow;
+
+function renderAutomationTemplates() {
+  const grid = document.getElementById('mkt-auto-templates-grid');
+  if (!grid) return;
+
+  grid.innerHTML = AUTOMATION_TEMPLATES_DATA.map(t => {
+    return `
+      <div class="col-md-6 col-xl-4">
+        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 8px;">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-${t.color} bg-opacity-10 text-${t.color} border border-${t.color} border-opacity-20 fs-xxs"><i class="${t.icon} me-1"></i> ${t.tag}</span>
+              <div class="d-flex gap-1 fs-xs">
+                ${t.channels.map(ch => `<span class="badge bg-light text-dark border fs-xxs">${ch}</span>`).join('')}
+              </div>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">${escapeHtml(t.name)}</h6>
+            <p class="text-muted fs-xxs mb-3">${escapeHtml(t.desc)}</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm fw-bold flex-grow-1" onclick="openNewAutomationBuilder('${t.id}')">Usar Modelo</button>
+            <button class="btn btn-light btn-sm border" title="Pré-visualizar" onclick="alert('Pré-visualização do modelo: ${t.name}')"><i class="ph-eye"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAutomationExecutions() {
+  const tbody = document.getElementById('mkt-auto-executions-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = AUTOMATION_EXECUTIONS_DATA.map(e => {
+    let badge = `<span class="badge bg-info">Aguardando</span>`;
+    if (e.status === 'completed') badge = `<span class="badge bg-success">Concluído</span>`;
+    if (e.status === 'running') badge = `<span class="badge bg-primary">Em Execução</span>`;
+
+    return `
+      <tr>
+        <td><strong>${escapeHtml(e.customer)}</strong></td>
+        <td><span class="badge bg-light text-dark border">${escapeHtml(e.journey)}</span></td>
+        <td>${escapeHtml(e.step)}</td>
+        <td><strong class="text-primary">${escapeHtml(e.nextAction)}</strong></td>
+        <td class="text-muted fs-xs">${escapeHtml(e.scheduledAt)}</td>
+        <td>${badge}</td>
+        <td class="text-end">
+          <button class="btn btn-xs btn-light border py-1 px-2" onclick="alert('Visualizando detalhes do cliente ${e.customer}...')"><i class="ph-user"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAutomationAuditLogs() {
+  const tbody = document.getElementById('mkt-auto-audit-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = AUTOMATION_AUDIT_LOGS.map(l => {
+    return `
+      <tr>
+        <td class="font-monospace fs-xxs text-muted">${escapeHtml(l.time)}</td>
+        <td><code>${escapeHtml(l.event)}</code></td>
+        <td class="font-monospace fs-xxs">${escapeHtml(l.execId)}</td>
+        <td class="font-monospace fs-xxs text-primary">${escapeHtml(l.customerId)}</td>
+        <td><span class="badge bg-light text-dark border fs-xxs">${escapeHtml(l.node)}</span></td>
+        <td><strong class="text-success fs-xxs">${escapeHtml(l.result)}</strong></td>
+        <td class="text-end"><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs">${escapeHtml(l.idempotency)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+
+/**
+ * ==========================================================================
+ * FASE 23.7: WHATSAPP MARKETING & CENTRAL DE CONVERSAS ENGINE
+ * ==========================================================================
+ */
+
+let WHATSAPP_CONVERSATIONS_DATA = [
+  {
+    id: "conv-001",
+    customer: {
+      name: "Mariana Oliveira",
+      phone: "(71) 98821-1234",
+      maskedPhone: "(71) 9****-1234",
+      city: "Salvador, BA",
+      score: 92,
+      isVip: true,
+      totalSpent: 4820,
+      ordersCount: 12,
+      ticketsCount: 18,
+      lastOrderDays: 12,
+      activeOrder: {
+        id: "#845218",
+        event: "Festival Summer 2026",
+        items: "2x Pista Premium",
+        value: 240,
+        status: "Aprovado",
+        ticketCode: "ING-8821"
+      },
+      tags: ["VIP", "Recorrente", "WhatsApp Engaged", "Festival Summer"]
+    },
+    protocol: "SAC-2026-0001842",
+    queue: "sac",
+    queueName: "SAC Geral",
+    agent: "João Santos",
+    status: "open",
+    priority: "high",
+    unreadCount: 2,
+    slaRemaining: "04:32",
+    lastMessage: "Perfeito! Nome: Rafael Oliveira, CPF: 029.384.112-90.",
+    lastTime: "16:44",
+    messages: [
+      { type: "marketing_event", text: "🚀 Recebeu Campanha WhatsApp: '🔥 Virada de Lote Festival Summer'", time: "Ontem 18:20" },
+      { type: "marketing_event", text: "👆 Clicou no link com UTM rastreada", time: "Ontem 18:23" },
+      { type: "marketing_event", text: "💳 Compra realizada - Pedido #845218 (R$ 240,00)", time: "28/08 14:10" },
+      { direction: "inbound", text: "Olá, boa tarde! Gostaria de transferir um dos ingressos do meu pedido #845218 para meu irmão. Como faço?", time: "16:42" },
+      { direction: "outbound", text: "Olá Mariana! Localizei seu pedido aqui. Para realizar a troca de titularidade com segurança, basta me confirmar o nome completo e CPF do seu irmão.", time: "16:43" },
+      { direction: "inbound", text: "Perfeito! Nome: Rafael Oliveira, CPF: 029.384.112-90.", time: "16:44" }
+    ]
+  },
+  {
+    id: "conv-002",
+    customer: {
+      name: "Carlos Eduardo Santos",
+      phone: "(41) 99123-5566",
+      maskedPhone: "(41) 9****-5566",
+      city: "Curitiba, PR",
+      score: 78,
+      isVip: false,
+      totalSpent: 1240,
+      ordersCount: 4,
+      ticketsCount: 6,
+      lastOrderDays: 2,
+      activeOrder: {
+        id: "#845199",
+        event: "Show de Rock Curitiba",
+        items: "1x Camarote VIP",
+        value: 350,
+        status: "Pendente Pix",
+        ticketCode: "ING-8790"
+      },
+      tags: ["Rock Curitiba", "Pendente Pix"]
+    },
+    protocol: "SAC-2026-0001840",
+    queue: "finance",
+    queueName: "Financeiro",
+    agent: "Bot Auto",
+    status: "waiting",
+    priority: "urgent",
+    unreadCount: 1,
+    slaRemaining: "01:15",
+    lastMessage: "Meu Pix expirou, como gero outro?",
+    lastTime: "16:38",
+    messages: [
+      { direction: "inbound", text: "Olá, meu Pix expirou antes de eu pagar o pedido #845199. Como gero outro?", time: "16:38" }
+    ]
+  },
+  {
+    id: "conv-003",
+    customer: {
+      name: "Ana Paula Costa",
+      phone: "(11) 98765-4321",
+      maskedPhone: "(11) 9****-4321",
+      city: "São Paulo, SP",
+      score: 65,
+      isVip: false,
+      totalSpent: 680,
+      ordersCount: 2,
+      ticketsCount: 4,
+      lastOrderDays: 30,
+      activeOrder: null,
+      tags: ["Interessada Arena"]
+    },
+    protocol: "SAC-2026-0001835",
+    queue: "tickets",
+    queueName: "Ingressos",
+    agent: "Beatriz Lima",
+    status: "open",
+    priority: "normal",
+    unreadCount: 0,
+    slaRemaining: "08:45",
+    lastMessage: "Vocês têm setor PCD disponível para o Arena Music?",
+    lastTime: "16:30",
+    messages: [
+      { direction: "inbound", text: "Olá! Vocês têm setor PCD disponível para o Arena Music?", time: "16:30" }
+    ]
+  },
+  {
+    id: "conv-004",
+    customer: {
+      name: "João Pedro Lima",
+      phone: "(41) 98455-7788",
+      maskedPhone: "(41) 9****-7788",
+      city: "Curitiba, PR",
+      score: 95,
+      isVip: true,
+      totalSpent: 6420,
+      ordersCount: 16,
+      ticketsCount: 24,
+      lastOrderDays: 1,
+      activeOrder: {
+        id: "#845150",
+        event: "Teatro Guaíra - Orquestra",
+        items: "2x Plateia A",
+        value: 180,
+        status: "Aprovado",
+        ticketCode: "ING-8610"
+      },
+      tags: ["VIP", "Teatro"]
+    },
+    protocol: "SAC-2026-0001828",
+    queue: "sac",
+    queueName: "SAC Geral",
+    agent: "João Santos",
+    status: "resolved",
+    priority: "normal",
+    unreadCount: 0,
+    slaRemaining: "Concluído",
+    lastMessage: "Obrigado, ingresso recebido perfeitamente!",
+    lastTime: "16:15",
+    messages: [
+      { direction: "inbound", text: "Obrigado, ingresso recebido perfeitamente!", time: "16:15" }
+    ]
+  }
+];
+window.WHATSAPP_CONVERSATIONS_DATA = WHATSAPP_CONVERSATIONS_DATA;
+
+let WHATSAPP_TEMPLATES_DATA = [
+  {
+    id: "tpl_whats_virada",
+    name: "aviso_virada_lote_24h",
+    category: "MARKETING",
+    language: "Português (BR)",
+    status: "Aprovado",
+    header: "🔥 Virada de Lote!",
+    body: "Olá {{1}}, o {{2}} muda de lote amanhã às 18h. Garanta seu ingresso antes do reajuste de preço.",
+    footer: "DiskIngressos Oficial",
+    cta: "Comprar Ingresso"
+  },
+  {
+    id: "tpl_whats_cart",
+    name: "carrinho_abandonado_resgate",
+    category: "MARKETING",
+    language: "Português (BR)",
+    status: "Aprovado",
+    header: "🛒 Seus Ingressos Reservados",
+    body: "Olá {{1}}, vimos que você não finalizou o pedido para {{2}}. Seus ingressos estão reservados com 5% de desconto especial.",
+    footer: "Válido por 2 horas",
+    cta: "Finalizar Pedido"
+  },
+  {
+    id: "tpl_whats_ingresso",
+    name: "ingresso_confirmado_qrcode",
+    category: "UTILIDADE",
+    language: "Português (BR)",
+    status: "Aprovado",
+    header: "🎟️ Seu Ingresso Chegou!",
+    body: "Olá {{1}}, seu pedido #{{2}} para o {{3}} foi aprovado com sucesso! Apresente o QR Code na entrada.",
+    footer: "Acesso Rápido DiskIngressos",
+    cta: "Ver Ingresso"
+  },
+  {
+    id: "tpl_whats_pix",
+    name: "segunda_via_pix_pendente",
+    category: "UTILIDADE",
+    language: "Português (BR)",
+    status: "Aprovado",
+    header: "💳 Código Pix Gerado",
+    body: "Olá {{1}}, segue seu código Pix para o pedido #{{2}} no valor de R$ {{3}}. Copie e cole no seu banco.",
+    footer: "Expira em 30 minutos",
+    cta: "Copiar Pix"
+  }
+];
+window.WHATSAPP_TEMPLATES_DATA = WHATSAPP_TEMPLATES_DATA;
+
+let WHATSAPP_CAMPAIGNS_DATA = [
+  {
+    name: "Virada de Lote Festival Summer",
+    audience: "32.480 contatos",
+    sent: 18420,
+    delivered: 18180,
+    read: 15820,
+    clicks: "4.280 (23,5%)",
+    sales: 620,
+    revenue: "R$ 98.420,00",
+    status: "Concluída"
+  },
+  {
+    name: "Últimos Ingressos Rock Curitiba",
+    audience: "12.580 contatos",
+    sent: 12580,
+    delivered: 12420,
+    read: 11150,
+    clicks: "3.890 (31,3%)",
+    sales: 284,
+    revenue: "R$ 64.180,00",
+    status: "Ativa"
+  },
+  {
+    name: "Recuperação Automática de Carrinho",
+    audience: "1.428 contatos",
+    sent: 1428,
+    delivered: 1410,
+    read: 1290,
+    clicks: "680 (48,2%)",
+    sales: 248,
+    revenue: "R$ 42.680,00",
+    status: "Ativa (Automação)"
+  },
+  {
+    name: "Early Bird VIP Arena Music",
+    audience: "3.450 contatos",
+    sent: 3450,
+    delivered: 3420,
+    read: 3120,
+    clicks: "980 (28,6%)",
+    sales: 194,
+    revenue: "R$ 38.900,00",
+    status: "Concluída"
+  }
+];
+
+let WHATSAPP_AGENTS_DATA = [
+  { name: "João Santos", queue: "SAC Geral & VIP", status: "Online", activeChats: 8, avgResponse: "1m 42s", sla: "98,2%", csat: "4.9 / 5.0" },
+  { name: "Beatriz Lima", queue: "Ingressos & Eventos", status: "Online", activeChats: 6, avgResponse: "2m 10s", sla: "95,6%", csat: "4.8 / 5.0" },
+  { name: "Carlos Nogueira", queue: "Financeiro & Pix", status: "Ocupado", activeChats: 11, avgResponse: "3m 05s", sla: "94,1%", csat: "4.7 / 5.0" },
+  { name: "Disk Bot Auto", queue: "Triagem Automatizada", status: "Ativo 24/7", activeChats: 42, avgResponse: "0.2s", sla: "100%", csat: "4.6 / 5.0" }
+];
+
+let currentActiveWhatsConvId = "conv-001";
+let currentWhatsMsgMode = "client"; // 'client' or 'internal'
+
+function initWhatsAppMarketingModule() {
+  renderWhatsConversationsList();
+  selectWhatsConversation(currentActiveWhatsConvId);
+  renderWhatsTemplates();
+  renderWhatsCampaigns();
+  renderWhatsAgents();
+}
+window.initWhatsAppMarketingModule = initWhatsAppMarketingModule;
+
+function renderWhatsConversationsList() {
+  const container = document.getElementById('whats-conversations-list');
+  if (!container) return;
+
+  const search = document.getElementById('whats-search-input')?.value.toLowerCase().trim() || '';
+  const queueFilter = document.getElementById('whats-queue-filter')?.value || 'all';
+  const statusFilter = document.getElementById('whats-status-filter')?.value || 'all';
+
+  const filtered = WHATSAPP_CONVERSATIONS_DATA.filter(c => {
+    if (queueFilter !== 'all' && c.queue !== queueFilter) return false;
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+    if (search && !c.customer.name.toLowerCase().includes(search) && !c.customer.phone.includes(search) && !(c.customer.activeOrder?.id || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="p-4 text-center text-muted fs-xs">
+        <i class="ph-magnifying-glass fs-2 mb-1 d-block text-secondary"></i>
+        Nenhuma conversa encontrada.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(c => {
+    const isSelected = (c.id === currentActiveWhatsConvId);
+    let badgeClass = c.customer.isVip ? 'bg-purple' : 'bg-primary';
+    let unreadHtml = c.unreadCount > 0 ? `<span class="badge bg-success rounded-pill fs-xxs">${c.unreadCount}</span>` : '';
+
+    return `
+      <div class="list-group-item list-group-item-action p-2.5 border-start-0 border-end-0 ${isSelected ? 'bg-light border-primary border-2' : ''}" style="cursor: pointer;" onclick="selectWhatsConversation('${c.id}')">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div class="d-flex align-items-center gap-1.5">
+            <strong class="text-dark fs-xs">${escapeHtml(c.customer.name)}</strong>
+            ${c.customer.isVip ? '<span class="badge bg-purple text-white fs-xxs" style="background-color: #8b5cf6;">VIP</span>' : ''}
+          </div>
+          <span class="fs-xxs text-muted">${escapeHtml(c.lastTime)}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fs-xxs text-muted text-truncate" style="max-width: 190px;">${escapeHtml(c.lastMessage)}</span>
+          ${unreadHtml}
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-1 pt-1 border-top border-light fs-xxs text-muted">
+          <span><i class="ph-users me-0.5"></i> ${escapeHtml(c.queueName)}</span>
+          <span class="text-primary fw-semibold">${escapeHtml(c.agent)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderWhatsConversationsList = renderWhatsConversationsList;
+
+function selectWhatsConversation(convId) {
+  currentActiveWhatsConvId = convId;
+  const conv = WHATSAPP_CONVERSATIONS_DATA.find(c => c.id === convId);
+  if (!conv) return;
+
+  conv.unreadCount = 0;
+  renderWhatsConversationsList();
+
+  // Populate Active Chat Header
+  const nameEl = document.getElementById('whats-active-name');
+  const avatarEl = document.getElementById('whats-active-avatar');
+  const phoneEl = document.getElementById('whats-active-phone');
+  const protEl = document.getElementById('whats-active-protocol');
+  const slaEl = document.getElementById('whats-active-sla');
+
+  if (nameEl) nameEl.textContent = conv.customer.name;
+  if (avatarEl) avatarEl.textContent = conv.customer.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+  if (phoneEl) phoneEl.textContent = conv.customer.maskedPhone;
+  if (protEl) protEl.textContent = `Protocolo: ${conv.protocol}`;
+  if (slaEl) slaEl.innerHTML = `<i class="ph-clock me-1"></i> SLA: ${conv.slaRemaining}`;
+
+  // Populate Customer 360 Pane
+  const cName = document.getElementById('c360-name');
+  const cAvatar = document.getElementById('c360-avatar');
+  const cScore = document.getElementById('c360-score');
+  const cCity = document.getElementById('c360-city');
+  const cSpent = document.getElementById('c360-total-spent');
+  const cOrders = document.getElementById('c360-orders-count');
+  const cTickets = document.getElementById('c360-tickets-count');
+  const cLast = document.getElementById('c360-last-order');
+
+  if (cName) cName.textContent = conv.customer.name;
+  if (cAvatar) cAvatar.textContent = conv.customer.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+  if (cScore) cScore.textContent = `Score CRM: ${conv.customer.score} • ${conv.customer.isVip ? '👑 VIP' : 'Cliente'}`;
+  if (cCity) cCity.innerHTML = `<i class="ph-map-pin me-1"></i> ${conv.customer.city}`;
+  if (cSpent) cSpent.textContent = `R$ ${Number(conv.customer.totalSpent).toLocaleString('pt-BR')},00`;
+  if (cOrders) cOrders.textContent = `${conv.customer.ordersCount} pedidos`;
+  if (cTickets) cTickets.textContent = `${conv.customer.ticketsCount} ingressos`;
+  if (cLast) cLast.textContent = `Há ${conv.customer.lastOrderDays} dias`;
+
+  // Render Messages
+  renderWhatsMessages(conv);
+}
+window.selectWhatsConversation = selectWhatsConversation;
+
+function renderWhatsMessages(conv) {
+  const body = document.getElementById('whats-messages-body');
+  if (!body) return;
+
+  body.innerHTML = conv.messages.map(m => {
+    if (m.type === 'marketing_event') {
+      return `
+        <div class="text-center my-2">
+          <span class="badge bg-purple bg-opacity-10 text-purple border border-purple border-opacity-20 fs-xxs py-1 px-2.5 rounded-pill">
+            ${escapeHtml(m.text)} • <span class="opacity-75">${escapeHtml(m.time)}</span>
+          </span>
+        </div>
+      `;
+    }
+
+    if (m.direction === 'inbound') {
+      return `
+        <div class="d-flex justify-content-start mb-2.5">
+          <div class="p-2.5 rounded-3 bg-white text-dark shadow-2xs border" style="max-width: 78%; border-top-left-radius: 0 !important;">
+            <div class="fs-xs">${escapeHtml(m.text)}</div>
+            <div class="text-end text-muted fs-xxs mt-1">${escapeHtml(m.time)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (m.direction === 'internal') {
+      return `
+        <div class="d-flex justify-content-center mb-2.5">
+          <div class="p-2.5 rounded-3 bg-warning bg-opacity-10 border border-warning border-opacity-30 text-dark shadow-2xs" style="max-width: 85%;">
+            <div class="fw-bold text-dark fs-xxs mb-0.5"><i class="ph-note-pencil text-warning me-1"></i> NOTA INTERNA (SAC):</div>
+            <div class="fs-xs">${escapeHtml(m.text)}</div>
+            <div class="text-end text-muted fs-xxs mt-1">${escapeHtml(m.time)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="d-flex justify-content-end mb-2.5">
+        <div class="p-2.5 rounded-3 bg-success text-white shadow-2xs" style="max-width: 78%; border-top-right-radius: 0 !important;">
+          <div class="fs-xs">${escapeHtml(m.text)}</div>
+          <div class="text-end text-white-50 fs-xxs mt-1">${escapeHtml(m.time)} <i class="ph-checks text-white ms-0.5"></i></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  body.scrollTop = body.scrollHeight;
+}
+
+function toggleMessageType(type) {
+  currentWhatsMsgMode = type;
+  const input = document.getElementById('whats-chat-input');
+  if (input) {
+    if (type === 'internal') {
+      input.placeholder = "Escreva uma nota interna (visível apenas para a equipe)...";
+      input.classList.add('border-warning');
+    } else {
+      input.placeholder = "Digite uma mensagem ou comando (/ingresso, /pagamento)...";
+      input.classList.remove('border-warning');
+    }
+  }
+}
+window.toggleMessageType = toggleMessageType;
+
+function sendWhatsMessage() {
+  const input = document.getElementById('whats-chat-input');
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  const conv = WHATSAPP_CONVERSATIONS_DATA.find(c => c.id === currentActiveWhatsConvId);
+  if (!conv) return;
+
+  const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  conv.messages.push({
+    direction: currentWhatsMsgMode === 'internal' ? 'internal' : 'outbound',
+    text: text,
+    time: nowTime
+  });
+
+  conv.lastMessage = text;
+  conv.lastTime = nowTime;
+
+  input.value = '';
+  renderWhatsMessages(conv);
+  renderWhatsConversationsList();
+}
+window.sendWhatsMessage = sendWhatsMessage;
+
+function handleWhatsChatKeyDown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendWhatsMessage();
+  }
+}
+window.handleWhatsChatKeyDown = handleWhatsChatKeyDown;
+
+function sendWhatsQuickAction(actionType) {
+  const conv = WHATSAPP_CONVERSATIONS_DATA.find(c => c.id === currentActiveWhatsConvId);
+  if (!conv) return;
+
+  const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  let msg = '';
+  if (actionType === 'ticket_lookup') {
+    msg = `🎟️ Seu ingresso #ING-8821 (Pista Premium - Festival Summer 2026) está ativo e válido.`;
+  } else if (actionType === 'order_lookup') {
+    msg = `📦 Pedido #845218 localizado: 2x Ingressos Pista Premium no valor de R$ 240,00 com status APROVADO.`;
+  } else if (actionType === 'resend_ticket') {
+    msg = `📲 Reenviamos seu ingresso com QR Code diretamente em anexo. Bom evento!`;
+  } else if (actionType === 'pix_link') {
+    msg = `💳 Segue seu código Pix copia-e-cola: 00020126580014br.gov.bcb.pix0136d89e...`;
+  } else if (actionType === 'send_coupon') {
+    msg = `🎁 Como cliente especial, você ganhou 10% OFF para o próximo evento! Cupom: DISK10`;
+  } else if (actionType === 'open_ticket') {
+    msg = `📝 Ticket SAC criado com sucesso sob o protocolo ${conv.protocol}. Nosso supervisor acompanhará o caso.`;
+  }
+
+  conv.messages.push({ direction: 'outbound', text: msg, time: nowTime });
+  conv.lastMessage = msg;
+  conv.lastTime = nowTime;
+
+  renderWhatsMessages(conv);
+  renderWhatsConversationsList();
+}
+window.sendWhatsQuickAction = sendWhatsQuickAction;
+
+function insertWhatsQuickReply(cmd) {
+  const input = document.getElementById('whats-chat-input');
+  if (!input) return;
+
+  const replies = {
+    '/ingresso': 'Olá! Posso localizar seu ingresso imediatamente. Por favor, confirme seu CPF ou número do pedido.',
+    '/pagamento': 'Para consultar seu pagamento ou gerar nova via Pix, acesse o link seguro: diskingressos.com.br/pagamento',
+    '/reembolso': 'Para solicitações de cancelamento ou estorno, seu protocolo foi registrado e nossa equipe financeira analisará em até 24h.',
+    '/titularidade': 'Para alterar a titularidade do ingresso, envie o nome completo e CPF do novo portador.'
+  };
+
+  input.value = replies[cmd] || cmd;
+  input.focus();
+}
+window.insertWhatsQuickReply = insertWhatsQuickReply;
+
+function insertWhatsAiSuggestion() {
+  const input = document.getElementById('whats-chat-input');
+  if (input) {
+    input.value = "Localizei seu pedido #845218. Posso gerar o link de alteração de titularidade diretamente para você.";
+    input.focus();
+  }
+}
+window.insertWhatsAiSuggestion = insertWhatsAiSuggestion;
+
+function filterWhatsConversations() {
+  renderWhatsConversationsList();
+}
+window.filterWhatsConversations = filterWhatsConversations;
+
+function switchWhatsTab(tabKey, event) {
+  if (event) event.preventDefault();
+
+  const tabs = document.querySelectorAll('#mkt-whatsapp-nav-tabs .nav-link');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+  const panes = document.querySelectorAll('.mkt-whats-pane');
+  panes.forEach(p => p.style.display = 'none');
+
+  const targetPane = document.getElementById(`mkt-pane-whats-${tabKey}`);
+  if (targetPane) targetPane.style.display = 'block';
+}
+window.switchWhatsTab = switchWhatsTab;
+
+function transferWhatsConversation() {
+  alert("🔄 [TRANSFERÊNCIA DE CONVERSA]\n\nSelecione o atendente ou departamento de destino:\n\n1. Financeiro (Carlos Nogueira)\n2. Ingressos (Beatriz Lima)\n3. Fila VIP\n\nTransferência realizada com observação interna anexada!");
+}
+window.transferWhatsConversation = transferWhatsConversation;
+
+function closeWhatsConversation() {
+  const conv = WHATSAPP_CONVERSATIONS_DATA.find(c => c.id === currentActiveWhatsConvId);
+  if (!conv) return;
+
+  conv.status = 'resolved';
+  renderWhatsConversationsList();
+  alert(`✅ Atendimento ${conv.protocol} finalizado com sucesso! Pesquisa CSAT disparada automaticamente para o cliente.`);
+}
+window.closeWhatsConversation = closeWhatsConversation;
+
+function openNewWhatsCampaignModal() {
+  alert("📢 [NOVA CAMPANHA WHATSAPP]\n\n1. Selecione o Público (ex: 32.480 interessados)\n2. Escolha o Template HSM Aprovado pela Meta\n3. Preencha as Variáveis {{1}}, {{2}}\n4. Agende o Disparo em Lotes (5.000 msgs / 10 min)\n\nRedirecionando para disparo...");
+}
+window.openNewWhatsCampaignModal = openNewWhatsCampaignModal;
+
+function openNewWhatsChatModal() {
+  const phone = prompt("Digite o telefone com DDD (Ex: 41999998888):");
+  if (phone) {
+    alert(`Iniciando nova conversa com +55 ${phone} via Meta Cloud API...`);
+  }
+}
+window.openNewWhatsChatModal = openNewWhatsChatModal;
+
+function renderWhatsTemplates() {
+  const grid = document.getElementById('whats-templates-grid');
+  if (!grid) return;
+
+  grid.innerHTML = WHATSAPP_TEMPLATES_DATA.map(t => {
+    return `
+      <div class="col-md-6 col-xl-3">
+        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 8px;">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-success">${escapeHtml(t.category)}</span>
+              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs">● ${escapeHtml(t.status)}</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">${escapeHtml(t.name)}</h6>
+            <div class="p-2.5 bg-light rounded border fs-xxs mb-3" style="background-color: #f8fafc;">
+              <strong class="text-success d-block mb-1">${escapeHtml(t.header)}</strong>
+              ${escapeHtml(t.body)}
+              <div class="text-muted mt-1 font-monospace">${escapeHtml(t.footer)}</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm fw-bold w-100" onclick="alert('Disparando template ${t.name}...')"><i class="ph-paper-plane me-1"></i> Disparar Template</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWhatsCampaigns() {
+  const tbody = document.getElementById('whats-campaigns-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = WHATSAPP_CAMPAIGNS_DATA.map(c => {
+    return `
+      <tr>
+        <td><strong>${escapeHtml(c.name)}</strong></td>
+        <td>${escapeHtml(c.audience)}</td>
+        <td>${Number(c.sent).toLocaleString('pt-BR')}</td>
+        <td><strong class="text-success">${Number(c.delivered).toLocaleString('pt-BR')}</strong></td>
+        <td>${Number(c.read).toLocaleString('pt-BR')}</td>
+        <td><strong class="text-primary">${escapeHtml(c.clicks)}</strong></td>
+        <td>${c.sales}</td>
+        <td><strong class="text-success">${escapeHtml(c.revenue)}</strong></td>
+        <td><span class="badge bg-success">${escapeHtml(c.status)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderWhatsAgents() {
+  const tbody = document.getElementById('whats-agents-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = WHATSAPP_AGENTS_DATA.map(a => {
+    let statusBadge = `<span class="badge bg-success">● ${a.status}</span>`;
+    if (a.status === 'Ocupado') statusBadge = `<span class="badge bg-warning text-dark">● ${a.status}</span>`;
+
+    return `
+      <tr>
+        <td><strong>${escapeHtml(a.name)}</strong></td>
+        <td>${escapeHtml(a.queue)}</td>
+        <td>${statusBadge}</td>
+        <td><strong>${a.activeChats}</strong> conversas</td>
+        <td>${escapeHtml(a.avgResponse)}</td>
+        <td><strong class="text-success">${escapeHtml(a.sla)}</strong></td>
+        <td class="text-end"><span class="badge bg-primary">${escapeHtml(a.csat)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+
+/**
+ * ==========================================================================
+ * FASE 23.8: E-MAIL MARKETING & EDITOR VISUAL DE CAMPANHAS ENGINE
+ * ==========================================================================
+ */
+
+let EMAIL_CAMPAIGNS_DATA = [
+  {
+    id: "camp-email-001",
+    name: "Virada de Lote Festival Summer 2026",
+    audience: "Interessados no Festival (42.820)",
+    sent: 41940,
+    opened: "48,2% (20.215)",
+    clicks: "16,4% (3.315)",
+    sales: 842,
+    revenue: "R$ 168.400,00",
+    status: "Finalizada"
+  },
+  {
+    id: "camp-email-002",
+    name: "Pré-Venda Exclusiva Clientes VIP",
+    audience: "Clientes VIP Score >= 90 (8.720)",
+    sent: 8640,
+    opened: "62,8% (5.425)",
+    clicks: "24,1% (1.307)",
+    sales: 382,
+    revenue: "R$ 91.820,00",
+    status: "Finalizada"
+  },
+  {
+    id: "camp-email-003",
+    name: "Últimos Ingressos Rock Curitiba",
+    audience: "Compradores de Rock (31.480)",
+    sent: 30920,
+    opened: "51,4% (15.892)",
+    clicks: "18,7% (2.971)",
+    sales: 624,
+    revenue: "R$ 142.600,00",
+    status: "Ativa"
+  },
+  {
+    id: "camp-email-004",
+    name: "Recuperação Automática de Carrinho (24h)",
+    audience: "Carrinho Abandonado (1.850)",
+    sent: 1850,
+    opened: "46,5% (860)",
+    clicks: "21,0% (388)",
+    sales: 194,
+    revenue: "R$ 44.200,00",
+    status: "Ativa (Automação)"
+  }
+];
+window.EMAIL_CAMPAIGNS_DATA = EMAIL_CAMPAIGNS_DATA;
+
+let EMAIL_TEMPLATES_DATA = [
+  {
+    id: "tpl_em_virada",
+    name: "Virada de Lote 48h",
+    category: "Venda",
+    color: "danger",
+    icon: "ph-fire",
+    desc: "Header com contagem regressiva, destaque do evento, aviso de aumento de preço e CTA de alta conversão.",
+    subject: "🔥 [URGENTE] Seu lote vira amanhã! Garanta o seu ingresso"
+  },
+  {
+    id: "tpl_em_ultimos",
+    name: "Últimos Ingressos Disponíveis",
+    category: "Escassez",
+    color: "warning",
+    icon: "ph-clock",
+    desc: "Layout com barra de progresso de ingressos restantes (<10%) e gatilhos mentais de escassez.",
+    subject: "Atenção: Os ingressos para o {{evento_nome}} estão quase esgotados!"
+  },
+  {
+    id: "tpl_em_cart",
+    name: "Recuperação de Carrinho Abandonado",
+    category: "Recuperação",
+    color: "primary",
+    icon: "ph-shopping-cart",
+    desc: "Reativação do carrinho com imagem do evento reservado e cupom de 5% OFF por 2 horas.",
+    subject: "{{primeiro_nome}}, você esqueceu ingressos no seu carrinho! 5% OFF pra você 🛒"
+  },
+  {
+    id: "tpl_em_7dias",
+    name: "Régua Pré-Evento: Faltam 7 Dias",
+    category: "Relacionamento",
+    color: "info",
+    icon: "ph-calendar-check",
+    desc: "Instruções do evento, mapa do local, estacionamento, horários de abertura e link de acesso rápido ao ingresso.",
+    subject: "Faltam 7 dias para o {{evento_nome}}! Confira tudo o que você precisa saber 🎟️"
+  },
+  {
+    id: "tpl_em_amanha",
+    name: "Régua Pré-Evento: É Amanhã!",
+    category: "Operacional",
+    color: "success",
+    icon: "ph-bell-ringing",
+    desc: "Guia completo de acesso com QR Code em destaque, previsão do tempo e lista de itens permitidos.",
+    subject: "É amanhã! Seu QR Code de acesso para o {{evento_nome}} está aqui 📱"
+  },
+  {
+    id: "tpl_em_confirmacao",
+    name: "Compra Confirmada & Ingresso Disponível",
+    category: "Operacional",
+    color: "success",
+    icon: "ph-check-circle",
+    desc: "Comprovante fiscal, resumo dos setores adquiridos, botões para baixar PDF ou adicionar à carteira Apple/Google.",
+    subject: "Pagamento Aprovado! Seus ingressos para o pedido #{{pedido_numero}} chegaram 🎉"
+  },
+  {
+    id: "tpl_em_vip",
+    name: "Acesso Exclusivo Cliente VIP",
+    category: "Fidelização",
+    color: "purple",
+    icon: "ph-crown",
+    desc: "Convite para pré-venda antecipada com cupom exclusivo de 15% OFF para clientes de alto score.",
+    subject: "Exclusivo para você: Pré-venda VIP liberada para o {{evento_nome}} 👑"
+  },
+  {
+    id: "tpl_em_reativacao",
+    name: "Reativação de Inativos (90 Dias)",
+    category: "Reengajamento",
+    color: "warning",
+    icon: "ph-arrows-counter-clockwise",
+    desc: "Curadoria dos melhores eventos dos próximos meses com voucher de desconto de boas-vindas de volta.",
+    subject: "Sentimos sua falta, {{primeiro_nome}}! Preparamos um presente especial para seu próximo show 🎁"
+  },
+  {
+    id: "tpl_em_posevento",
+    name: "Pós-Evento & Avaliação NPS",
+    category: "Relacionamento",
+    color: "info",
+    icon: "ph-star",
+    desc: "Agradecimento pela presença e pesquisa de satisfação interativa em 1 clique (0 a 10).",
+    subject: "O que você achou do {{evento_nome}}? Avalie sua experiência em 1 minuto ⭐"
+  },
+  {
+    id: "tpl_em_newsletter",
+    name: "Newsletter Cultural Semanal",
+    category: "Conteúdo",
+    color: "primary",
+    icon: "ph-newspaper",
+    desc: "Destaques da semana, agenda de shows da cidade e entrevistas exclusivas com artistas.",
+    subject: "Agenda Cultural Disk: Os melhores shows e peças deste final de semana em {{cidade}} 🎭"
+  },
+  {
+    id: "tpl_em_aniversario",
+    name: "Aniversariante do Mês",
+    category: "Comemoração",
+    color: "pink",
+    icon: "ph-cake",
+    desc: "Parabéns com voucher presente e cortesia de aniversário para o cliente e acompanhante.",
+    subject: "Feliz Aniversário, {{primeiro_nome}}! Seu presente de 15% OFF chegou 🎂"
+  },
+  {
+    id: "tpl_em_custom",
+    name: "Campanha Personalizada em Branco",
+    category: "Custom",
+    color: "secondary",
+    icon: "ph-paint-brush",
+    desc: "Estrutura limpa e pré-formatada para criar qualquer comunicação do zero com o editor drag-and-drop.",
+    subject: "Comunicado Oficial DiskIngressos: {{evento_nome}}"
+  }
+];
+window.EMAIL_TEMPLATES_DATA = EMAIL_TEMPLATES_DATA;
+
+let EMAIL_SUPPRESSION_DATA = [
+  { email: "rodrigo.al***@bol.com.br", reason: "Hard Bounce (Conta Inexistente)", date: "01/09/2026", status: "Suprimido Definitivo" },
+  { email: "carla.fe***@gmail.com", reason: "Opt-out (Descadastro Solicitado)", date: "31/08/2026", status: "Descadastrado" },
+  { email: "marcos.si***@yahoo.com.br", reason: "Spam Complaint (Relatado)", date: "30/08/2026", status: "Bloqueado" },
+  { email: "juliana.costa***@empresa.com", reason: "Hard Bounce (Domínio Inválido)", date: "28/08/2026", status: "Suprimido Definitivo" },
+  { email: "felipe.rocha***@uol.com.br", reason: "Soft Bounce Repetido (Caixa Cheia)", date: "27/08/2026", status: "Quarentena 30d" }
+];
+
+function initEmailMarketingModule() {
+  renderEmailCampaignsTable();
+  renderEmailTemplates();
+  renderEmailSuppressionTable();
+}
+window.initEmailMarketingModule = initEmailMarketingModule;
+
+function renderEmailCampaignsTable() {
+  const tbody = document.getElementById('email-campaigns-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = EMAIL_CAMPAIGNS_DATA.map(c => {
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark">${escapeHtml(c.name)}</div>
+          <span class="fs-xxs text-muted">ID: ${c.id}</span>
+        </td>
+        <td><span class="badge bg-light text-dark border fs-xxs">${escapeHtml(c.audience)}</span></td>
+        <td><strong>${Number(c.sent).toLocaleString('pt-BR')}</strong></td>
+        <td><strong class="text-primary">${escapeHtml(c.opened)}</strong></td>
+        <td><strong class="text-info">${escapeHtml(c.clicks)}</strong></td>
+        <td><strong class="text-success">${c.sales}</strong></td>
+        <td><strong class="text-success">${escapeHtml(c.revenue)}</strong></td>
+        <td><span class="badge bg-success">${escapeHtml(c.status)}</span></td>
+        <td class="text-end">
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Editar Campanha" onclick="switchEmailTab('builder')"><i class="ph-pencil"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Duplicar" onclick="alert('Campanha ${c.name} duplicada com sucesso!')"><i class="ph-copy"></i></button>
+          <button class="btn btn-xs btn-light border py-1 px-2" title="Relatório de Atribuição" onclick="alert('Relatório da campanha ${c.name}')"><i class="ph-chart-line"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderEmailTemplates() {
+  const grid = document.getElementById('email-templates-grid');
+  if (!grid) return;
+
+  grid.innerHTML = EMAIL_TEMPLATES_DATA.map(t => {
+    return `
+      <div class="col-md-6 col-xl-3">
+        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 8px;">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-${t.color} bg-opacity-10 text-${t.color} border border-${t.color} border-opacity-20 fs-xxs"><i class="${t.icon} me-1"></i> ${t.category}</span>
+              <span class="badge bg-light text-dark border fs-xxs">Responsivo</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">${escapeHtml(t.name)}</h6>
+            <p class="text-muted fs-xxs mb-2">${escapeHtml(t.desc)}</p>
+            <div class="p-1.5 bg-light rounded border fs-xxs text-muted mb-3 font-monospace text-truncate">
+              <strong>Assunto:</strong> ${escapeHtml(t.subject)}
+            </div>
+          </div>
+          <div class="d-flex gap-1">
+            <button class="btn btn-primary btn-sm fw-bold flex-grow-1" onclick="openEmailTemplate('${t.id}')">Usar Modelo</button>
+            <button class="btn btn-light btn-sm border" title="Visualizar" onclick="alert('Pré-visualização do template ${t.name}')"><i class="ph-eye"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderEmailSuppressionTable() {
+  const tbody = document.getElementById('email-suppression-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = EMAIL_SUPPRESSION_DATA.map(s => {
+    return `
+      <tr>
+        <td class="font-monospace">${escapeHtml(s.email)}</td>
+        <td><span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20">${escapeHtml(s.reason)}</span></td>
+        <td class="text-muted">${escapeHtml(s.date)}</td>
+        <td class="text-end"><span class="badge bg-dark">${escapeHtml(s.status)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function switchEmailTab(tabKey, event) {
+  if (event) event.preventDefault();
+
+  const tabs = document.querySelectorAll('#mkt-email-nav-tabs .nav-link');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+  const panes = document.querySelectorAll('.mkt-email-pane');
+  panes.forEach(p => p.style.display = 'none');
+
+  const targetPane = document.getElementById(`mkt-pane-email-${tabKey}`);
+  if (targetPane) targetPane.style.display = 'block';
+}
+window.switchEmailTab = switchEmailTab;
+
+function setEmailEditorDevice(device) {
+  const canvas = document.getElementById('email-preview-canvas');
+  const btnDesktop = document.getElementById('btn-view-desktop');
+  const btnMobile = document.getElementById('btn-view-mobile');
+
+  if (!canvas) return;
+
+  if (device === 'mobile') {
+    canvas.style.maxWidth = '360px';
+    btnMobile?.classList.add('btn-primary', 'active');
+    btnMobile?.classList.remove('btn-outline-primary');
+    btnDesktop?.classList.remove('btn-primary', 'active');
+    btnDesktop?.classList.add('btn-outline-primary');
+  } else {
+    canvas.style.maxWidth = '600px';
+    btnDesktop?.classList.add('btn-primary', 'active');
+    btnDesktop?.classList.remove('btn-outline-primary');
+    btnMobile?.classList.remove('btn-primary', 'active');
+    btnMobile?.classList.add('btn-outline-primary');
+  }
+}
+window.setEmailEditorDevice = setEmailEditorDevice;
+
+function addEmailEditorBlock(blockType) {
+  const canvas = document.getElementById('email-preview-canvas');
+  if (!canvas) return;
+
+  let blockHtml = '';
+
+  if (blockType === 'banner') {
+    blockHtml = `
+      <div class="p-3 text-center bg-primary text-white my-2 rounded position-relative">
+        <h5 class="fw-bold mb-0">Novo Banner Publicitário</h5>
+        <span class="fs-xxs text-white-50">Clique para substituir imagem ou alterar link de redirecionamento</span>
+      </div>
+    `;
+  } else if (blockType === 'title') {
+    blockHtml = `
+      <div class="p-3 my-2 text-center">
+        <h4 class="fw-bold text-dark mb-1">Título em Destaque do E-mail</h4>
+        <div class="text-muted fs-xs">Subtítulo explicativo com call to action secundário</div>
+      </div>
+    `;
+  } else if (blockType === 'text') {
+    blockHtml = `
+      <div class="p-3 my-2 bg-light rounded text-muted fs-xs leading-relaxed">
+        Parágrafo adicional com informações sobre atrações, setores de camarote e horários de apresentação.
+      </div>
+    `;
+  } else if (blockType === 'countdown') {
+    blockHtml = `
+      <div class="p-3 bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25 text-center my-2">
+        <span class="fs-xxs text-uppercase text-dark fw-bold d-block mb-1">O lote promocional encerra em:</span>
+        <div class="d-flex justify-content-center gap-2 fs-xs fw-bold text-dark font-monospace">
+          <span class="p-1.5 bg-white border rounded">02 DIAS</span> :
+          <span class="p-1.5 bg-white border rounded">14 HORAS</span> :
+          <span class="p-1.5 bg-white border rounded">30 MIN</span>
+        </div>
+      </div>
+    `;
+  } else if (blockType === 'coupon') {
+    blockHtml = `
+      <div class="p-3 rounded border text-center my-2" style="background-color: #fdf4ff; border-color: #f0abfc !important;">
+        <span class="fs-xxs text-purple text-uppercase fw-bold d-block mb-1">Cupom Exclusivo:</span>
+        <div class="p-2 bg-white border border-dashed rounded font-monospace fs-5 fw-bold text-purple mb-1">PROMO10</div>
+        <span class="fs-xxs text-muted">10% de desconto em qualquer ingresso</span>
+      </div>
+    `;
+  } else if (blockType === 'button') {
+    blockHtml = `
+      <div class="text-center my-3">
+        <button class="btn btn-success btn-lg fw-bold px-4 py-2.5 w-100 shadow-sm" style="border-radius: 8px;">
+          GARANTIR MEU LOTE PROMOCIONAL ➔
+        </button>
+      </div>
+    `;
+  } else {
+    blockHtml = `
+      <div class="p-2.5 my-2 border rounded bg-white text-dark fs-xs">
+        Novo Bloco Inserido com Sucesso no Layout
+      </div>
+    `;
+  }
+
+  // Insert before the footer
+  const footer = canvas.querySelector('.text-center.bg-light.border-top');
+  if (footer) {
+    footer.insertAdjacentHTML('beforebegin', blockHtml);
+  } else {
+    canvas.insertAdjacentHTML('beforeend', blockHtml);
+  }
+
+  alert(`✨ Bloco "${blockType}" adicionado ao layout com sucesso!`);
+}
+window.addEmailEditorBlock = addEmailEditorBlock;
+
+function validateEmailSubject() {
+  const input = document.getElementById('email-subject-input');
+  const countEl = document.getElementById('email-subject-count');
+  const statusEl = document.getElementById('email-subject-status');
+
+  if (!input || !countEl || !statusEl) return;
+
+  const len = input.value.length;
+  countEl.textContent = `${len} caracteres`;
+
+  if (len === 0) {
+    statusEl.textContent = "Vazio ⚠️";
+    statusEl.className = "text-danger fw-bold";
+  } else if (len <= 55) {
+    statusEl.textContent = "Ideal ✓";
+    statusEl.className = "text-success fw-bold";
+  } else if (len <= 75) {
+    statusEl.textContent = "Aceitável";
+    statusEl.className = "text-warning fw-bold";
+  } else {
+    statusEl.textContent = "Muito longo ⚠️";
+    statusEl.className = "text-danger fw-bold";
+  }
+}
+window.validateEmailSubject = validateEmailSubject;
+
+function generateEmailAiSuggestions() {
+  const input = document.getElementById('email-subject-input');
+  if (input) {
+    input.value = "🔥 [Últimas Horas] Seu ingresso para o Festival Summer vira hoje!";
+    validateEmailSubject();
+  }
+  alert("✨ [IA Assistente]: Assunto e pré-cabeçalho atualizados com variações de alta taxa de abertura e conversão!");
+}
+window.generateEmailAiSuggestions = generateEmailAiSuggestions;
+
+function sendEmailTest() {
+  const email = prompt("Digite o e-mail de destino para envio do teste interno:", "teste@diskingressos.com.br");
+  if (email) {
+    alert(`📧 E-mail de teste enviado com sucesso para ${email}!\n\nVerificação de SPF/DKIM/DMARC: 100% Válido.`);
+  }
+}
+window.sendEmailTest = sendEmailTest;
+
+function publishEmailCampaign() {
+  alert("🚀 Campanha de E-mail publicada com sucesso!\n\n" +
+        "✓ 30.928 contatos elegíveis enfileirados\n" +
+        "✓ Throttling ativo: 20.000 envios / hora\n" +
+        "✓ Rastreamento UTM e Pixel vinculados\n" +
+        "✓ Teste A/B de assunto iniciado (20% split)");
+  switchEmailTab('campaigns');
+}
+window.publishEmailCampaign = publishEmailCampaign;
+
+function openNewEmailCampaignWizard() {
+  switchEmailTab('builder');
+}
+window.openNewEmailCampaignWizard = openNewEmailCampaignWizard;
+
+function openEmailTemplate(tplKey) {
+  const tpl = EMAIL_TEMPLATES_DATA.find(t => t.id === tplKey);
+  if (tpl) {
+    const titleEl = document.getElementById('email-builder-campaign-name');
+    if (titleEl) titleEl.textContent = `Campanha baseada em: ${tpl.name}`;
+    const subjectInput = document.getElementById('email-subject-input');
+    if (subjectInput) {
+      subjectInput.value = tpl.subject;
+      validateEmailSubject();
+    }
+  }
+  switchEmailTab('builder');
+}
+window.openEmailTemplate = openEmailTemplate;
+
 
 /* ==========================================================================
    2. Events Module Logic

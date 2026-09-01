@@ -83,5 +83,8 @@ function mockApiPlugin() {
 
 export default defineConfig({
   base: './',
+  build: {
+    emptyOutDir: false
+  },
   plugins: [mockApiPlugin()]
 });
