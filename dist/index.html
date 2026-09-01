@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-  <script type="module" crossorigin src="./assets/index-DVt1ZFaB.js"></script>
+  <script type="module" crossorigin src="./assets/index-D4udOvja.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-bHJTMMAw.css">
 </head>
 <body>
@@ -5949,12 +5949,111 @@
                     <!-- VIEW: Event - Marketing -->
                     <section id="view-event-marketing" class="page-section" style="display: none; flex-direction: column; width: 100%;">
                         <div class="card card-body shadow-sm d-flex flex-row justify-content-between align-items-center py-2 mb-3" style="border-radius: 6px; border-left: 4px solid #3b82f6;">
-                            <h5 class="fw-bold mb-0">Canais de Marketing do Evento</h5>
-                            <span class="fs-xs text-muted">Performance de tráfego e conversão</span>
+                            <div>
+                                <h5 class="fw-bold mb-0">Canais de Marketing do Evento</h5>
+                                <span class="fs-xs text-muted" id="event-marketing-subtitle">Performance de tráfego, pixels e conversão</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-primary fw-bold" onclick="window.switchActiveView('mkt-config')"><i class="ph-gear me-1"></i> Configurar Pixels</button>
+                                <button class="btn btn-sm btn-outline-primary fw-bold" onclick="window.switchActiveView('mkt-analytics')"><i class="ph-chart-pie me-1"></i> Ver Analytics Completo</button>
+                            </div>
                         </div>
-                        <div class="card shadow-sm border p-4 text-center text-muted">
-                            <i class="ph-megaphone fs-1 mb-2"></i>
-                            <p class="mb-0">Analytics e pixel de conversão exclusivos do evento.</p>
+
+                        <!-- 4 KPI Cards -->
+                        <div class="row g-2 mb-3 text-white">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 p-3 h-100 position-relative overflow-hidden" style="background-color: #0ea5e9; border-radius: 6px;">
+                                    <span class="fs-xxs text-white-50 text-uppercase fw-bold">Disparos Meta Pixel</span>
+                                    <h4 class="fw-bold mt-1.5 mb-0 text-white" id="ev-mkt-pixel-total">18.420</h4>
+                                    <span class="text-white-50 fs-xxs">CAPI Server-Side Ativo</span>
+                                    <i class="ph-meta-logo position-absolute text-white" style="font-size: 40px; right: -5px; bottom: -5px; opacity: 0.15;"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 p-3 h-100 position-relative overflow-hidden" style="background-color: #10b981; border-radius: 6px;">
+                                    <span class="fs-xxs text-white-50 text-uppercase fw-bold">Receita Atribuída Ads</span>
+                                    <h4 class="fw-bold mt-1.5 mb-0 text-white" id="ev-mkt-revenue">R$ 142.850,00</h4>
+                                    <span class="text-white-50 fs-xxs">ROAS Geral: 4.6x</span>
+                                    <i class="ph-currency-dollar position-absolute text-white" style="font-size: 40px; right: -5px; bottom: -5px; opacity: 0.15;"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 p-3 h-100 position-relative overflow-hidden" style="background-color: #8b5cf6; border-radius: 6px;">
+                                    <span class="fs-xxs text-white-50 text-uppercase fw-bold">Sessões GA4</span>
+                                    <h4 class="fw-bold mt-1.5 mb-0 text-white" id="ev-mkt-sessions">14.930</h4>
+                                    <span class="text-white-50 fs-xxs">Taxa de Conversão: 14.8%</span>
+                                    <i class="ph-google-logo position-absolute text-white" style="font-size: 40px; right: -5px; bottom: -5px; opacity: 0.15;"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card border-0 p-3 h-100 position-relative overflow-hidden" style="background-color: #f97316; border-radius: 6px;">
+                                    <span class="fs-xxs text-white-50 text-uppercase fw-bold">Carrinhos Recuperados</span>
+                                    <h4 class="fw-bold mt-1.5 mb-0 text-white" id="ev-mkt-recovered">342</h4>
+                                    <span class="text-white-50 fs-xxs">R$ 38.640,00 salvos</span>
+                                    <i class="ph-shopping-cart position-absolute text-white" style="font-size: 40px; right: -5px; bottom: -5px; opacity: 0.15;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Channels & Performance Table -->
+                        <div class="card shadow-sm border mb-3" style="border-radius: 6px;">
+                            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="ph-chart-bar text-primary me-2"></i> Performance por Canal de Divulgação</h6>
+                                <button class="btn btn-xs btn-primary fw-bold" onclick="window.openUtmBuilderModal()"><i class="ph-plus me-1"></i> Criar Link UTM</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                                    <thead>
+                                        <tr class="table-light">
+                                            <th>Canal / Origem</th>
+                                            <th>Cliques / Visitas</th>
+                                            <th>Ingressos Vendidos</th>
+                                            <th>Taxa Conversão</th>
+                                            <th>Receita Total</th>
+                                            <th>ROAS</th>
+                                            <th class="text-end">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ev-mkt-channels-tbody">
+                                        <tr>
+                                            <td><i class="ph-meta-logo text-primary me-2"></i><strong>Meta Ads (Instagram & Facebook)</strong></td>
+                                            <td>6.840</td>
+                                            <td><span class="badge bg-primary">820 ingressos</span></td>
+                                            <td><strong class="text-success">11.98%</strong></td>
+                                            <td><strong>R$ 82.000,00</strong></td>
+                                            <td><span class="badge bg-success">5.2x</span></td>
+                                            <td class="text-end"><button class="btn btn-xs btn-light border" onclick="window.switchActiveView('mkt-analytics')">Ver Gráficos</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="ph-google-logo text-danger me-2"></i><strong>Google Ads & Busca Orgânica</strong></td>
+                                            <td>4.210</td>
+                                            <td><span class="badge bg-info">490 ingressos</span></td>
+                                            <td><strong class="text-success">11.63%</strong></td>
+                                            <td><strong>R$ 49.000,00</strong></td>
+                                            <td><span class="badge bg-success">4.1x</span></td>
+                                            <td class="text-end"><button class="btn btn-xs btn-light border" onclick="window.switchActiveView('mkt-analytics')">Ver Gráficos</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="ph-link text-success me-2"></i><strong>Influenciadores & Parcerias (UTMs)</strong></td>
+                                            <td>2.350</td>
+                                            <td><span class="badge bg-warning text-dark">285 ingressos</span></td>
+                                            <td><strong class="text-success">12.12%</strong></td>
+                                            <td><strong>R$ 28.500,00</strong></td>
+                                            <td><span class="badge bg-success">6.8x</span></td>
+                                            <td class="text-end"><button class="btn btn-xs btn-light border" onclick="window.switchActiveView('mkt-config')">Gerenciar Links</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="ph-envelope text-purple me-2"></i><strong>E-mail Marketing & Remarketing</strong></td>
+                                            <td>1.530</td>
+                                            <td><span class="badge bg-secondary">195 ingressos</span></td>
+                                            <td><strong class="text-success">12.74%</strong></td>
+                                            <td><strong>R$ 19.500,00</strong></td>
+                                            <td><span class="badge bg-success">8.5x</span></td>
+                                            <td class="text-end"><button class="btn btn-xs btn-light border" onclick="window.switchActiveView('remkt-campaigns')">Ver Campanhas</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
 

@@ -378,14 +378,30 @@ function switchActiveView(viewId) {
     if (typeof initAgendaAnnualModule === 'function') initAgendaAnnualModule();
   } else if (viewId === 'agenda-general') {
     if (typeof initAgendaGeneralModule === 'function') initAgendaGeneralModule();
-  } else if (viewId.startsWith('marketing')) {
-    if (viewId === 'marketing-analytics') {
-      targetSection = document.getElementById('view-marketing-analytics');
-      if (typeof renderMarketingAnalyticsCharts === 'function') renderMarketingAnalyticsCharts();
-    } else if (viewId === 'marketing-pixels') {
-      targetSection = document.getElementById('view-marketing-pixels');
-      if (typeof renderMarketingPixelCharts === 'function') renderMarketingPixelCharts();
+  } else if (viewId.startsWith('marketing') || viewId.startsWith('mkt-') || viewId.startsWith('remkt-')) {
+    if (viewId === 'mkt-config' || viewId === 'marketing-config') {
+      targetSection = document.getElementById('view-mkt-config');
+      if (typeof initMarketingConfigModule === 'function') initMarketingConfigModule();
+    } else if (viewId === 'mkt-analytics' || viewId === 'marketing-analytics') {
+      targetSection = document.getElementById('view-mkt-analytics');
+      if (typeof renderMarketingAnalyticsCharts === 'function') {
+        setTimeout(() => renderMarketingAnalyticsCharts(), 50);
+      }
+    } else if (viewId === 'mkt-pixel' || viewId === 'marketing-pixels' || viewId === 'marketing-pixel') {
+      targetSection = document.getElementById('view-mkt-pixel');
+      if (typeof renderMarketingPixelCharts === 'function') {
+        setTimeout(() => renderMarketingPixelCharts(), 50);
+      }
+    } else if (viewId === 'remkt-audiences') {
+      targetSection = document.getElementById('view-remkt-audiences');
+    } else if (viewId === 'remkt-recovery') {
+      targetSection = document.getElementById('view-remkt-recovery');
+    } else if (viewId === 'remkt-campaigns') {
+      targetSection = document.getElementById('view-remkt-campaigns');
     }
+  } else if (viewId === 'event-marketing') {
+    targetSection = document.getElementById('view-event-marketing');
+    if (typeof initEventMarketingModule === 'function') initEventMarketingModule();
   } else if (viewId === 'global-consult-ticket' || viewId === 'event-consult-ticket' || viewId === 'event-cortesias') {
     targetSection = document.getElementById(`view-${viewId}`);
     if (typeof initTicketModule === 'function') initTicketModule();
@@ -2150,6 +2166,225 @@ function initAiAssistant() {
 }
 window.initAiAssistant = initAiAssistant;
 
+/* ==========================================================================
+   4. MARKETING & REMARKETING MODULE
+   ========================================================================== */
+
+let activeMktCharts = {};
+
+let MKT_GA_IDS = ['G-8872615291-1', 'G-9928172611-2'];
+
+let MKT_UTM_LINKS = [
+  { name: 'Instagram Stories - Promo Lote 1', url: 'https://diskingressos.com.br/evento/2314?utm_source=instagram&utm_medium=stories&utm_campaign=lote1_promo', clicks: 1420, sales: 88, revenue: 10560.00 },
+  { name: 'Influencer Ana Paula - Bio Link', url: 'https://diskingressos.com.br/evento/2314?utm_source=influencer&utm_medium=bio&utm_campaign=anapaula_cupom', clicks: 980, sales: 64, revenue: 7680.00 },
+  { name: 'Meta Ads - Retargeting Carrinho', url: 'https://diskingressos.com.br/evento/2314?utm_source=facebook&utm_medium=cpc&utm_campaign=retargeting_cart', clicks: 2310, sales: 145, revenue: 17400.00 },
+  { name: 'Google Search Ads - Fim de Semana', url: 'https://diskingressos.com.br/evento/2314?utm_source=google&utm_medium=cpc&utm_campaign=search_brand', clicks: 3120, sales: 210, revenue: 25200.00 }
+];
+
+function initMarketingConfigModule() {
+  const eventSelect = document.getElementById('mkt-event-selector');
+  if (eventSelect && typeof EVENTS_DATA !== 'undefined' && EVENTS_DATA.length > 0) {
+    const currentVal = eventSelect.value || String(EVENTS_DATA[0].id);
+    eventSelect.innerHTML = EVENTS_DATA.map(ev => `<option value="${ev.id}">${ev.id} - ${ev.name}</option>`).join('');
+    eventSelect.value = currentVal;
+    loadEventMarketingConfig(eventSelect.value);
+  }
+  renderMktGaIdsList();
+  renderMktUtmLinks();
+}
+window.initMarketingConfigModule = initMarketingConfigModule;
+
+function loadEventMarketingConfig(eventId) {
+  const ev = (typeof EVENTS_DATA !== 'undefined') ? EVENTS_DATA.find(e => String(e.id) === String(eventId)) : null;
+  const bannerDetails = document.getElementById('mkt-event-banner-details');
+  if (bannerDetails) {
+    if (ev) {
+      bannerDetails.innerHTML = `
+        <div><i class="ph-calendar text-primary me-1"></i> Data: <strong>${ev.date || 'Em breve'}</strong></div>
+        <div><i class="ph-map-pin text-danger me-1"></i> Local: <strong>${ev.location || 'Curitiba - PR'}</strong></div>
+        <div><span class="badge bg-success"><i class="ph-check-circle me-1"></i> Vendas Ativas</span></div>
+      `;
+    } else {
+      bannerDetails.innerHTML = `<div><span class="badge bg-info">Evento Geral</span></div>`;
+    }
+  }
+
+  // Load saved config or defaults
+  const saved = localStorage.getItem(`mkt_config_${eventId}`);
+  if (saved) {
+    try {
+      const cfg = JSON.parse(saved);
+      if (document.getElementById('mkt-fb-pixel')) document.getElementById('mkt-fb-pixel').value = cfg.fbPixel || '';
+      if (document.getElementById('mkt-main-pixel-id')) document.getElementById('mkt-main-pixel-id').value = cfg.capiId || '';
+      if (document.getElementById('mkt-main-pixel-token')) document.getElementById('mkt-main-pixel-token').value = cfg.capiToken || '';
+      if (document.getElementById('mkt-fb-test-code')) document.getElementById('mkt-fb-test-code').value = cfg.fbTestCode || '';
+      if (document.getElementById('mkt-tiktok-pixel')) document.getElementById('mkt-tiktok-pixel').value = cfg.tiktokPixel || '';
+      if (document.getElementById('mkt-tiktok-token')) document.getElementById('mkt-tiktok-token').value = cfg.tiktokToken || '';
+      if (document.getElementById('mkt-pinterest-pixel')) document.getElementById('mkt-pinterest-pixel').value = cfg.pinterestPixel || '';
+      if (document.getElementById('mkt-google-ads-id')) document.getElementById('mkt-google-ads-id').value = cfg.googleAdsId || '';
+      if (document.getElementById('mkt-google-ads-label')) document.getElementById('mkt-google-ads-label').value = cfg.googleAdsLabel || '';
+      return;
+    } catch(e) {}
+  }
+
+  // Set default values if none saved
+  if (document.getElementById('mkt-fb-pixel') && !document.getElementById('mkt-fb-pixel').value) {
+    document.getElementById('mkt-fb-pixel').value = '2616244731939615';
+  }
+  if (document.getElementById('mkt-main-pixel-id') && !document.getElementById('mkt-main-pixel-id').value) {
+    document.getElementById('mkt-main-pixel-id').value = '2616244731939615';
+  }
+  if (document.getElementById('mkt-main-pixel-token') && !document.getElementById('mkt-main-pixel-token').value) {
+    document.getElementById('mkt-main-pixel-token').value = 'EAACvM7a1B9kBA... (Token Meta CAPI Autenticado)';
+  }
+  if (document.getElementById('mkt-tiktok-pixel') && !document.getElementById('mkt-tiktok-pixel').value) {
+    document.getElementById('mkt-tiktok-pixel').value = 'C87B3FGL89AB';
+  }
+  if (document.getElementById('mkt-pinterest-pixel') && !document.getElementById('mkt-pinterest-pixel').value) {
+    document.getElementById('mkt-pinterest-pixel').value = '265000987654';
+  }
+  if (document.getElementById('mkt-google-ads-id') && !document.getElementById('mkt-google-ads-id').value) {
+    document.getElementById('mkt-google-ads-id').value = 'AW-109283741';
+  }
+  if (document.getElementById('mkt-google-ads-label') && !document.getElementById('mkt-google-ads-label').value) {
+    document.getElementById('mkt-google-ads-label').value = 'kLmN89PqRsTu';
+  }
+}
+window.loadEventMarketingConfig = loadEventMarketingConfig;
+
+function switchMktConfigPane(paneName) {
+  // Update nav list items active state
+  const navLinks = document.querySelectorAll('#mkt-config-nav a');
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(paneName)) {
+      link.classList.add('active');
+    }
+  });
+
+  // Toggle panes
+  const panes = document.querySelectorAll('.mkt-config-pane');
+  panes.forEach(p => p.style.display = 'none');
+  const targetPane = document.getElementById(`mkt-pane-${paneName}`);
+  if (targetPane) {
+    targetPane.style.display = 'block';
+  }
+}
+window.switchMktConfigPane = switchMktConfigPane;
+
+function saveEventMarketingConfig() {
+  const eventSelect = document.getElementById('mkt-event-selector');
+  const eventId = eventSelect ? eventSelect.value : 'global';
+  const cfg = {
+    fbPixel: document.getElementById('mkt-fb-pixel') ? document.getElementById('mkt-fb-pixel').value : '',
+    capiId: document.getElementById('mkt-main-pixel-id') ? document.getElementById('mkt-main-pixel-id').value : '',
+    capiToken: document.getElementById('mkt-main-pixel-token') ? document.getElementById('mkt-main-pixel-token').value : '',
+    fbTestCode: document.getElementById('mkt-fb-test-code') ? document.getElementById('mkt-fb-test-code').value : '',
+    tiktokPixel: document.getElementById('mkt-tiktok-pixel') ? document.getElementById('mkt-tiktok-pixel').value : '',
+    tiktokToken: document.getElementById('mkt-tiktok-token') ? document.getElementById('mkt-tiktok-token').value : '',
+    pinterestPixel: document.getElementById('mkt-pinterest-pixel') ? document.getElementById('mkt-pinterest-pixel').value : '',
+    googleAdsId: document.getElementById('mkt-google-ads-id') ? document.getElementById('mkt-google-ads-id').value : '',
+    googleAdsLabel: document.getElementById('mkt-google-ads-label') ? document.getElementById('mkt-google-ads-label').value : ''
+  };
+  localStorage.setItem(`mkt_config_${eventId}`, JSON.stringify(cfg));
+  alert('Configurações de Pixel, Conversões CAPI e Google Suite salvas com sucesso!');
+}
+window.saveEventMarketingConfig = saveEventMarketingConfig;
+
+function addGoogleAnalyticsId() {
+  const input = document.getElementById('mkt-ga-pixel');
+  if (!input || !input.value.trim()) return;
+  const val = input.value.trim().toUpperCase();
+  if (!MKT_GA_IDS.includes(val)) {
+    MKT_GA_IDS.push(val);
+    renderMktGaIdsList();
+    input.value = '';
+  }
+}
+window.addGoogleAnalyticsId = addGoogleAnalyticsId;
+
+function removeGoogleAnalyticsId(index) {
+  MKT_GA_IDS.splice(index, 1);
+  renderMktGaIdsList();
+}
+window.removeGoogleAnalyticsId = removeGoogleAnalyticsId;
+
+function renderMktGaIdsList() {
+  const container = document.getElementById('mkt-ga-ids-list');
+  if (!container) return;
+  if (MKT_GA_IDS.length === 0) {
+    container.innerHTML = '<span class="text-muted fs-xxs">Nenhum ID GA4 configurado.</span>';
+    return;
+  }
+  container.innerHTML = MKT_GA_IDS.map((id, idx) => `
+    <span class="badge bg-light text-dark border me-1 mb-1 p-1 px-2 d-inline-flex align-items-center gap-1">
+      <i class="ph-google-logo text-danger"></i> ${id}
+      <button type="button" class="btn-close ms-1" style="font-size: 8px;" onclick="window.removeGoogleAnalyticsId(${idx})" aria-label="Remover"></button>
+    </span>
+  `).join('');
+}
+window.renderMktGaIdsList = renderMktGaIdsList;
+
+function renderMktUtmLinks() {
+  const emptyState = document.getElementById('mkt-utm-empty-state');
+  const linksContainer = document.getElementById('mkt-utm-links-container');
+  const linksList = document.getElementById('mkt-utm-links-list');
+  if (!linksList) return;
+
+  if (MKT_UTM_LINKS.length === 0) {
+    if (emptyState) emptyState.classList.remove('d-none');
+    if (linksContainer) linksContainer.classList.add('d-none');
+  } else {
+    if (emptyState) emptyState.classList.add('d-none');
+    if (linksContainer) linksContainer.classList.remove('d-none');
+    linksList.innerHTML = MKT_UTM_LINKS.map((item, idx) => `
+      <div class="card p-2 mb-2 border bg-white shadow-none">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <strong class="fs-xs text-dark">${item.name}</strong>
+          <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs">${item.sales} vendas (R$ ${item.revenue.toLocaleString('pt-BR', {minimumFractionDigits: 2})})</span>
+        </div>
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control form-control-sm font-monospace fs-xxs bg-light" value="${item.url}" readonly id="utm-input-${idx}">
+          <button class="btn btn-outline-primary btn-sm" onclick="navigator.clipboard.writeText('${item.url}'); alert('Link UTM copiado para a área de transferência!');"><i class="ph-copy"></i> Copiar</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+window.renderMktUtmLinks = renderMktUtmLinks;
+
+function openUtmBuilderModal() {
+  const campName = prompt("Digite o nome da campanha (ex: Black Friday, Instagram Stories, Influencer):", "Campanha Julho");
+  if (!campName) return;
+  const source = prompt("Origem do tráfego (utm_source - ex: instagram, google, facebook, newsletter):", "instagram");
+  if (!source) return;
+  const medium = prompt("Mídia do tráfego (utm_medium - ex: stories, feed, cpc, email):", "stories");
+  
+  const eventSelect = document.getElementById('mkt-event-selector');
+  const eventId = eventSelect ? eventSelect.value : '2314';
+  const url = `https://diskingressos.com.br/evento/${eventId}?utm_source=${encodeURIComponent(source)}&utm_medium=${encodeURIComponent(medium || 'link')}&utm_campaign=${encodeURIComponent(campName)}`;
+  
+  MKT_UTM_LINKS.unshift({
+    name: campName,
+    url: url,
+    clicks: 0,
+    sales: 0,
+    revenue: 0
+  });
+  renderMktUtmLinks();
+  navigator.clipboard.writeText(url);
+  alert(`Link UTM gerado e copiado com sucesso:\n${url}`);
+}
+window.openUtmBuilderModal = openUtmBuilderModal;
+
+function initEventMarketingModule() {
+  const sub = document.getElementById('event-marketing-subtitle');
+  if (sub && typeof currentManagedEvent !== 'undefined' && currentManagedEvent) {
+    sub.textContent = `Performance de Marketing para: ${currentManagedEvent.name}`;
+  }
+}
+window.initEventMarketingModule = initEventMarketingModule;
+
 function renderMarketingAnalyticsCharts() {
   // Helpers to prevent memory leaks by destroying previous chart instances
   const chartsToInit = [
@@ -2397,7 +2632,7 @@ function renderMarketingPixelCharts() {
   const orgPane = document.getElementById('pane-pixel-organic');
   if (!orgPane || orgPane.style.display === 'none') return;
 
-  // 1. Disparos por Dia (Empty state lines)
+  // 1. Disparos por Dia
   const dailyCtx = document.getElementById('chart-pixel-daily');
   if (dailyCtx) {
     if (activeMktCharts['pixel-daily']) activeMktCharts['pixel-daily'].destroy();
@@ -2407,35 +2642,35 @@ function renderMarketingPixelCharts() {
         labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
         datasets: [
           {
-            label: 'Disparos',
-            data: [0, 0, 0, 0, 0, 0, 0],
+            label: 'Disparos de Pixel',
+            data: [142, 185, 230, 210, 320, 480, 510],
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: true,
-            tension: 0.1
+            tension: 0.3
           },
           {
-            label: 'Compras',
-            data: [0, 0, 0, 0, 0, 0, 0],
+            label: 'Conversões de Compra',
+            data: [18, 24, 31, 28, 45, 68, 72],
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             fill: true,
-            tension: 0.1
+            tension: 0.3
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: true, position: 'top' } },
         scales: {
-          y: { min: 0, max: 10, ticks: { stepSize: 1 } }
+          y: { min: 0 }
         }
       }
     });
   }
 
-  // 2. Disparos por Hora (Empty state lines)
+  // 2. Disparos por Hora
   const hourlyCtx = document.getElementById('chart-pixel-hourly');
   if (hourlyCtx) {
     if (activeMktCharts['pixel-hourly']) activeMktCharts['pixel-hourly'].destroy();
@@ -2445,51 +2680,51 @@ function renderMarketingPixelCharts() {
         labels: ['00h', '04h', '08h', '12h', '16h', '20h'],
         datasets: [
           {
-            label: 'Disparos',
-            data: [0, 0, 0, 0, 0, 0],
+            label: 'Disparos / Hora',
+            data: [25, 12, 85, 190, 240, 310],
             borderColor: '#f59e0b',
             backgroundColor: 'rgba(245, 158, 11, 0.1)',
             fill: true,
-            tension: 0.1
+            tension: 0.3
           },
           {
-            label: 'Compras',
-            data: [0, 0, 0, 0, 0, 0],
+            label: 'Compras / Hora',
+            data: [3, 1, 12, 28, 35, 48],
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             fill: true,
-            tension: 0.1
+            tension: 0.3
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: true, position: 'top' } },
         scales: {
-          y: { min: 0, max: 10, ticks: { stepSize: 1 } }
+          y: { min: 0 }
         }
       }
     });
   }
 
-  // 3. Distribuição de Eventos (Grey single circle)
+  // 3. Distribuição de Eventos
   const distCtx = document.getElementById('chart-pixel-distribution');
   if (distCtx) {
     if (activeMktCharts['pixel-distribution']) activeMktCharts['pixel-distribution'].destroy();
     activeMktCharts['pixel-distribution'] = new Chart(distCtx, {
       type: 'doughnut',
       data: {
-        labels: ['Sem dados'],
+        labels: ['PageView', 'AddToCart', 'InitiateCheckout', 'Purchase', 'Search'],
         datasets: [{
-          data: [100],
-          backgroundColor: ['#e2e8f0']
+          data: [62, 18, 12, 5, 3],
+          backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } }
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8 } } }
       }
     });
   }
