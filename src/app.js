@@ -262,7 +262,7 @@ function initApp() {
     console.warn("Limitless template initialization warning:", err);
   }
   
-  initViewSwitcher();
+  // Navegação já controlada por openView()/navigateTo()/switchActiveView.
   initEventsModule();
   initFinanceModule();
   initSettingsModule();
@@ -334,112 +334,77 @@ function initApp() {
 
 
 
+
 /* ==========================================================================
-   1. Universal SPA Router & Navigation Controller (Fase 23.2)
+   NATIVE DATA-VIEW NAVIGATION CONTROLLER (data-view -> view-*)
    ========================================================================== */
 
-/**
- * Standardized IDs for Marketing Submodules
- */
-const MARKETING_PAGES = {
-  overview: "marketing-overview",
-  campaigns: "marketing-campaigns",
-  campaignCreate: "marketing-campaign-create",
-  campaignTemplates: "marketing-campaign-templates",
-  whatsapp: "marketing-whatsapp",
-  email: "marketing-email",
-  sms: "marketing-sms",
-  abandonedCart: "marketing-abandoned-cart",
-  audiences: "marketing-audiences",
-  coupons: "marketing-coupons",
-  utm: "marketing-utm",
-  pixel: "marketing-pixel",
-  ads: "marketing-ads",
-  automation: "marketing-automation",
-  reports: "marketing-reports"
-};
-window.MARKETING_PAGES = MARKETING_PAGES;
+function openView(viewName) {
+  if (!viewName) viewName = 'dashboard-main';
+  viewName = String(viewName).replace(/^#\/?/, '').replace(/^view-/, '').trim().toLowerCase();
 
-function initViewSwitcher() {
-  const subLinks = document.querySelectorAll('.submenu-link');
-  
-  subLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetView = link.getAttribute('data-view') || (link.getAttribute('href') || '').replace('#', '');
-      if (targetView) {
-        navigateTo(targetView);
-      }
-    });
+  const aliasMap = {
+    '': 'dashboard-main',
+    'dashboard': 'dashboard-main',
+    'dashboard-main': 'dashboard-main',
+    'agenda': 'dashboard-agenda',
+    'indicadores': 'dashboard-indicators',
+    'eventos': 'events-list',
+    'events': 'events-list',
+    'novo-evento': 'events-new',
+    'lotes': 'events-lotes',
+    'cupons': 'events-cupons',
+    'checkin': 'events-checkin',
+    'participantes': 'events-attendees',
+    'consulta': 'global-consult-ticket',
+    'marketing': 'marketing-overview',
+    'marketing-dashboard': 'marketing-overview',
+    'campanhas': 'marketing-campaigns',
+    'whatsapp': 'marketing-whatsapp',
+    'email': 'marketing-email',
+    'sms': 'marketing-sms',
+    'automacao': 'marketing-automation',
+    'financeiro': 'financial-dashboard',
+    'saldo': 'financial-balance',
+    'contabilidade': 'accounting-disk',
+    'relatorios': 'reports-sales',
+    'configuracoes': 'settings-profile'
+  };
+
+  const resolvedName = aliasMap[viewName] || viewName;
+  const targetId = 'view-' + resolvedName;
+  let target = document.getElementById(targetId) || document.getElementById(resolvedName);
+
+  console.log('[NAV]', {
+    viewName,
+    resolvedName,
+    targetId,
+    found: !!target
   });
-}
 
-/**
- * Log navigation events for diagnostics
- */
-function logNavigation(pageId) {
-  console.log({
-    module: "navigation",
-    page: pageId,
-    timestamp: new Date().toISOString()
+  if (!target) {
+    console.error('[NAV] Página inexistente: ' + targetId);
+    target = document.getElementById('view-dashboard-main');
+    if (!target) return false;
+  }
+
+  // Esconder TODAS as .page-section
+  document.querySelectorAll('.page-section').forEach(section => {
+    section.style.display = 'none';
   });
-}
-window.logNavigation = logNavigation;
 
-/**
- * Display graceful error feedback if a route fails
- */
-function showNavigationError(pageId) {
-  console.warn(`[Navigation] Erro ao abrir módulo: ${pageId}`);
+  // Exibir somente a tela encontrada
+  target.style.display = 'block';
 
-  const errorBox = document.getElementById("navigation-error");
-  const errorMsg = document.getElementById("navigation-error-msg");
+  // Atualizar classe active em todos os links com [data-view]
+  document.querySelectorAll('[data-view]').forEach(item => {
+    const dv = (item.getAttribute('data-view') || '').replace(/^view-/, '');
+    const isActive = dv === resolvedName || dv === viewName;
+    item.classList.toggle('active', isActive);
 
-  if (errorBox) {
-    if (errorMsg) {
-      errorMsg.innerHTML = `Não foi possível abrir esta área. Código: <strong>${escapeHtml(pageId)}</strong>`;
-    }
-    errorBox.style.display = "block";
-    errorBox.classList.remove("hidden");
-    
-    // Auto hide after 5 seconds
-    setTimeout(() => {
-      if (errorBox) errorBox.style.display = "none";
-    }, 5000);
-  }
-}
-window.showNavigationError = showNavigationError;
-
-/**
- * Toggle submenu collapse state
- */
-function toggleSubmenu(menuId) {
-  const menu = document.getElementById(menuId);
-  if (!menu) return;
-
-  menu.classList.toggle("hidden");
-  menu.classList.toggle("submenu-open");
-  
-  if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
-    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menu, { toggle: true });
-  }
-}
-window.toggleSubmenu = toggleSubmenu;
-
-/**
- * Sync active class states and expand parent accordions
- */
-function updateActiveMenu(pageId) {
-  const subLinks = document.querySelectorAll('.submenu-link');
-  subLinks.forEach(link => {
-    const dataView = link.getAttribute('data-view');
-    const href = (link.getAttribute('href') || '').replace(/^#\/?/, '');
-    
-    if (dataView === pageId || href === pageId) {
-      subLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-      
-      const parentLi = link.closest('.nav-item-submenu');
+    // Expandir accordion pai se estiver ativo
+    if (isActive) {
+      const parentLi = item.closest('.nav-item-submenu');
       if (parentLi) {
         parentLi.classList.add('nav-item-open');
         const sub = parentLi.querySelector('.nav-group-sub');
@@ -449,221 +414,57 @@ function updateActiveMenu(pageId) {
       }
     }
   });
-}
-window.updateActiveMenu = updateActiveMenu;
 
-/**
- * Universal Central Navigation Controller
- */
-function navigateTo(pageId) {
-  if (!pageId) pageId = 'dashboard';
-  console.log('[NAVIGATION] Abrindo:', pageId);
-
-  // Normalize pageId
-  const cleanId = String(pageId).replace(/^#\/?/, '').trim().toLowerCase();
-
-  // Unified Route Map for Aliases and Identifiers
-  const routeMap = {
-    '': 'dashboard-main',
-    'dashboard': 'dashboard-main',
-    'dashboard-main': 'dashboard-main',
-    'view-dashboard-main': 'dashboard-main',
-    'agenda': 'agenda-annual',
-    'agenda-annual': 'agenda-annual',
-    'agenda-general': 'agenda-general',
-    'dashboard-indicators': 'dashboard-indicators',
-    'indicadores': 'dashboard-indicators',
-
-    'eventos': 'events-list',
-    'events': 'events-list',
-    'events-list': 'events-list',
-    'events-new': 'events-new',
-    'novo-evento': 'events-new',
-    'events-lotes': 'events-lotes',
-    'lotes': 'events-lotes',
-    'events-cupons': 'marketing-coupons',
-    'cupons': 'marketing-coupons',
-    'events-checkin': 'events-checkin',
-    'checkin': 'events-checkin',
-    'events-attendees': 'events-attendees',
-    'participantes': 'events-attendees',
-    'events-page': 'events-page',
-
-    'consulta': 'global-consult-ticket',
-    'global-consult-ticket': 'global-consult-ticket',
-    'event-consult-ticket': 'event-consult-ticket',
-    'cortesias': 'event-cortesias',
-
-    // Marketing Module Standardized Routes
-    'marketing': 'marketing-overview',
-    'marketing-overview': 'marketing-overview',
-    'mkt-analytics': 'marketing-overview',
-    'marketing-analytics': 'marketing-overview',
-    'marketing-dashboard': 'marketing-overview',
-
-    'marketing-campaigns': 'marketing-campaigns',
-    'marketing-campanhas': 'marketing-campaigns',
-    'campanhas': 'marketing-campaigns',
-    'remkt-campaigns': 'marketing-campaigns',
-
-    'marketing-campaign-create': 'marketing-campaign-create',
-    'marketing-campaign-templates': 'marketing-campaign-templates',
-
-    'marketing-whatsapp': 'marketing-whatsapp',
-    'whatsapp': 'marketing-whatsapp',
-    'whatsapp-marketing': 'marketing-whatsapp',
-
-    'marketing-email': 'marketing-email',
-    'email': 'marketing-email',
-    'email-marketing': 'marketing-email',
-
-    'marketing-sms': 'marketing-sms',
-    'sms': 'marketing-sms',
-    'sms-marketing': 'marketing-sms',
-
-    'marketing-abandoned-cart': 'marketing-abandoned-cart',
-    'marketing-recuperacao': 'marketing-abandoned-cart',
-    'carrinho-abandonado': 'marketing-abandoned-cart',
-    'carrinho': 'marketing-abandoned-cart',
-    'remkt-recovery': 'marketing-abandoned-cart',
-
-    'marketing-audiences': 'marketing-audiences',
-    'marketing-publicos': 'marketing-audiences',
-    'publicos': 'marketing-audiences',
-    'remkt-audiences': 'marketing-audiences',
-
-    'marketing-coupons': 'marketing-coupons',
-    'marketing-cupons': 'marketing-coupons',
-
-    'marketing-utm': 'marketing-utm',
-    'utm': 'marketing-utm',
-    'mkt-utm': 'marketing-utm',
-
-    'marketing-pixel': 'marketing-pixel',
-    'pixel': 'marketing-pixel',
-    'mkt-pixel': 'marketing-pixel',
-
-    'marketing-config': 'marketing-pixel',
-    'mkt-config': 'marketing-pixel',
-
-    'marketing-ads': 'marketing-ads',
-    'marketing-diskads': 'marketing-ads',
-    'diskads': 'marketing-ads',
-
-    'marketing-automation': 'marketing-automation',
-    'automacao': 'marketing-automation',
-    'marketing-automacao': 'marketing-automation',
-
-    'marketing-reports': 'marketing-reports',
-    'marketing-relatorios': 'marketing-reports',
-    'event-marketing': 'event-marketing',
-
-    // Financial Routes
-    'financeiro': 'financial-dashboard',
-    'financial-dashboard': 'financial-dashboard',
-    'financial-balance': 'financial-balance',
-    'saldo': 'financial-balance',
-    'financial-repass': 'financial-repass',
-    'financial-advance': 'financial-advance',
-    'financial-negotiations': 'financial-negotiations',
-    'financial-statement': 'financial-statement',
-    'financial-expenses': 'financial-expenses',
-    'financial-accounts': 'financial-accounts',
-    'financial-bordero': 'financial-bordero',
-    'financial-pdv': 'financial-pdv',
-    'financial-paymethods': 'financial-paymethods',
-    'financial-custompay': 'financial-custompay',
-    'financial-refunds': 'financial-refunds',
-    'financial-operators': 'financial-operators',
-    'financial-analytics': 'financial-analytics',
-
-    // Accounting Routes
-    'contabilidade': 'accounting-disk',
-    'accounting': 'accounting-disk',
-    'accounting-disk': 'accounting-disk',
-
-    // Reports Routes
-    'relatorios': 'reports-sales',
-    'reports': 'reports-sales',
-    'reports-sales': 'reports-sales',
-
-    // Settings Routes
-    'configuracoes': 'settings-profile',
-    'settings': 'settings-profile',
-    'settings-profile': 'settings-profile'
-  };
-
-  const resolvedId = routeMap[cleanId] || cleanId;
-
-  // 1. Hide all pages / sections
-  const pages = document.querySelectorAll('.app-page, .page-section');
-  pages.forEach(page => {
-    page.classList.add('hidden');
-    page.classList.remove('active-page');
-    page.style.display = 'none';
-  });
-
-  // 2. Find target element
-  let target = document.getElementById(resolvedId) ||
-               document.getElementById('view-' + resolvedId) ||
-               document.getElementById(cleanId) ||
-               document.getElementById('view-' + cleanId);
-
-  if (!target) {
-    console.error(`[NAVIGATION ERROR] Página não encontrada: ${pageId} (resolvido: ${resolvedId})`);
-    showNavigationError(pageId);
-    // Fallback to main dashboard
-    target = document.getElementById('view-dashboard-main') || document.getElementById('dashboard-main') || document.getElementById('dashboard');
-  }
-
-  if (target) {
-    target.classList.remove('hidden');
-    target.classList.add('active-page');
-    target.style.display = 'flex';
-    target.style.flexDirection = 'column';
-    target.style.width = '100%';
-  }
-
-  // 3. Update active menu state
-  updateActiveMenu(resolvedId);
-
-  // 4. Update browser URL history and session
+  // Atualizar hash na URL
   try {
-    history.replaceState({ page: resolvedId }, '', '#' + resolvedId);
-    sessionStorage.setItem('currentPage', resolvedId);
-  } catch (e) {
-    console.warn("Could not update history state", e);
-  }
+    history.replaceState({ page: resolvedName }, '', '#' + resolvedName);
+    sessionStorage.setItem('currentPage', resolvedName);
+  } catch (e) {}
 
-  // 5. Trigger module-specific initializers
-  if (resolvedId === 'marketing-overview') {
-    setTimeout(renderMarketingOverviewCharts, 50);
-  } else if (resolvedId === 'marketing-pixel' || resolvedId === 'mkt-pixel' || resolvedId === 'marketing-config') {
-    if (typeof initMarketingPixelModule === 'function') initMarketingPixelModule();
-  } else if (resolvedId === 'marketing-audiences') {
-    if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
-  } else if (resolvedId === 'marketing-abandoned-cart') {
-    if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
-  } else if (resolvedId === 'marketing-campaigns') {
+  // Disparar renderizadores específicos
+  if (resolvedName === 'marketing-overview') {
+    if (typeof renderMarketingOverviewCharts === 'function') setTimeout(renderMarketingOverviewCharts, 50);
+  } else if (resolvedName === 'marketing-campaigns') {
     if (typeof initMultichannelCampaignsModule === 'function') initMultichannelCampaignsModule();
-  } else if (resolvedId === 'marketing-campaign-create') {
-    if (typeof initCampaignWizard === 'function') initCampaignWizard();
-  } else if (resolvedId === 'marketing-automation') {
-    if (typeof initMarketingAutomationModule === 'function') initMarketingAutomationModule();
-  } else if (resolvedId === 'marketing-whatsapp') {
+  } else if (resolvedName === 'marketing-whatsapp') {
     if (typeof initWhatsAppMarketingModule === 'function') initWhatsAppMarketingModule();
-  } else if (resolvedId === 'marketing-email') {
+  } else if (resolvedName === 'marketing-email') {
     if (typeof initEmailMarketingModule === 'function') initEmailMarketingModule();
-  } else if (resolvedId === 'event-marketing') {
-    if (typeof initEventMarketingModule === 'function') initEventMarketingModule();
-  } else if (resolvedId === 'financial-negotiations') {
-    if (typeof initNegotiationsPage === 'function') initNegotiationsPage();
+  } else if (resolvedName === 'marketing-automation') {
+    if (typeof initMarketingAutomationModule === 'function') initMarketingAutomationModule();
+  } else if (resolvedName === 'marketing-pixel' || resolvedName === 'marketing-config') {
+    if (typeof initMarketingPixelModule === 'function') initMarketingPixelModule();
+  } else if (resolvedName === 'marketing-audiences') {
+    if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
+  } else if (resolvedName === 'marketing-abandoned-cart') {
+    if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
   }
 
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  window.scrollTo(0, 0);
+  return true;
 }
-window.navigateTo = navigateTo;
-window.switchActiveView = navigateTo;
+
+window.openView = openView;
+window.navigateTo = openView;
+window.switchActiveView = openView;
+
+// ÚNICO Listener nativo para [data-view]
+document.addEventListener('click', function(event) {
+  const link = event.target.closest('[data-view]');
+  if (link) {
+    event.preventDefault();
+    const view = link.getAttribute('data-view');
+    if (view) {
+      openView(view);
+    }
+  }
+});
+
+// Listener para navegação por hash / popstate
+window.addEventListener('hashchange', function() {
+  const hash = (window.location.hash || '').replace(/^#\/?/, '').trim();
+  if (hash) openView(hash);
+});
 
 function renderMarketingOverviewCharts() {
   refreshMarketingDashboard();
