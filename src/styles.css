@@ -1804,3 +1804,221 @@ html, body {
   color: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* ==========================================================================
+   Comprehensive Responsive Layout & Auto-Resizing System
+   ========================================================================== */
+
+/* 1. Global Viewport & Flexbox Container Guards */
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.page-content {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-height: calc(100vh - 56px);
+  overflow-x: hidden;
+  position: relative;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important; /* Crucial for preventing flex children from pushing parent */
+  overflow-x: hidden;
+}
+
+.content {
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.container-fluid, #main-content {
+  padding-left: 0;
+  padding-right: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+}
+
+.page-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+/* 2. Grid & Card Sizing Guards (Prevents Chart/Table Overflows) */
+.row {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  max-width: 100%;
+}
+
+.row > * {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  min-width: 0 !important; /* Prevents overflow in flex grid items */
+}
+
+.card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
+
+.card-body, .card-header, .card-footer {
+  min-width: 0 !important;
+  max-width: 100%;
+}
+
+/* 3. Chart.js Responsive Canvases & Containers */
+canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+div:has(> canvas),
+[style*="position: relative"]:has(canvas) {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+/* 4. Table Responsiveness */
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.table th, .table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.table td.allow-wrap,
+.table td strong {
+  white-space: normal;
+}
+
+/* 5. Responsive Header Toolbar & Breadcrumbs */
+.page-header-content {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+#header-action-toolbar {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* 6. Modals Adaptive Sizing */
+.modal-overlay {
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+}
+
+/* 7. Fluid Media Queries */
+@media (max-width: 1200px) {
+  .sidebar-main:not(.sidebar-main-resized) {
+    width: 260px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .page-header-content {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  #header-action-toolbar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .content {
+    padding: 0.75rem;
+  }
+
+  .navbar-search {
+    max-width: 100% !important;
+    margin: 0.5rem 0 !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .card-body.d-flex.flex-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  .mkt-config-pane {
+    padding: 0.5rem !important;
+  }
+
+  #mkt-config-nav {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    margin-bottom: 0.75rem;
+  }
+
+  #mkt-config-nav a {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .page-title {
+    font-size: 1.1rem !important;
+  }
+
+  .btn-sm {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 11px !important;
+  }
+
+  .table th, .table td {
+    font-size: 11px !important;
+    padding: 0.35rem 0.5rem !important;
+  }
+}

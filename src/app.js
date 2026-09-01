@@ -8502,9 +8502,37 @@ window.selectWizardProducer = function(val) {
   }
 };
 
+// Auto-resize handler for all active Chart instances & layout elements on window / sidebar resize
+function triggerGlobalChartResize() {
+  if (typeof Chart !== 'undefined' && Chart.instances) {
+    Object.values(Chart.instances).forEach(chart => {
+      if (chart && typeof chart.resize === 'function') {
+        chart.resize();
+      }
+    });
+  }
+}
+window.triggerGlobalChartResize = triggerGlobalChartResize;
+
+window.addEventListener('resize', () => {
+  clearTimeout(window.__chartResizeTimer);
+  window.__chartResizeTimer = setTimeout(triggerGlobalChartResize, 150);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const resizeButtons = document.querySelectorAll('.sidebar-main-resize, .sidebar-mobile-main-toggle, .sidebar-control');
+  resizeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setTimeout(triggerGlobalChartResize, 250);
+      setTimeout(triggerGlobalChartResize, 400);
+    });
+  });
+});
+
 // Initialize app after all scope variables and functions are defined
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
   initApp();
 }
+
