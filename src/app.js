@@ -252,6 +252,49 @@ let EVENTS_DATA = [
 let currentEventsFilter = 'ativos';
 let currentSearchQuery = '';
 
+// Gerenciamento completo de Menu Lateral Mobile com Backdrop e Gestos
+function initMobileSidebar() {
+  let backdrop = document.querySelector('.sidebar-mobile-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-mobile-backdrop';
+    document.body.appendChild(backdrop);
+  }
+
+  const sidebar = document.querySelector('.sidebar.sidebar-main');
+
+  // Toggle do menu mobile para todos os botões com a classe .sidebar-mobile-main-toggle
+  document.querySelectorAll('.sidebar-mobile-main-toggle').forEach(btn => {
+    // Remove listeners antigos se houver
+    btn.removeEventListener('click', btn.__mobileToggleHandler);
+    btn.__mobileToggleHandler = (e) => {
+      e.preventDefault();
+      if (!sidebar) return;
+      const isExpanded = sidebar.classList.toggle('sidebar-mobile-expanded');
+      backdrop.classList.toggle('show', isExpanded);
+      if (typeof triggerGlobalChartResize === 'function') {
+        setTimeout(triggerGlobalChartResize, 200);
+      }
+    };
+    btn.addEventListener('click', btn.__mobileToggleHandler);
+  });
+
+  // Fechar ao clicar no backdrop escuro
+  backdrop.addEventListener('click', () => {
+    if (sidebar) sidebar.classList.remove('sidebar-mobile-expanded');
+    backdrop.classList.remove('show');
+  });
+
+  // Fechar com a tecla ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-mobile-expanded')) {
+      sidebar.classList.remove('sidebar-mobile-expanded');
+      backdrop.classList.remove('show');
+    }
+  });
+}
+window.initMobileSidebar = initMobileSidebar;
+
 function initApp() {
   try {
     if (typeof window.App !== 'undefined') {
@@ -262,6 +305,9 @@ function initApp() {
     console.warn("Limitless template initialization warning:", err);
   }
   
+  // Inicialização da Sidebar Mobile e Backdrop
+  initMobileSidebar();
+
   // Navegação já controlada por openView()/navigateTo()/switchActiveView.
   initEventsModule();
   initFinanceModule();
@@ -415,6 +461,72 @@ function openView(viewName) {
     }
   });
 
+  // Atualizar Título e Subtítulo da Página dinamicamente
+  const viewTitles = {
+    'dashboard-main': { title: 'Painel Geral', sub: 'Métricas operacionais consolidadas e resumo de vendas.' },
+    'dashboard-agenda': { title: 'Agenda de Eventos', sub: 'Calendário e programação de eventos da plataforma.' },
+    'dashboard-indicators': { title: 'Indicadores de Performance', sub: 'Metas e indicadores consolidados de bilheteria.' },
+    'events-list': { title: 'Todos os Eventos', sub: 'Gestão, acompanhamento e status em tempo real de eventos.' },
+    'events-new': { title: 'Novo Evento', sub: 'Cadastro e configuração de eventos, lotes e ingressos.' },
+    'events-lotes': { title: 'Lotes de Ingressos', sub: 'Gestão de lotes, disponibilidade e precificação.' },
+    'events-cupons': { title: 'Cupons de Desconto', sub: 'Criação e gestão de cupons promocionais para eventos.' },
+    'events-checkin': { title: 'Validador de Portaria', sub: 'Controle de acesso e leitura de ingressos na portaria.' },
+    'events-attendees': { title: 'Lista de Participantes', sub: 'Lista consolidada de compradores e participantes.' },
+    'events-page': { title: 'Página do Evento', sub: 'Link público de vendas e QR Code de divulgação.' },
+    'global-consult-ticket': { title: 'Consulta de Ingressos', sub: 'Busca unificada por pedido, código, CPF ou comprador.' },
+    'financial-dashboard': { title: 'Painel Financeiro', sub: 'Resumo financeiro, conciliação e fluxo de caixa.' },
+    'financial-balance': { title: 'Saldo Consolidado', sub: 'Saldos disponíveis, repasses e fechamento financeiro.' },
+    'financial-repass': { title: 'Solicitações de Repasse', sub: 'Gestão e histórico de transferências a produtores.' },
+    'financial-advance': { title: 'Antecipações', sub: 'Simulação e contratação de antecipação de recebíveis.' },
+    'financial-negotiations': { title: 'Negociações Financeiras', sub: 'Taxas de serviço, conveniência e comissões por evento.' },
+    'financial-statement': { title: 'Extrato Financeiro', sub: 'Histórico detalhado de transações e movimentações.' },
+    'financial-expenses': { title: 'Despesas Financeiras', sub: 'Controle e lançamentos de custos operacionais.' },
+    'financial-accounts': { title: 'Contas Bancárias', sub: 'Cadastro e gestão de contas de produtores e parceiros.' },
+    'financial-bordero': { title: 'Borderô Financeiro', sub: 'Demonstrativo consolidado de fechamento de eventos.' },
+    'financial-pdv': { title: 'Pontos de Venda (PDV)', sub: 'Monitoramento em tempo real de caixas físicos e operadores.' },
+    'financial-paymethods': { title: 'Métodos de Pagamento', sub: 'Taxas, adquirentes e regras de parcelamento.' },
+    'financial-custompay': { title: 'Pagamentos Customizados', sub: 'Condições especiais e formas personalizadas de recebimento.' },
+    'financial-refunds': { title: 'Devoluções e Estornos', sub: 'Gestão de cancelamentos, estornos e chargebacks.' },
+    'financial-operators': { title: 'Operadoras de Cartão', sub: 'Gateways, adquirentes e conciliação de recebíveis.' },
+    'financial-analytics': { title: 'Inteligência Financeira', sub: 'Análise preditiva, lucratividade e insights de vendas.' },
+    'marketing-overview': { title: 'Marketing Hub', sub: 'Visão geral 360° de campanhas, públicos e conversões.' },
+    'marketing-campaigns': { title: 'Central de Campanhas', sub: 'Planeje, dispare e acompanhe campanhas multicanal.' },
+    'marketing-campaign-create': { title: 'Nova Campanha', sub: 'Assistente de criação de campanhas de tráfego e vendas.' },
+    'marketing-whatsapp': { title: 'WhatsApp Marketing', sub: 'Disparos e automação de mensagens em massa via WhatsApp.' },
+    'marketing-email': { title: 'E-mail Marketing', sub: 'Gestão de campanhas de e-mail e métricas de engajamento.' },
+    'marketing-sms': { title: 'SMS Marketing', sub: 'Disparo de SMS direto com alta taxa de entrega e abertura.' },
+    'marketing-abandoned-cart': { title: 'Recuperação de Carrinho', sub: 'Recuperação automatizada de pedidos pendentes.' },
+    'marketing-coupons': { title: 'Cupons e Promoções', sub: 'Gestão estratégica de cupons e afiliados de divulgação.' },
+    'marketing-audiences': { title: 'Públicos e CRM', sub: 'Segmentação de compradores e clusters de interesse.' },
+    'marketing-automation': { title: 'Automações de Marketing', sub: 'Fluxos automáticos de régua de relacionamento.' },
+    'marketing-utm': { title: 'UTMs & Analytics', sub: 'Rastreamento avançado e atribuição de receita por canal.' },
+    'marketing-pixel': { title: 'Pixel & Meta CAPI', sub: 'Integrações com Meta Pixel, Google Tag e TikTok.' },
+    'marketing-ads': { title: 'Disk Ads', sub: 'Anúncios patrocinados dentro da plataforma DiskIngressos.' },
+    'marketing-reports': { title: 'Relatórios de Marketing', sub: 'ROI, ROAS e conversão consolidada por canal.' },
+    'accounting-disk': { title: 'Contabilidade Disk', sub: 'Plano de contas, livro diário, razão e conciliação contábil.' },
+    'reports-sales': { title: 'Relatórios e Métricas', sub: 'Relatórios consolidados de vendas e participantes.' },
+    'settings-profile': { title: 'Configurações', sub: 'Perfil, preferências e configurações da conta.' }
+  };
+
+  const titleEl = document.getElementById('active-view-title');
+  const subEl = document.getElementById('active-view-subtitle');
+  if (titleEl && viewTitles[resolvedName]) {
+    titleEl.textContent = viewTitles[resolvedName].title;
+    if (subEl) subEl.textContent = viewTitles[resolvedName].sub;
+  }
+
+  // Fechar sidebar mobile automaticamente após clique de navegação
+  if (window.innerWidth < 992) {
+    const mobileSidebar = document.querySelector('.sidebar.sidebar-main');
+    const mobileBackdrop = document.querySelector('.sidebar-mobile-backdrop');
+    if (mobileSidebar && mobileSidebar.classList.contains('sidebar-mobile-expanded')) {
+      mobileSidebar.classList.remove('sidebar-mobile-expanded');
+    }
+    if (mobileBackdrop) {
+      mobileBackdrop.classList.remove('show');
+    }
+  }
+
   // Atualizar hash na URL
   try {
     history.replaceState({ page: resolvedName }, '', '#' + resolvedName);
@@ -438,6 +550,12 @@ function openView(viewName) {
     if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
   } else if (resolvedName === 'marketing-abandoned-cart') {
     if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
+  }
+
+  // Redimensionamento global de gráficos para garantir adaptação perfeita no container
+  if (typeof triggerGlobalChartResize === 'function') {
+    setTimeout(triggerGlobalChartResize, 60);
+    setTimeout(triggerGlobalChartResize, 250);
   }
 
   window.scrollTo(0, 0);

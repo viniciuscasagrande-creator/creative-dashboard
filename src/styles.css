@@ -1806,7 +1806,7 @@ html, body {
 }
 
 /* ==========================================================================
-   Comprehensive Responsive Layout & Auto-Resizing System
+   Comprehensive Responsive Layout, Alignment & Auto-Resizing System
    ========================================================================== */
 
 /* 1. Global Viewport & Flexbox Container Guards */
@@ -1814,6 +1814,7 @@ html, body {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 .page-content {
@@ -1884,6 +1885,54 @@ html, body {
   max-width: 100%;
 }
 
+.card-header.d-flex,
+.card-header.d-flex.justify-content-between {
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+}
+
+/* Equal height and alignment for report cards */
+.report-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* 5-Column Responsive Helper for PDV & Operadoras KPIs */
+.kpi-col-5 {
+  flex: 0 0 20%;
+  max-width: 20%;
+}
+
+@media (max-width: 1199.98px) {
+  .kpi-col-5 {
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .kpi-col-5 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .kpi-col-5 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 /* 3. Chart.js Responsive Canvases & Containers */
 canvas {
   max-width: 100% !important;
@@ -1899,12 +1948,12 @@ div:has(> canvas),
   overflow: hidden;
 }
 
-/* 4. Table Responsiveness */
+/* 4. Table Responsiveness & Touch Scroll */
 .table-responsive {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   margin-bottom: 0;
 }
 
@@ -1936,6 +1985,18 @@ div:has(> canvas),
 
 /* 6. Modals Adaptive Sizing */
 .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1060 !important;
   padding: 1rem;
   box-sizing: border-box;
 }
@@ -1947,14 +2008,45 @@ div:has(> canvas),
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
 }
 
 .modal-body {
   overflow-y: auto;
   max-height: calc(90vh - 120px);
+  -webkit-overflow-scrolling: touch;
 }
 
-/* 7. Fluid Media Queries */
+/* 7. Mobile Sidebar Drawer & Backdrop System */
+.sidebar-mobile-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 1040;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  pointer-events: none;
+}
+
+.sidebar-mobile-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.navbar-logo {
+  max-height: 26px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* 8. Fluid Responsive Media Queries */
 @media (max-width: 1200px) {
   .sidebar-main:not(.sidebar-main-resized) {
     width: 260px;
@@ -1962,31 +2054,107 @@ div:has(> canvas),
 }
 
 @media (max-width: 991.98px) {
+  /* Mobile Sidebar as a smooth drawer */
+  .sidebar.sidebar-main {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: -290px !important;
+    width: 290px !important;
+    max-width: 85vw !important;
+    height: 100vh !important;
+    z-index: 1045 !important;
+    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.35) !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .sidebar.sidebar-main.sidebar-mobile-expanded {
+    left: 0 !important;
+  }
+
+  /* Page Header stack on mobile */
   .page-header-content {
     flex-direction: column;
     align-items: flex-start !important;
+    gap: 0.5rem !important;
   }
 
   #header-action-toolbar {
     width: 100%;
     justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .content {
-    padding: 0.75rem;
+    padding: 0.75rem 0.5rem;
   }
 
   .navbar-search {
     max-width: 100% !important;
     margin: 0.5rem 0 !important;
   }
+
+  /* Touch-friendly horizontal scrolling tabs on mobile */
+  .nav-tabs,
+  .nav-tabs-responsive,
+  ul[id^="financial-sub-tabs"],
+  #accounting-nav-pills,
+  #mkt-campaigns-status-tabs,
+  #mkt-whatsapp-nav-tabs,
+  #mkt-email-nav-tabs,
+  #mkt-automation-nav-tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding: 4px 2px !important;
+    max-height: none !important;
+    width: 100% !important;
+  }
+
+  .nav-tabs::-webkit-scrollbar,
+  ul[id^="financial-sub-tabs"]::-webkit-scrollbar,
+  #accounting-nav-pills::-webkit-scrollbar,
+  #mkt-campaigns-status-tabs::-webkit-scrollbar,
+  #mkt-whatsapp-nav-tabs::-webkit-scrollbar,
+  #mkt-email-nav-tabs::-webkit-scrollbar,
+  #mkt-automation-nav-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .nav-tabs .nav-item,
+  ul[id^="financial-sub-tabs"] .nav-item,
+  #accounting-nav-pills .nav-link,
+  #accounting-nav-pills > div {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
 }
 
 @media (max-width: 767.98px) {
-  .card-body.d-flex.flex-row {
+  /* Action toolbars and buttons wrap gracefully */
+  .card-body.d-flex.flex-row:has(button),
+  .card-body.d-flex.flex-row:has(.btn),
+  .card-body.d-flex.flex-row:has(input),
+  .card-body.d-flex.flex-row:has(select) {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 0.5rem;
+    gap: 0.75rem !important;
+  }
+
+  /* Stat / KPI metric cards maintain balanced row layout */
+  .card-body.d-flex.flex-row:not(:has(button)):not(:has(.btn)) {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
   }
 
   .mkt-config-pane {
@@ -2005,20 +2173,83 @@ div:has(> canvas),
     padding: 0.5rem 0.75rem !important;
     font-size: 11px !important;
   }
+
+  /* Responsive select/inputs with fixed pixel widths */
+  select[style*="width:"],
+  input[style*="width:"] {
+    max-width: 100% !important;
+  }
+
+  /* Tables on mobile */
+  .table th, .table td {
+    padding: 0.45rem 0.55rem !important;
+    font-size: 12px !important;
+  }
+
+  /* Modal on mobile */
+  .modal-overlay {
+    padding: 0.5rem !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 94vh !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+
+  .modal-body {
+    max-height: calc(94vh - 130px) !important;
+    padding: 1rem !important;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+  }
 }
 
 @media (max-width: 575.98px) {
   .page-title {
-    font-size: 1.1rem !important;
+    font-size: 1.15rem !important;
   }
 
   .btn-sm {
-    padding: 0.25rem 0.5rem !important;
-    font-size: 11px !important;
+    padding: 0.3rem 0.55rem !important;
+    font-size: 12px !important;
   }
 
   .table th, .table td {
-    font-size: 11px !important;
-    padding: 0.35rem 0.5rem !important;
+    font-size: 11.5px !important;
+    padding: 0.35rem 0.45rem !important;
+  }
+
+  /* Wizard Step Indicator on mobile */
+  .wizard-step-circle {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+  }
+
+  .wizard-step-line {
+    margin-top: -15px !important;
+  }
+
+  .wizard-step-circle + span {
+    font-size: 9px !important;
+    line-height: 1.1 !important;
+    max-width: 60px !important;
+    margin: 4px auto 0 !important;
+  }
+
+  /* Compact Navbar user controls on small phones */
+  .navbar-nav-link {
+    padding: 0.2rem !important;
+  }
+
+  .navbar-brand {
+    padding-left: 0 !important;
   }
 }
