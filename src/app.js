@@ -8,6 +8,8 @@ import { dreService } from './services/dreService.js';
 import { balanceSheetService } from './services/balanceSheetService.js';
 import { closingService } from './services/closingService.js';
 import { accountingDashboardService } from './services/accountingDashboardService.js';
+import { auditComplianceService } from './services/auditComplianceService.js';
+import { accountingIntelligenceService } from './services/accountingIntelligenceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
 // Global state for events
@@ -6584,13 +6586,9 @@ function switchAccountingTab(e, tabName) {
     viewSec.style.display = 'block';
   }
 
-  // Special behavior: if clicking "inteligencia-contabil", show dashboard & smooth-scroll to AI panel
+  // Fase 26.17.9.1: Inteligência Contábil possui pane real.
   let actualTabToDisplay = tabName;
   let scrollToIntelligence = false;
-  if (tabName === 'inteligencia-contabil') {
-    actualTabToDisplay = 'dashboard';
-    scrollToIntelligence = true;
-  }
 
   currentAccountingTab = actualTabToDisplay;
   const category = ACCOUNTING_CATEGORY_MAP[tabName] || ACCOUNTING_CATEGORY_MAP[actualTabToDisplay] || 'visao-geral';
@@ -6703,6 +6701,8 @@ function switchAccountingTab(e, tabName) {
   // 9. Invoke pane render functions
   if (actualTabToDisplay === 'dashboard') {
     renderAccountingDashboard();
+  } else if (actualTabToDisplay === 'inteligencia-contabil') {
+    if (typeof renderAccountingIntelligence === 'function') renderAccountingIntelligence();
   } else if (actualTabToDisplay === 'simulador') {
     const simIngressos = document.getElementById('sim-res-rec-ingressos');
     if (!simIngressos || simIngressos.textContent === 'R$ 0,00' || simIngressos.textContent === '-') {
@@ -6739,7 +6739,8 @@ function switchAccountingTab(e, tabName) {
   } else if (actualTabToDisplay === 'nfe') {
     if (typeof renderNfe === 'function') renderNfe();
   } else if (actualTabToDisplay === 'auditoria') {
-    if (typeof renderAuditoria === 'function') renderAuditoria();
+    if (typeof renderAuditCompliance === 'function') renderAuditCompliance();
+    if (typeof renderAudit === 'function') renderAudit();
   }
 
   if (actualTabToDisplay === 'demonstracoes') {
@@ -8085,6 +8086,85 @@ window.initAgendaGeneralModule = initAgendaGeneralModule;
 
 
 // Bind all accounting functions to window
+
+/* ==========================================================================
+   FASE 26.17.9.1 — INTEGRAÇÃO REAL 8.7 + 8.8
+   ========================================================================== */
+function formatAccountingBrl(value) {
+  return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(Number(value || 0));
+}
+
+async function renderAccountingIntelligence() {
+  const root = document.getElementById('acc-intelligence-enterprise-root');
+  if (!root) return;
+  root.innerHTML = '<div class="p-4 text-muted small"><i class="ph-spinner spinner me-2"></i>Calculando inteligência contábil...</div>';
+  try {
+    const data = await accountingIntelligenceService.getOverview();
+    const insightHtml = (data.insights || []).map(item => `
+      <div class="border rounded-3 p-3 mb-2 bg-white">
+        <div class="d-flex justify-content-between gap-3 align-items-start">
+          <div>
+            <span class="badge ${item.priority === 'CRITICA' ? 'bg-danger' : item.priority === 'ALTA' ? 'bg-warning text-dark' : 'bg-secondary'} mb-2">${item.type}</span>
+            <h6 class="fw-bold text-dark mb-1">${item.title}</h6>
+            <p class="small text-muted mb-2">${item.description}</p>
+            <div class="small text-muted"><strong>Origem:</strong> ${(item.sourceModules || []).join(' • ')}</div>
+            <div class="small text-dark mt-2"><strong>Ação sugerida:</strong> ${item.recommendedAction || 'Investigar.'}</div>
+          </div>
+          <div class="text-end" style="min-width:140px">
+            <div class="small text-muted">Impacto</div>
+            <div class="fw-bold">${formatAccountingBrl(item.financialImpact)}</div>
+            <div class="small text-muted mt-1">Confiança ${Math.round((item.confidence || 0)*100)}%</div>
+          </div>
+        </div>
+      </div>`).join('');
+
+    root.innerHTML = `
+      <div class="row g-3 mb-3">
+        ${[
+          ['Alertas ativos',data.activeAlerts],['Riscos críticos',data.criticalRisks],
+          ['Valor em risco',formatAccountingBrl(data.financialValueAtRisk)],['Saúde contábil',`${data.accountingHealthScore}/100`]
+        ].map(([label,value])=>`<div class="col-6 col-xl-3"><div class="card border shadow-sm h-100"><div class="card-body p-3"><div class="small text-muted">${label}</div><div class="fs-4 fw-bold text-dark mt-1">${value}</div></div></div></div>`).join('')}
+      </div>
+      <div class="card border shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <div><strong>Central de Insights</strong><div class="small text-muted">Regras determinísticas sobre módulos integrados do PDT</div></div>
+          <button class="btn btn-sm btn-outline-primary" onclick="window.renderAccountingIntelligence()"><i class="ph-arrows-clockwise me-1"></i>Atualizar</button>
+        </div>
+        <div class="card-body">${insightHtml}</div>
+      </div>`;
+  } catch (error) {
+    console.error('[Accounting Intelligence]',error);
+    root.innerHTML = `<div class="alert alert-danger">Não foi possível calcular a inteligência contábil: ${error.message}</div>`;
+  }
+}
+
+function renderAuditCompliance() {
+  const kpiRoot = document.getElementById('acc-audit-compliance-kpis');
+  const excRoot = document.getElementById('acc-audit-compliance-exceptions');
+  if (!kpiRoot || !excRoot) return;
+  const overview = auditComplianceService.getOverview();
+  const exceptions = auditComplianceService.getExceptions();
+  kpiRoot.innerHTML = [
+    ['Eventos auditados',overview.totalEvents],['Alterações manuais',overview.manualChanges],
+    ['Reaberturas',overview.reopenedPeriods],['Exceções abertas',overview.openExceptions],
+    ['Riscos críticos',overview.criticalRisks],['Compliance',`${overview.controlsSatisfied}%`]
+  ].map(([label,value])=>`<div class="col-6 col-lg-2"><div class="border rounded-3 p-2 bg-white h-100"><div class="small text-muted">${label}</div><div class="fs-5 fw-bold text-dark">${value}</div></div></div>`).join('');
+
+  excRoot.innerHTML = exceptions.length ? exceptions.map(item=>`
+    <div class="border rounded-3 p-3 mb-2 bg-white">
+      <div class="d-flex justify-content-between gap-2">
+        <div><span class="badge ${item.risk==='CRITICO'?'bg-danger':'bg-warning text-dark'}">${item.risk}</span><strong class="ms-2">${item.title}</strong></div>
+        <span class="small text-muted">${item.status.replaceAll('_',' ')}</span>
+      </div>
+      <div class="small text-muted mt-2">${item.description || ''}</div>
+      <div class="small mt-2"><strong>Responsável:</strong> ${item.owner || 'Não atribuído'} • <strong>Prazo:</strong> ${item.dueDate || '—'}</div>
+    </div>`).join('') : '<div class="text-muted small">Nenhuma exceção de compliance aberta.</div>';
+}
+window.renderAccountingIntelligence = renderAccountingIntelligence;
+window.renderAuditCompliance = renderAuditCompliance;
+window.auditComplianceService = auditComplianceService;
+window.accountingIntelligenceService = accountingIntelligenceService;
+
 window.switchAccountingTab = switchAccountingTab;
 window.switchAccountingCategory = switchAccountingCategory;
 window.setAccountingFilter = setAccountingFilter;
