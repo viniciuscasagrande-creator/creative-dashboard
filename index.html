@@ -11909,54 +11909,279 @@ Como podemos te ajudar hoje?
                                     </div>
                                 </div>
 
-                                <!-- TAB PANE: Conciliação Bancária -->
+                                <!-- TAB PANE: Centro de Conciliação Contábil & Operacional (Fase 26.17.8.2) -->
                                 <div class="accounting-pane" id="accpane-conciliacao" style="display: none;">
-                                    <div class="row g-3">
-                                        <div class="col-md-5">
-                                            <!-- Upload statement card -->
-                                            <div class="card shadow-sm border p-3">
-                                                <h6 class="fw-bold text-dark mb-3"><i class="ph-upload-simple text-primary me-1"></i> Importar Extrato Bancário</h6>
-                                                <p class="text-muted fs-xs">Importe arquivos contábeis do seu banco para realizar o batimento automático com as vendas de ingressos.</p>
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Instituição Bancária:</label>
-                                                    <select class="form-select form-select-sm fw-semibold" id="acc-concil-banco">
-                                                        <option value="itau" selected>Banco Itaú S.A.</option>
-                                                        <option value="inter">Banco Inter (API Direta)</option>
-                                                        <option value="stripe">Stripe Gateway (Liquidação D+3)</option>
-                                                        <option value="stone">Stone Adquirente (MDR Batimento)</option>
-                                                    </select>
+
+                                    <!-- 1. CABEÇALHO EXECUTIVO DO CENTRO DE CONCILIAÇÃO -->
+                                    <div class="card card-body p-3 shadow-sm border mb-3 bg-white" style="border-radius: 10px; border-left: 4px solid #10b981;">
+                                        <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs font-monospace">FASE 26.17.8.2</span>
+                                                    <span class="fs-xxs text-muted uppercase tracking-wider fw-bold">Contabilidade Enterprise PDT DiskIngressos</span>
                                                 </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Escolher Arquivo (OFX, CSV ou CNAB):</label>
-                                                    <input type="file" class="form-control form-control-sm" id="acc-concil-file" onchange="window.simulateImportOFX()">
-                                                </div>
-                                                <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="window.simulateImportOFX()"><i class="ph-sparkle me-1"></i> Processar Conciliação Inteligente</button>
+                                                <h5 class="fw-bold text-dark mb-0">Centro de Conciliação Contábil &amp; Operacional</h5>
+                                                <span class="fs-xs text-muted">
+                                                    Rastreamento contínuo: <strong>Pedido → Gateway → Banco → Split → Repasse → Contabilidade</strong>
+                                                </span>
+                                            </div>
+
+                                            <!-- Ações Rápidas no Cabeçalho -->
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-xs fw-semibold" onclick="window.openModal('importar-extrato-conciliacao')">
+                                                    <i class="ph-upload-simple me-1 text-primary"></i> Importar Extrato (OFX/CSV)
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary btn-xs fw-semibold" onclick="window.exportReconciliationCsv()">
+                                                    <i class="ph-file-arrow-down me-1"></i> Exportar Dados
+                                                </button>
+                                                <button type="button" class="btn btn-success btn-xs fw-bold text-white shadow-xs" onclick="window.runAutoReconciliation()">
+                                                    <i class="ph-arrows-clockwise me-1"></i> Executar Conciliação em Lote
+                                                </button>
                                             </div>
                                         </div>
-                                        
-                                        <!-- Reconciliation Batimento table -->
-                                        <div class="col-md-7">
-                                            <div class="card shadow-sm border h-100">
-                                                <div class="card-header bg-transparent py-2 d-flex justify-content-between align-items-center">
-                                                    <h6 class="fw-bold mb-0 text-dark"><i class="ph-scales text-muted me-1"></i> Confronto de Saldos e Lançamentos</h6>
-                                                    <span class="badge bg-danger rounded-pill fs-xxs" id="acc-concil-pending-badge">2 Pendentes</span>
+
+                                        <!-- Pipeline Visual de Fluxo -->
+                                        <div class="reconciliation-pipeline mt-3 pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2 fs-xxs">
+                                            <div class="pipeline-step active d-flex align-items-center gap-1.5">
+                                                <span class="badge bg-primary text-white rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">1</span>
+                                                <span class="fw-bold text-dark">Pedido Aprovado</span>
+                                                <i class="ph-check-circle text-success fs-6"></i>
+                                            </div>
+                                            <i class="ph-caret-right text-muted opacity-40"></i>
+                                            <div class="pipeline-step active d-flex align-items-center gap-1.5">
+                                                <span class="badge bg-primary text-white rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">2</span>
+                                                <span class="fw-bold text-dark">Gateway Processado</span>
+                                                <i class="ph-check-circle text-success fs-6"></i>
+                                            </div>
+                                            <i class="ph-caret-right text-muted opacity-40"></i>
+                                            <div class="pipeline-step active d-flex align-items-center gap-1.5">
+                                                <span class="badge bg-primary text-white rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">3</span>
+                                                <span class="fw-bold text-dark">Liquidação Bancária</span>
+                                                <i class="ph-check-circle text-success fs-6"></i>
+                                            </div>
+                                            <i class="ph-caret-right text-muted opacity-40"></i>
+                                            <div class="pipeline-step active d-flex align-items-center gap-1.5">
+                                                <span class="badge bg-primary text-white rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">4</span>
+                                                <span class="fw-bold text-dark">Split Calculado</span>
+                                                <i class="ph-check-circle text-success fs-6"></i>
+                                            </div>
+                                            <i class="ph-caret-right text-muted opacity-40"></i>
+                                            <div class="pipeline-step active d-flex align-items-center gap-1.5">
+                                                <span class="badge bg-primary text-white rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">5</span>
+                                                <span class="fw-bold text-dark">Repasse Produtor</span>
+                                                <i class="ph-check-circle text-success fs-6"></i>
+                                            </div>
+                                            <i class="ph-caret-right text-muted opacity-40"></i>
+                                            <div class="pipeline-step active d-flex align-items-center gap-1.5">
+                                                <span class="badge bg-success text-white rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">6</span>
+                                                <span class="fw-bold text-dark">Contabilidade Conciliada</span>
+                                                <i class="ph-shield-check text-success fs-6"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. GRID DE 8 KPIS DE INTEGRIDADE DA CONCILIAÇÃO -->
+                                    <div class="row g-2 mb-3">
+                                        <!-- KPI 1: Processado -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Processado</span>
+                                                <h5 class="fw-bold mb-0 text-dark font-monospace" id="rec-kpi-processed">R$ 1.842.500,00</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-calendar-check text-primary"></i> Período corrente</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 2: Conciliado -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Conciliado</span>
+                                                <h5 class="fw-bold mb-0 text-success font-monospace" id="rec-kpi-reconciled">R$ 1.779.200,00</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-check-circle text-success"></i> 98,73% de aderência</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 3: Pendente -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Pendente</span>
+                                                <h5 class="fw-bold mb-0 text-warning font-monospace" id="rec-kpi-pending">R$ 29.100,00</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-hourglass text-warning"></i> Aguardando liquidação D+1/3</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 4: Divergente -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Divergente</span>
+                                                <h5 class="fw-bold mb-0 text-danger font-monospace" id="rec-kpi-divergent">R$ 34.200,00</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-warning-circle text-danger"></i> 27 pedidos em fila</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 5: Valor Divergente -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Valor Divergente</span>
+                                                <h5 class="fw-bold mb-0 text-danger font-monospace" id="rec-kpi-divergent-amount">R$ 34.210,00</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-scales text-danger"></i> Impacto a regularizar</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 6: Chargebacks -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Chargebacks</span>
+                                                <h5 class="fw-bold mb-0 text-danger font-monospace" id="rec-kpi-chargebacks">7</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-shield-warning text-danger"></i> Contestação de adquirente</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 7: Estornos -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Estornos</span>
+                                                <h5 class="fw-bold mb-0 text-secondary font-monospace" id="rec-kpi-refunds">18</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-arrow-u-down-left text-secondary"></i> Cancelamentos CDC</span>
+                                            </div>
+                                        </div>
+                                        <!-- KPI 8: Duplicidades -->
+                                        <div class="col-6 col-md-3">
+                                            <div class="card card-body p-3 shadow-sm border text-start bg-white h-100" style="border-radius: 8px;">
+                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Duplicidades</span>
+                                                <h5 class="fw-bold mb-0 text-secondary font-monospace" id="rec-kpi-duplicates">4</h5>
+                                                <span class="fs-xxs text-muted mt-1"><i class="ph-copy text-secondary"></i> TID duplicado no lote</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. PAINEL DE CONTROLE CENTRAL (ÍNDICE & EXCEÇÕES + FILA OPERACIONAL) -->
+                                    <div class="row g-3">
+                                        <!-- COLUNA LATERAL ESQUERDA: ÍNDICE GERAL & SUB-MÉTRICAS -->
+                                        <div class="col-xl-4 col-lg-5">
+                                            <!-- Card Índice Geral -->
+                                            <div class="card p-3 shadow-sm border mb-3 bg-white" style="border-radius: 10px;">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="fs-xxs fw-bold text-muted text-uppercase">Índice Geral de Batimento</span>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs">Automático</span>
                                                 </div>
+                                                <h2 class="fw-bold text-dark font-monospace mb-1" id="rec-gauge-rate">98,73%</h2>
+                                                <div class="progress mb-2" style="height: 8px; border-radius: 4px; background-color: #f1f5f9;">
+                                                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" id="rec-gauge-bar" role="progressbar" style="width: 98.73%"></div>
+                                                </div>
+                                                <p class="fs-xxs text-muted mb-3">
+                                                    Conformidade calculada entre pedidos no banco de dados, liquidações bancárias e relatórios de adquirentes.
+                                                </p>
+
+                                                <!-- Breakdown de Divergências Críticas -->
+                                                <div class="d-flex flex-column gap-2 pt-2 border-top">
+                                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light fs-xs">
+                                                        <span class="text-muted"><i class="ph-magnifying-glass me-1.5 text-danger"></i> Não Localizadas</span>
+                                                        <strong class="font-monospace text-danger" id="rec-metric-notfound">9</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light fs-xs">
+                                                        <span class="text-muted"><i class="ph-percent me-1.5 text-warning"></i> Diferenças de Taxas</span>
+                                                        <strong class="font-monospace text-warning" id="rec-metric-feegap">12</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light fs-xs">
+                                                        <span class="text-muted"><i class="ph-paper-plane-tilt me-1.5 text-danger"></i> Repasses Divergentes</span>
+                                                        <strong class="font-monospace text-danger" id="rec-metric-payoutgap">6</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card Rápido de Importação de Extrato (Recurso Preservado e Aprimorado) -->
+                                            <div class="card p-3 shadow-sm border bg-white" style="border-radius: 10px;">
+                                                <h6 class="fw-bold text-dark mb-2"><i class="ph-bank text-primary me-1.5"></i> Extratos &amp; Adquirentes</h6>
+                                                <p class="text-muted fs-xs mb-2">Importe arquivos OFX ou relatórios de liquidação para batimento automático.</p>
+                                                <div class="mb-2">
+                                                    <label class="form-label fs-xxs fw-bold text-muted mb-0.5">Adquirente / Banco:</label>
+                                                    <select class="form-select form-select-xs fw-semibold" id="rec-import-banco-select">
+                                                        <option value="itau" selected>Banco Itaú (C/C 89210-4)</option>
+                                                        <option value="inter">Banco Inter (Conta Digital / Pix)</option>
+                                                        <option value="stripe">Stripe Adquirente (MDR 2.5%)</option>
+                                                        <option value="stone">Stone Pagamentos (MDR 2.3%)</option>
+                                                        <option value="pagarme">Pagar.me / Mundipagg</option>
+                                                    </select>
+                                                </div>
+                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold w-100 mb-2" onclick="window.openModal('importar-extrato-conciliacao')">
+                                                    <i class="ph-file-plus me-1"></i> Carregar Arquivo OFX / CSV
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold w-100" onclick="window.viewReconciliationAuditLog()">
+                                                    <i class="ph-shield-check me-1 text-primary"></i> Ver Trilha de Auditoria Geral
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- COLUNA PRINCIPAL DIREITA: FILTROS, BUSCA & FILA DE DIVERGÊNCIAS -->
+                                        <div class="col-xl-8 col-lg-7">
+                                            <div class="card shadow-sm border bg-white" style="border-radius: 10px; overflow: hidden;">
+                                                <!-- Filtros de Status (Pills) -->
+                                                <div class="p-3 border-bottom bg-light bg-opacity-40">
+                                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                                        <div class="btn-group btn-group-xs flex-wrap" role="group" id="rec-status-filter-group">
+                                                            <button type="button" class="btn btn-xs btn-primary fw-bold active" data-status="TODOS" onclick="window.setReconciliationStatusFilter('TODOS')">Todos</button>
+                                                            <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-status="DIVERGENTE" onclick="window.setReconciliationStatusFilter('DIVERGENTE')">Divergentes</button>
+                                                            <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-status="PENDENTE" onclick="window.setReconciliationStatusFilter('PENDENTE')">Pendentes</button>
+                                                            <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-status="EM_ANALISE" onclick="window.setReconciliationStatusFilter('EM_ANALISE')">Em Análise</button>
+                                                            <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-status="BLOQUEADO" onclick="window.setReconciliationStatusFilter('BLOQUEADO')">Bloqueados</button>
+                                                            <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-status="CONCILIADO" onclick="window.setReconciliationStatusFilter('CONCILIADO')">Conciliados</button>
+                                                        </div>
+                                                        <span class="fs-xxs text-muted font-monospace" id="rec-filtered-count-badge">Carregando registros...</span>
+                                                    </div>
+
+                                                    <!-- Busca e Filtros Secundários -->
+                                                    <div class="row g-2">
+                                                        <div class="col-md-6">
+                                                            <div class="input-group input-group-xs">
+                                                                <span class="input-group-text bg-white"><i class="ph-magnifying-glass text-muted"></i></span>
+                                                                <input type="text" class="form-control form-control-xs" id="rec-search-input" placeholder="Buscar pedido (#123456), TID, evento ou produtor..." oninput="window.handleReconciliationSearch(this.value)">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6 col-md-3">
+                                                            <select class="form-select form-select-xs" id="rec-filter-gateway" onchange="window.handleReconciliationSecondaryFilter()">
+                                                                <option value="todos" selected>Todos os Gateways</option>
+                                                                <option value="stripe">Stripe</option>
+                                                                <option value="stone">Stone</option>
+                                                                <option value="pagarme">Pagar.me</option>
+                                                                <option value="inter">Pix Inter</option>
+                                                                <option value="cielo">Cielo</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-sm-6 col-md-3">
+                                                            <select class="form-select form-select-xs" id="rec-filter-divergence" onchange="window.handleReconciliationSecondaryFilter()">
+                                                                <option value="TODOS" selected>Todos os Tipos</option>
+                                                                <option value="TAXA_GATEWAY">Diferença de Taxa</option>
+                                                                <option value="LIQUIDACAO_NAO_LOCALIZADA">Liquidação Ausente</option>
+                                                                <option value="REPASSE_DIVERGENTE">Repasse Divergente</option>
+                                                                <option value="CHARGEBACK_NAO_REFLETIDO">Chargeback</option>
+                                                                <option value="TRANSACAO_DUPLICADA">Transação Duplicada</option>
+                                                                <option value="ESTORNO_NAO_REFLETIDO">Estorno Pendente</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Tabela Operacional de Fila de Conciliação -->
                                                 <div class="table-responsive">
-                                                    <table class="table table-hover align-middle mb-0 fs-xxs" style="font-size: 11.5px;">
-                                                        <thead>
-                                                            <tr class="table-light">
-                                                                <th>Data</th>
-                                                                <th>Extrato (Banco)</th>
-                                                                <th>Sistema (DiskIngressos)</th>
-                                                                <th>Diferença</th>
-                                                                <th class="text-center">Ação</th>
+                                                    <table class="table table-hover align-middle mb-0 text-nowrap fs-xxs" id="rec-operational-table">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th class="py-2 px-3">Pedido</th>
+                                                                <th class="py-2">Evento &amp; Produtor</th>
+                                                                <th class="py-2">Gateway &amp; TID</th>
+                                                                <th class="py-2 text-end">Esperado</th>
+                                                                <th class="py-2 text-end">Liquidado</th>
+                                                                <th class="py-2 text-end">Diferença</th>
+                                                                <th class="py-2 text-center">Status</th>
+                                                                <th class="py-2 text-center">Ações</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody id="acc-conciliacao-tbody">
-                                                            <!-- Filled dynamically -->
+                                                        <tbody id="rec-table-tbody">
+                                                            <!-- Linhas preenchidas dinamicamente via reconciliationService -->
                                                         </tbody>
                                                     </table>
+                                                </div>
+
+                                                <!-- Rodapé da Tabela -->
+                                                <div class="card-footer bg-transparent py-2 px-3 border-top d-flex justify-content-between align-items-center fs-xxs text-muted">
+                                                    <span>Trilha de auditoria ativa em conformidade com PCI-DSS &amp; CPC 47</span>
+                                                    <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none" onclick="window.syncReconciliationData()">
+                                                        <i class="ph-arrows-clockwise me-1"></i> Atualizar Fila
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -14858,5 +15083,250 @@ Como podemos te ajudar hoje?
             </div>
         </div>
     </div>
+    <!-- MODAL: ANALISE DETALHADA DE CONCILIACAO (DRAWER / TIMELINE) -->
+    <div class="modal-overlay" id="modal-analise-conciliacao-detalhe" style="display: none;">
+        <div class="modal-content" style="max-width: 920px; border-radius: 10px;">
+            <div class="modal-header bg-dark text-white py-3" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph-arrows-left-right text-success fs-5"></i>
+                    <div>
+                        <span class="modal-title fw-bold" style="color: #fff;" id="modal-rec-title">Análise de Conciliação — Pedido #123456</span>
+                        <span class="fs-xxs text-muted d-block" id="modal-rec-subtitle">Rastreamento de ponta a ponta: Pedido → Gateway → Banco → Split → Repasse → Contabilidade</span>
+                    </div>
+                </div>
+                <button class="btn-close-modal" type="button" onclick="closeModal('analise-conciliacao-detalhe')" style="color: #fff; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body p-4 text-start bg-light">
+                <!-- Status Banner & Diagnóstico -->
+                <div class="alert alert-warning border border-warning border-opacity-40 py-2.5 px-3 mb-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-1.5 mb-0.5">
+                            <span class="badge bg-danger text-white fs-xxs font-monospace" id="modal-rec-status-badge">DIVERGENTE</span>
+                            <span class="fw-bold fs-xs text-dark" id="modal-rec-diag-title">Diferença de Taxa Gateway (MDR)</span>
+                        </div>
+                        <p class="fs-xs text-muted mb-0" id="modal-rec-diag-desc">
+                            Taxa cobrada pelo adquirente divergiu da contratada em 0,70%, gerando retenção de R$ 4,95 a maior na remessa bancária.
+                        </p>
+                    </div>
+                    <div class="text-sm-end text-nowrap">
+                        <span class="fs-xxs text-muted d-block">Impacto Financeiro:</span>
+                        <strong class="fs-5 text-danger font-monospace" id="modal-rec-difference-amount">R$ 4,95</strong>
+                    </div>
+                </div>
+
+                <!-- Comparativo de Valores Lado a Lado -->
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-4">
+                        <div class="card card-body p-2.5 bg-white border text-start">
+                            <span class="fs-xxs text-muted fw-bold text-uppercase">Valor Esperado (Yii)</span>
+                            <strong class="fs-6 font-monospace text-dark" id="modal-rec-expected">R$ 165,00</strong>
+                            <span class="fs-xxs text-muted">Ingresso R$ 150 + Taxa R$ 15</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card card-body p-2.5 bg-white border text-start">
+                            <span class="fs-xxs text-muted fw-bold text-uppercase">Valor Liquidado (Banco)</span>
+                            <strong class="fs-6 font-monospace text-primary" id="modal-rec-settled">R$ 160,05</strong>
+                            <span class="fs-xxs text-muted" id="modal-rec-bank-account">Itaú Ag 0142 C/C 89210-4</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card card-body p-2.5 bg-white border text-start">
+                            <span class="fs-xxs text-muted fw-bold text-uppercase">Divergência Apurada</span>
+                            <strong class="fs-6 font-monospace text-danger" id="modal-rec-gap">R$ 4,95</strong>
+                            <span class="fs-xxs text-danger fw-semibold">Retenção a maior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Linha do Tempo Visual do Ciclo da Transação -->
+                <div class="card card-body p-3 bg-white border mb-3">
+                    <h6 class="fw-bold text-dark mb-3"><i class="ph-clock-counter-clockwise text-primary me-1.5"></i> Trilha Operacional do Pedido</h6>
+                    <div class="reconciliation-timeline d-flex flex-column gap-2.5" id="modal-rec-timeline">
+                        <!-- Step 1 -->
+                        <div class="d-flex align-items-start gap-2 fs-xs">
+                            <span class="badge bg-success rounded-circle p-1 mt-0.5"><i class="ph-check text-white"></i></span>
+                            <div>
+                                <strong class="text-dark">1. Pedido Criado &amp; Aprovado no Checkout</strong>
+                                <p class="text-muted fs-xxs mb-0" id="modal-rec-step-order">Cliente: Lucas Martins • Valor R$ 165,00 • Lote Inteira</p>
+                            </div>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="d-flex align-items-start gap-2 fs-xs">
+                            <span class="badge bg-warning rounded-circle p-1 mt-0.5"><i class="ph-warning text-white"></i></span>
+                            <div>
+                                <strong class="text-dark">2. Processamento no Gateway (Stripe)</strong>
+                                <p class="text-muted fs-xxs mb-0" id="modal-rec-step-gateway">TID: ch_3N8xZ9K2j18v • MDR Calculado: 3,2% (Contratado: 2,5%)</p>
+                            </div>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="d-flex align-items-start gap-2 fs-xs">
+                            <span class="badge bg-success rounded-circle p-1 mt-0.5"><i class="ph-check text-white"></i></span>
+                            <div>
+                                <strong class="text-dark">3. Liquidação Bancária (Itaú D+1)</strong>
+                                <p class="text-muted fs-xxs mb-0" id="modal-rec-step-bank">Crédito efetivo de R$ 160,05 na conta transitória de recebíveis</p>
+                            </div>
+                        </div>
+                        <!-- Step 4 -->
+                        <div class="d-flex align-items-start gap-2 fs-xs">
+                            <span class="badge bg-info rounded-circle p-1 mt-0.5"><i class="ph-arrows-split text-white"></i></span>
+                            <div>
+                                <strong class="text-dark">4. Split de Recebíveis</strong>
+                                <p class="text-muted fs-xxs mb-0" id="modal-rec-step-split">Produtor: R$ 150,00 • Receita DiskIngressos: R$ 10,05</p>
+                            </div>
+                        </div>
+                        <!-- Step 5 -->
+                        <div class="d-flex align-items-start gap-2 fs-xs">
+                            <span class="badge bg-secondary rounded-circle p-1 mt-0.5"><i class="ph-paper-plane-tilt text-white"></i></span>
+                            <div>
+                                <strong class="text-dark">5. Repasse ao Produtor</strong>
+                                <p class="text-muted fs-xxs mb-0" id="modal-rec-step-payout">Aguardando conciliação da taxa para fechamento de borderô</p>
+                            </div>
+                        </div>
+                        <!-- Step 6 -->
+                        <div class="d-flex align-items-start gap-2 fs-xs">
+                            <span class="badge bg-dark rounded-circle p-1 mt-0.5"><i class="ph-scales text-white"></i></span>
+                            <div>
+                                <strong class="text-dark">6. Lançamento Contábil</strong>
+                                <p class="text-muted fs-xxs mb-0" id="modal-rec-step-accounting">Conta 1.1.2.01 (Adquirentes a Receber) vs 2.1.3.01 (Passivo Produtores)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Auditoria da Transação -->
+                <div class="card card-body p-3 bg-white border">
+                    <h6 class="fw-bold text-dark mb-2"><i class="ph-shield-check text-success me-1.5"></i> Trilha de Auditoria (Audit Log)</h6>
+                    <div class="d-flex flex-column gap-2" id="modal-rec-audit-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-light btn-sm fw-bold" onclick="closeModal('analise-conciliacao-detalhe')">Fechar</button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" id="btn-modal-reprocessar" onclick="window.reprocessReconciliationCurrentItem()">
+                        <i class="ph-arrows-clockwise me-1"></i> Reprocessar
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm fw-semibold" id="btn-modal-assumir" onclick="window.assignReconciliationAnalysis()">
+                        <i class="ph-user-check me-1"></i> Assumir Análise
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm fw-bold text-white" id="btn-modal-resolver" onclick="window.openResolveManualFromDetail()">
+                        <i class="ph-check-circle me-1"></i> Resolver Manualmente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RESOLUCAO MANUAL COM JUSTIFICATIVA OBRIGATORIA -->
+    <div class="modal-overlay" id="modal-resolver-manual-justificativa" style="display: none; z-index: 1060;">
+        <div class="modal-content" style="max-width: 540px; border-radius: 10px;">
+            <div class="modal-header bg-white py-3 border-bottom" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph-shield-warning text-warning fs-5"></i>
+                    <span class="modal-title fw-bold text-dark">Resolução Manual de Conciliação</span>
+                </div>
+                <button class="btn-close-modal" type="button" onclick="closeModal('resolver-manual-justificativa')" style="color: #64748b; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body p-4 text-start bg-white">
+                <input type="hidden" id="resolve-manual-item-id">
+                <div class="alert alert-info py-2 px-3 mb-3 fs-xs">
+                    <i class="ph-info me-1"></i> Esta ação baixa a divergência e gera um registro indelével na <strong>Trilha de Auditoria</strong> com carimbo de tempo e usuário responsável.
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Tipo de Resolução:</label>
+                    <select class="form-select form-select-sm fw-semibold" id="resolve-manual-type">
+                        <option value="RESOLVIDO_MANUALMENTE" selected>Ajuste Comercial / Tolerância de Taxa</option>
+                        <option value="CONCILIADO">Baixa Manual por Comprovante Bancário</option>
+                        <option value="BLOQUEADO">Bloqueio Definitivo por Chargeback</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fs-xxs fw-bold text-danger text-uppercase mb-0">Justificativa Operacional (Obrigatória):</label>
+                        <span class="fs-xxs text-muted" id="resolve-justification-counter">0 / 10 mín.</span>
+                    </div>
+                    <textarea class="form-control form-control-sm" id="resolve-manual-justification" rows="4" placeholder="Descreva detalhadamente o motivo da resolução manual, número de chamado de suporte ou acordo comercial..." oninput="window.updateJustificationCounter(this)"></textarea>
+                    <div class="invalid-feedback fs-xxs" id="resolve-justification-error">A justificativa deve conter no mínimo 10 caracteres explicativos.</div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Operador Responsável:</label>
+                    <input type="text" class="form-control form-control-sm bg-light" id="resolve-manual-operator" value="admin@diskingressos.com.br" readonly>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-sm fw-bold" onclick="closeModal('resolver-manual-justificativa')">Cancelar</button>
+                <button type="button" class="btn btn-success btn-sm fw-bold text-white" onclick="window.submitManualResolution()">
+                    <i class="ph-check me-1"></i> Gravar Resolução &amp; Auditoria
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPORTAR EXTRATO OFX / CSV -->
+    <div class="modal-overlay" id="modal-importar-extrato-conciliacao" style="display: none;">
+        <div class="modal-content" style="max-width: 580px; border-radius: 10px;">
+            <div class="modal-header bg-white py-3 border-bottom" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph-upload-simple text-primary fs-5"></i>
+                    <span class="modal-title fw-bold text-dark">Importar Extrato Bancário / Adquirente</span>
+                </div>
+                <button class="btn-close-modal" type="button" onclick="closeModal('importar-extrato-conciliacao')" style="color: #64748b; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body p-4 text-start bg-white">
+                <p class="fs-xs text-muted mb-3">
+                    Carregue os arquivos contábeis emitidos pelo seu banco ou adquirente (Stone, Stripe, Cielo, Itaú, Inter) para conferência automática contra o GMV de vendas do DiskIngressos.
+                </p>
+
+                <div class="mb-3">
+                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Instituição de Origem:</label>
+                    <select class="form-select form-select-sm fw-semibold" id="modal-import-bank">
+                        <option value="itau" selected>Banco Itaú S.A. (Extrato C/C)</option>
+                        <option value="inter">Banco Inter S.A. (API Pix / Extrato)</option>
+                        <option value="stripe">Stripe Adquirente (Relatório de Payouts)</option>
+                        <option value="stone">Stone Pagamentos (Arquivo EDI / MDR)</option>
+                        <option value="pagarme">Pagar.me / Stone Co (Liquidações)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Arquivo de Conciliação (OFX, CSV ou CNAB 240):</label>
+                    <input type="file" class="form-control form-control-sm" id="modal-import-file" accept=".ofx,.csv,.txt,.rem,.ret">
+                </div>
+
+                <div class="p-3 border rounded bg-light mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="ph-sparkle text-primary"></i>
+                        <strong class="fs-xs text-dark">Regra de Batimento Automático</strong>
+                    </div>
+                    <p class="fs-xxs text-muted mb-0">
+                        O algoritmo faz correspondência por <strong>TID/NSU</strong>, <strong>Valor Líquido</strong> e <strong>Janela Temporal de D+0 a D+3</strong>. Registros divergentes são automaticamente enviados para a fila operacional com diagnóstico prévio.
+                    </p>
+                </div>
+
+                <!-- Progress indicator during simulation -->
+                <div id="modal-import-progress" style="display: none;">
+                    <div class="d-flex justify-content-between fs-xxs text-muted mb-1">
+                        <span>Processando batimento inteligente...</span>
+                        <span id="modal-import-percent">0%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="modal-import-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-sm fw-bold" onclick="closeModal('importar-extrato-conciliacao')">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm fw-bold" id="btn-exec-import-ofx" onclick="window.executeImportExtratoModal()">
+                    <i class="ph-sparkle me-1"></i> Processar Arquivo
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
