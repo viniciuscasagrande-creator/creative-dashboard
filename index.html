@@ -232,64 +232,26 @@
                             </ul>
                         </li>
 
-                        <!-- Contabilidade accordion group -->
-                        <li class="nav-item nav-item-submenu">
+                        <!-- Contabilidade accordion group (Design Oficial ChatGPT Image) -->
+                        <li class="nav-item nav-item-submenu nav-item-open">
                             <a href="#" class="nav-link" title="Menu Contabilidade Disk">
                                 <i class="ph-book-open"></i>
-                                <span>Contabilidade Disk</span>
-                                <span class="badge bg-warning align-self-center rounded-pill ms-auto">Contábil</span>
+                                <span>Contabilidade</span>
+                                <span class="badge bg-primary align-self-center rounded-pill ms-auto">Enterprise</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
-                                <!-- 1. VISÃO GERAL -->
-                                <li class="nav-item nav-item-submenu">
-                                    <a href="#" class="nav-link"><i class="ph-chart-pie-slice me-2"></i> <span>Visão Geral</span></a>
-                                    <ul class="nav-group-sub collapse">
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'dashboard')">Dashboard</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'inteligencia-contabil')">Inteligência Contábil</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'simulador')">Simulador de Ciclo</a></li>
-                                    </ul>
-                                </li>
-                                <!-- 2. CONTABILIDADE -->
-                                <li class="nav-item nav-item-submenu">
-                                    <a href="#" class="nav-link"><i class="ph-book-open me-2"></i> <span>Contabilidade</span></a>
-                                    <ul class="nav-group-sub collapse">
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'plano-contas')">Plano de Contas</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'diario')">Livro Diário</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'razao')">Livro Razão</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'lancamentos')">Lançamentos</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'custos')">Centros de Custos</a></li>
-                                    </ul>
-                                </li>
-                                <!-- 3. CONCILIAÇÃO -->
-                                <li class="nav-item nav-item-submenu">
-                                    <a href="#" class="nav-link"><i class="ph-arrows-left-right me-2"></i> <span>Conciliação</span></a>
-                                    <ul class="nav-group-sub collapse">
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'conciliacao')">Bancária</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'repasses-extratos')">Gateways</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'receber')">Vendas × Recebimentos</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'repasses')">Repasses</a></li>
-                                    </ul>
-                                </li>
-                                <!-- 4. DEMONSTRAÇÕES -->
-                                <li class="nav-item nav-item-submenu">
-                                    <a href="#" class="nav-link"><i class="ph-file-text me-2"></i> <span>Demonstrações</span></a>
-                                    <ul class="nav-group-sub collapse">
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-dre')">DRE</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-balanco')">Balanço Patrimonial</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-fluxo')">Fluxo Contábil</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-balancete')">Balancete</a></li>
-                                    </ul>
-                                </li>
-                                <!-- 5. FISCAL & CONTROLE -->
-                                <li class="nav-item nav-item-submenu">
-                                    <a href="#" class="nav-link"><i class="ph-shield-check me-2"></i> <span>Fiscal & Controle</span></a>
-                                    <ul class="nav-group-sub collapse">
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'impostos')">Impostos</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'auditoria')">Auditoria</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'cont-fechamento')">Fechamento</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'fiscal-sped')">SPED Contábil</a></li>
-                                    </ul>
-                                </li>
+                            <ul class="nav-group-sub collapse show">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link active text-primary fw-bold" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'dashboard')"><i class="ph-chart-pie-slice me-2"></i> Vis&atilde;o Geral</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'inteligencia-contabil')"><i class="ph-brain me-2"></i> Intelig&ecirc;ncia Cont&aacute;bil</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'conciliacao')"><i class="ph-arrows-left-right me-2"></i> Centro de Concilia&ccedil;&atilde;o</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'lancamentos')"><i class="ph-crosshair me-2"></i> Rastreabilidade</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-dre')"><i class="ph-presentation me-2"></i> DRE Gerencial</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-balanco')"><i class="ph-scales me-2"></i> Balan&ccedil;o Patrimonial</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'cont-fechamento')"><i class="ph-lock-key me-2"></i> Fechamento Mensal</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'lancamentos')"><i class="ph-pencil me-2"></i> Lan&ccedil;amentos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'plano-contas')"><i class="ph-list-bullets me-2"></i> Plano de Contas</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-dre')"><i class="ph-file-text me-2"></i> Relat&oacute;rios</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'auditoria')"><i class="ph-shield-check me-2"></i> Auditoria</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'config-plano')"><i class="ph-gear me-2"></i> Configura&ccedil;&otilde;es</a></li>
                             </ul>
                         </li>
                         <!-- Fluxo de Caixa accordion group -->
@@ -10914,673 +10876,785 @@ Como podemos te ajudar hoje?
                         <!-- All Accounting Panes Container (Full Width, Spacious) -->
                         <div class="accounting-content-container">
                             <!-- TAB PANE: Dashboard -->
-                            <!-- TAB PANE: Dashboard (Contabilidade Enterprise) -->
+                                                        <!-- TAB PANE: Dashboard Contábil (Design Oficial ChatGPT Image) -->
                             <div class="accounting-pane" id="accpane-dashboard">
 
-                                <!-- HEADER EXECUTIVO & FILTROS CONTÁBEIS -->
-                                <div class="card card-body p-3 shadow-sm border mb-3 bg-white" style="border-radius: 10px;">
-                                    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
-                                        <div>
-                                            <div class="d-flex align-items-center gap-2 mb-1">
-                                                <span class="badge bg-primary text-white font-monospace fs-xxs py-0.5 px-1.5 text-uppercase">Enterprise</span>
-                                                <h5 class="fw-bold mb-0 text-dark">Resumo Contábil Executivo</h5>
-                                            </div>
-                                            <p class="text-muted fs-xs mb-0">
-                                                Segregação mandatória entre <strong>Recursos de Terceiros</strong> (Passivo/Produtores), <strong>Receita Própria DiskIngressos</strong>, custos de processamento e apuração de resultado.
-                                            </p>
+                                <!-- TOP HEADER ROW -->
+                                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start align-items-xl-center gap-3 mb-4">
+                                    <div>
+                                        <h3 class="fw-bold mb-1 text-dark" style="font-size: 1.65rem; letter-spacing: -0.02em;">Dashboard Cont&aacute;bil</h3>
+                                        <p class="text-muted fs-xs mb-0">Vis&atilde;o completa da opera&ccedil;&atilde;o financeira e cont&aacute;bil da DiskIngressos</p>
+                                    </div>
+
+                                    <!-- Actions: Mode Selector, Date Range, Period Dropdown, Atualizar -->
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <!-- Mode buttons -->
+                                        <div class="btn-group" role="group" aria-label="Modos do Painel">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" id="btn-mode-standard" onclick="window.switchAccountingMode('standard')">Standard</button>
+                                            <button type="button" class="btn btn-sm btn-primary active text-white fw-bold shadow-xs" id="btn-mode-advanced" onclick="window.switchAccountingMode('advanced')">Advanced</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" id="btn-mode-expert" onclick="window.switchAccountingMode('expert')">Expert</button>
                                         </div>
 
-                                        <!-- Controles de Filtros Rápidos e Seletores -->
-                                        <div class="d-flex flex-wrap align-items-center gap-2">
-                                            <!-- Seletor de Período -->
-                                            <div class="btn-group font-monospace" role="group" id="acc-filter-period-group">
-                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold" onclick="window.setAccountingFilter('hoje', this)">Hoje</button>
-                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold" onclick="window.setAccountingFilter('7d', this)">7d</button>
-                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold active" onclick="window.setAccountingFilter('30d', this)">30d</button>
-                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold" onclick="window.setAccountingFilter('mes', this)">Mês</button>
-                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold" onclick="window.setAccountingFilter('ano', this)">Ano</button>
-                                            </div>
+                                        <!-- Date Range Button -->
+                                        <button type="button" class="btn btn-sm btn-light border bg-white d-flex align-items-center gap-2 text-dark font-monospace" style="border-radius: 8px;">
+                                            <i class="ph-calendar text-muted"></i>
+                                            <span>01/09/2026 - 30/09/2026</span>
+                                            <i class="ph-caret-down fs-xxs text-muted"></i>
+                                        </button>
 
-                                            <div class="vr mx-1 opacity-20 d-none d-sm-block"></div>
-
-                                            <!-- Seletor de Produtor -->
-                                            <select class="form-select form-select-xs fw-semibold" id="acc-filter-producer" style="width: auto; min-width: 140px;" onchange="window.applyAccountingFilters()">
-                                                <option value="todos" selected>Todos Produtores</option>
-                                                <option value="prod-1">Opus Entretenimento</option>
-                                                <option value="prod-2">Move Concerts</option>
-                                                <option value="prod-3">T4F Entretenimento</option>
-                                            </select>
-
-                                            <!-- Seletor de Gateway -->
-                                            <select class="form-select form-select-xs fw-semibold" id="acc-filter-gateway" style="width: auto; min-width: 130px;" onchange="window.applyAccountingFilters()">
-                                                <option value="todos" selected>Todos Gateways</option>
-                                                <option value="stone">Stone / Pagar.me</option>
-                                                <option value="itau">Itaú PIX Direto</option>
-                                                <option value="cielo">Cielo / Rede</option>
-                                            </select>
-
-                                            <button type="button" class="btn btn-xs btn-light text-primary fw-bold border" onclick="window.syncAccountingData()" title="Recarregar Dados da API">
-                                                <i class="ph-arrows-clockwise"></i>
+                                        <!-- Quick Period Dropdown -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border bg-white dropdown-toggle text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px;">
+                                                Este m&ecirc;s
                                             </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm fs-xs">
+                                                <li><a class="dropdown-item active" href="#" onclick="window.setAccountingFilter('mes', this); return false;">Este m&ecirc;s</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="window.setAccountingFilter('30d', this); return false;">&Uacute;ltimos 30 dias</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="window.setAccountingFilter('ano', this); return false;">Este ano (YTD)</a></li>
+                                            </ul>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <!-- 1. RESUMO CONTÁBIL EXECUTIVO (8 INDICADORES PRINCIPAIS) -->
-                                <div class="row g-2 mb-3">
-                                    <!-- 1. Receita Bruta Transacionada (GMV) -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm border border-light text-start h-100 bg-white" style="border-radius: 10px;">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase">Receita Bruta (GMV)</span>
-                                                <i class="ph-currency-circle-dollar text-primary fs-5"></i>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-primary font-monospace" id="acc-card-gmv">R$ 1.842.500,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-info text-muted"></i> Volume total transacionado</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 2. Valores de Terceiros (DESTAQUE / EMPHASIS) -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm text-start h-100 bg-white" style="border-radius: 10px; border: 2px solid #ef4444 !important; background: linear-gradient(180deg, #fffefe 0%, #fff7f7 100%);">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-danger text-uppercase">Valores de Terceiros</span>
-                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 fs-xxs">Passivo</span>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-danger font-monospace" id="acc-card-terceiros">R$ 1.513.200,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-users-three text-danger"></i> Recursos dos produtores</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 3. Receita DiskIngressos (DESTAQUE / EMPHASIS) -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm text-start h-100 bg-white" style="border-radius: 10px; border: 2px solid #10b981 !important; background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-success text-uppercase">Receita DiskIngressos</span>
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs">Própria</span>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-success font-monospace" id="acc-card-receita-disk">R$ 229.300,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-buildings text-success"></i> Receita apropriável</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 4. Taxas de Gateway -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm border border-light text-start h-100 bg-white" style="border-radius: 10px;">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase">Taxas de Gateway</span>
-                                                <i class="ph-credit-card text-warning fs-5"></i>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-warning font-monospace" id="acc-card-gateway">R$ 54.820,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-percent text-warning"></i> Custos financeiros MDR</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 5. Tributos Provisionados -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm border border-light text-start h-100 bg-white" style="border-radius: 10px;">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase">Tributos Provisionados</span>
-                                                <i class="ph-scales text-secondary fs-5"></i>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-secondary font-monospace" id="acc-card-tributos">R$ 28.440,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-file-text text-secondary"></i> DAS & ISS estimados</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 6. Repasse a Produtores -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm border border-light text-start h-100 bg-white" style="border-radius: 10px;">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase">Repasse Liquidado</span>
-                                                <i class="ph-paper-plane-tilt text-info fs-5"></i>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-info font-monospace" id="acc-card-repasses">R$ 1.098.500,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-check-circle text-info"></i> R$ 414.700,00 a liquidar</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 7. Receita Líquida -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm border border-light text-start h-100 bg-white" style="border-radius: 10px;">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase">Receita Líquida Disk</span>
-                                                <i class="ph-chart-line-up text-primary fs-5"></i>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-primary font-monospace" id="acc-card-receita-liquida">R$ 146.040,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-arrow-right text-primary"></i> Após taxas e impostos</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- 8. Resultado Operacional (DESTAQUE / EMPHASIS) -->
-                                    <div class="col-6 col-md-4 col-xl-3">
-                                        <div class="card card-body p-3 shadow-sm text-start h-100 bg-white" style="border-radius: 10px; border: 2px solid #3b82f6 !important; background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fs-xxs fw-bold text-primary text-uppercase">Resultado Operacional</span>
-                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 fs-xxs">EBITDA</span>
-                                            </div>
-                                            <h4 class="fw-bold mb-1 text-primary font-monospace" id="acc-card-resultado-operacional">R$ 118.900,00</h4>
-                                            <span class="fs-xxs text-muted text-truncate"><i class="ph-trend-up text-success"></i> Margem 51.8% s/ Rec. Própria</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 2. EIXO CENTRAL: SEPARAÇÃO VISUAL RECURSOS DE TERCEIROS × RECEITA PRÓPRIA -->
-                                <div class="row g-3 mb-3">
-                                    <!-- Bloco 1: Recursos de Terceiros (Obrigações / Passivo) -->
-                                    <div class="col-lg-6">
-                                        <div class="card shadow-sm border h-100" style="border-radius: 10px; border-top: 4px solid #ef4444 !important;">
-                                            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <span class="fs-xxs font-semibold uppercase tracking-wider text-muted d-block">Segregação de Recursos</span>
-                                                    <h6 class="fw-bold text-dark mb-0">
-                                                        <i class="ph-users-three text-danger me-1.5"></i> Recursos de Terceiros (Produtores)
-                                                    </h6>
-                                                </div>
-                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 font-monospace fs-xxs">
-                                                    Passivo Operacional
-                                                </span>
-                                            </div>
-                                            <div class="card-body p-3 pt-1">
-                                                <div class="accounting-breakdown-list">
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-clock-countdown me-1.5 text-muted"></i> Aguardando Liquidação (D+1 / D+30 adquirentes)</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-dark" id="acc-terc-aguardando">R$ 380.000,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-wallet me-1.5 text-success"></i> Disponível para Repasse</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-success" id="acc-terc-disponivel">R$ 615.000,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-calendar-check me-1.5 text-primary"></i> Repasse Programado (Lotes de Payout)</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-primary" id="acc-terc-programado">R$ 310.000,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-lock-key me-1.5 text-warning"></i> Repasse Bloqueado (Retenções / Compliance)</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-warning" id="acc-terc-bloqueado">R$ 42.000,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-arrows-left-right me-1.5 text-info"></i> Em Conciliação Bancária</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-info" id="acc-terc-conciliando">R$ 124.000,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-warning-circle me-1.5 text-danger"></i> Com Divergência Identificada</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-danger" id="acc-terc-divergente">R$ 42.200,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center pt-2.5 mt-1 border-top border-secondary border-opacity-25">
-                                                        <strong class="fs-xs text-dark">Total sob Custódia Operacional:</strong>
-                                                        <strong class="fs-sm font-monospace text-danger" id="acc-terc-total">R$ 1.513.200,00</strong>
-                                                    </div>
-                                                </div>
-                                                <div class="alert alert-light border py-1.5 px-2 mt-3 mb-0 fs-xxs text-muted d-flex align-items-center gap-1.5">
-                                                    <i class="ph-shield-check text-primary fs-6"></i>
-                                                    <span>Recursos segregados em conta de pagamento conforme normas BACEN e CPC 47.</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Bloco 2: Receita Própria DiskIngressos (Receita Efetiva) -->
-                                    <div class="col-lg-6">
-                                        <div class="card shadow-sm border h-100" style="border-radius: 10px; border-top: 4px solid #10b981 !important;">
-                                            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <span class="fs-xxs font-semibold uppercase tracking-wider text-muted d-block">Receita Apropriável</span>
-                                                    <h6 class="fw-bold text-dark mb-0">
-                                                        <i class="ph-buildings text-success me-1.5"></i> Receita Própria DiskIngressos
-                                                    </h6>
-                                                </div>
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 font-monospace fs-xxs">
-                                                    Receita de Serviços
-                                                </span>
-                                            </div>
-                                            <div class="card-body p-3 pt-1">
-                                                <div class="accounting-breakdown-list">
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-ticket me-1.5 text-primary"></i> Taxa de Conveniência (Ticketing Fee)</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-dark" id="acc-disk-taxas">R$ 178.500,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-percent me-1.5 text-success"></i> Comissão Contratual sobre Vendas (Markup)</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-dark" id="acc-disk-comissao">R$ 26.300,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-desktop me-1.5 text-info"></i> Serviços Operacionais, PDV & Locação TVI</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-dark" id="acc-disk-servicos">R$ 18.500,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-dots-three-circle me-1.5 text-muted"></i> Outras Receitas Acessórias / Financeiras</span>
-                                                        <span class="fs-xs font-monospace fw-semibold text-dark" id="acc-disk-outras">R$ 6.000,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light text-muted">
-                                                        <span class="fs-xs"><i class="ph-scales me-1.5"></i> Deduções Diretas (Gateway MDR & DAS)</span>
-                                                        <span class="fs-xs font-monospace text-danger" id="acc-disk-deducoes">- R$ 83.260,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                                                        <span class="fs-xs text-muted-dark"><i class="ph-check-square me-1.5 text-primary"></i> Receita Líquida Contábil Apurada</span>
-                                                        <span class="fs-xs font-monospace fw-bold text-primary" id="acc-disk-liquida">R$ 146.040,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between align-items-center pt-2.5 mt-1 border-top border-secondary border-opacity-25">
-                                                        <strong class="fs-xs text-dark">Total Receita Própria DiskIngressos:</strong>
-                                                        <strong class="fs-sm font-monospace text-success" id="acc-disk-total">R$ 229.300,00</strong>
-                                                    </div>
-                                                </div>
-                                                <div class="alert alert-light border py-1.5 px-2 mt-3 mb-0 fs-xxs text-muted d-flex align-items-center gap-1.5">
-                                                    <i class="ph-info text-success fs-6"></i>
-                                                    <span>O valor facial do ingresso é repassado ao produtor e <strong>nunca</strong> compõe faturamento próprio.</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 3. CENTRO DE INTEGRIDADE & CONCILIAÇÃO -->
-                                <div class="row g-3 mb-3">
-                                    <!-- Índice de Conciliação -->
-                                    <div class="col-lg-4">
-                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
-                                            <div>
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="fs-xxs font-semibold uppercase tracking-wider text-muted">Centro de Conciliação</span>
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 font-monospace fs-xxs">Automático</span>
-                                                </div>
-                                                <h6 class="fw-bold text-dark mb-2">Índice de Conciliação Contábil</h6>
-                                                <div class="d-flex align-items-baseline gap-2 mb-2">
-                                                    <h2 class="fw-bold text-dark font-monospace mb-0" id="acc-reconcil-rate">98,73%</h2>
-                                                    <span class="fs-xs text-success fw-semibold"><i class="ph-trend-up"></i> +0.4% vs mês ant.</span>
-                                                </div>
-                                                <!-- Progress Bar -->
-                                                <div class="progress mb-2" style="height: 8px; border-radius: 6px; background-color: #f1f5f9;">
-                                                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" id="acc-reconcil-progress-bar" role="progressbar" style="width: 98.73%" aria-valuenow="98.73" aria-valuemin="0" aria-valuemax="100"></div>
-                                                </div>
-                                                <div class="d-flex justify-content-between fs-xxs text-muted font-monospace">
-                                                    <span>Auditados: <strong>1.842 pedidos</strong></span>
-                                                    <span>Conciliados: <strong>1.815</strong></span>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="btn btn-xs btn-outline-primary fw-bold w-100 mt-3" onclick="window.switchAccountingCategory('repasses', 'conciliacao')">
-                                                <i class="ph-arrows-left-right me-1"></i> Abrir Centro de Conciliação
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Painel de Divergências Ativas -->
-                                    <div class="col-lg-8">
-                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
-                                            <div>
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="fs-xxs font-semibold uppercase tracking-wider text-danger">Atenção Requerida</span>
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 font-monospace fs-xxs">27 Divergências</span>
-                                                </div>
-                                                <h6 class="fw-bold text-dark mb-1">Painel de Divergências & Auditoria de Pedidos</h6>
-                                                <p class="text-muted fs-xs mb-3">
-                                                    Inconsistências detectadas entre <strong>Pedidos Yii</strong>, <strong>Extrato de Gateway (MDR)</strong> e <strong>Extrato Bancário Itaú</strong>.
-                                                </p>
-
-                                                <div class="row g-2 mb-2">
-                                                    <div class="col-sm-4">
-                                                        <div class="border rounded p-2 bg-light text-start">
-                                                            <span class="fs-xxs text-muted d-block">Registros com Divergência:</span>
-                                                            <strong class="fs-sm text-danger font-monospace" id="acc-diverg-count">27 pedidos</strong>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-sm-4">
-                                                        <div class="border rounded p-2 bg-light text-start">
-                                                            <span class="fs-xxs text-muted d-block">Volume Financeiro Divergente:</span>
-                                                            <strong class="fs-sm text-danger font-monospace" id="acc-diverg-amount">R$ 34.210,00</strong>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-sm-4">
-                                                        <div class="border rounded p-2 bg-light text-start">
-                                                            <span class="fs-xxs text-muted d-block">Maior Impacto Identificado:</span>
-                                                            <strong class="fs-sm text-warning font-monospace">Taxa Stone (+0.37%)</strong>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 pt-2 border-top">
-                                                <span class="fs-xxs text-muted">
-                                                    <i class="ph-clock-countdown me-1"></i> Última verificação automática realizada às <strong>13:45:00</strong>
-                                                </span>
-                                                <div class="d-flex gap-2">
-                                                    <button type="button" class="btn btn-xs btn-outline-danger fw-bold" onclick="window.openDivergenciasModal()">
-                                                        <i class="ph-warning me-1"></i> Analisar 27 Divergências
-                                                    </button>
-                                                    <button type="button" class="btn btn-xs btn-primary fw-bold" onclick="window.conciliarLoteAutomatico()">
-                                                        <i class="ph-check-circle me-1"></i> Conciliação Automática
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 4. PAINEL ANALÍTICO MULTIMODAL (SUBSTITUI O GRÁFICO SIMPLES ANTERIOR) -->
-                                <div class="row g-3 mb-3">
-                                    <div class="col-lg-8">
-                                        <div class="card p-3 shadow-sm border h-100" style="border-radius: 10px;">
-                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
-                                                <div>
-                                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-chart-bar text-primary me-1"></i> Painel Analítico: Receita × Repasses × Taxas × Resultado</h6>
-                                                    <span class="fs-xxs text-muted">Comparativo contábil com visão por evento, produtor e gateway</span>
-                                                </div>
-                                                <!-- Seletor de Visão do Gráfico -->
-                                                <div class="btn-group font-monospace flex-wrap" role="group" id="acc-chart-view-group">
-                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold active" onclick="window.switchAnalyticsView('geral', this)">Visão Geral</button>
-                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.switchAnalyticsView('eventos', this)">Por Evento</button>
-                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.switchAnalyticsView('produtores', this)">Por Produtor</button>
-                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.switchAnalyticsView('gateways', this)">Por Gateway</button>
-                                                </div>
-                                            </div>
-
-                                            <!-- Dynamic Bar Chart Container -->
-                                            <div id="acc-chart-bars-container" class="d-flex justify-content-around align-items-end pb-2 pt-3" style="min-height: 200px;">
-                                                <!-- Populated dynamically via updateChartRange / switchAnalyticsView -->
-                                            </div>
-
-                                            <!-- Analytical Legend & Metrics -->
-                                            <div class="border-top pt-2 mt-2 d-flex flex-wrap justify-content-between align-items-center fs-xxs text-muted">
-                                                <span><i class="ph-circle-fill text-primary me-1"></i> GMV Total</span>
-                                                <span><i class="ph-circle-fill text-danger me-1"></i> Recursos Terceiros (Repasse)</span>
-                                                <span><i class="ph-circle-fill text-success me-1"></i> Receita Própria</span>
-                                                <span><i class="ph-circle-fill text-warning me-1"></i> Taxas Adquirente</span>
-                                                <span><i class="ph-percent text-success me-1"></i> Margem Líquida Média: <strong>51.8%</strong></span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- DRE Gerencial Sintética -->
-                                    <div class="col-lg-4">
-                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
-                                            <div>
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-presentation text-primary me-1"></i> DRE Gerencial Sintética</h6>
-                                                    <span class="badge bg-light text-primary font-monospace fs-xxs">Real × Orçado</span>
-                                                </div>
-                                                <div class="p-2.5 rounded bg-light font-monospace fs-xxs mb-2">
-                                                    <div class="d-flex justify-content-between py-1 border-bottom border-light">
-                                                        <span class="text-muted-dark">Receita Própria de Serviços:</span>
-                                                        <strong class="text-success" id="acc-dre-rec-propria">R$ 229.300,00</strong>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between py-1 text-danger">
-                                                        <span>(-) Impostos s/ Serviços (DAS):</span>
-                                                        <span id="acc-dre-impostos">- R$ 28.440,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between py-1 text-danger border-bottom border-light">
-                                                        <span>(-) Custos de Gateway & Adquirência:</span>
-                                                        <span id="acc-dre-gateway">- R$ 54.820,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between py-1 border-bottom border-light fw-bold text-dark">
-                                                        <span>(=) Receita Líquida Operacional:</span>
-                                                        <span class="text-primary" id="acc-dre-rec-liquida">R$ 146.040,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between py-1 text-muted border-bottom border-light">
-                                                        <span>(-) Despesas Operacionais / TVI:</span>
-                                                        <span>- R$ 27.140,00</span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between pt-1.5 fw-bold text-dark fs-xs">
-                                                        <span>(=) Resultado Operacional (EBITDA):</span>
-                                                        <span class="text-success" id="acc-dre-resultado-final">R$ 118.900,00</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="px-1 mb-2">
-                                                    <div class="d-flex justify-content-between fs-xxs text-muted mb-1">
-                                                        <span>Margem Líquida Real:</span>
-                                                        <strong class="text-success" id="acc-dre-margem-pct">51.8%</strong>
-                                                    </div>
-                                                    <div class="progress" style="height: 6px;">
-                                                        <div class="progress-bar bg-success" role="progressbar" style="width: 51.8%" aria-valuenow="51.8" aria-valuemin="0" aria-valuemax="100"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="btn btn-xs btn-outline-primary fw-bold w-100" onclick="window.switchAccountingCategory('demonstracoes', 'relatorios-dre')">
-                                                <i class="ph-arrow-right me-1"></i> Ver Demonstrativo DRE Detalhado
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. DISK INTELLIGENCE CONTÁBIL & FECHAMENTO MENSAL (2 COLUNAS) -->
-                                <div class="row g-3 mb-3">
-                                    <!-- Disk Intelligence Contábil -->
-                                    <div class="col-lg-6">
-                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
-                                            <div>
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="fw-bold text-dark mb-0">
-                                                        <i class="ph-brain text-warning me-1"></i> Disk Intelligence — Contabilidade & IA
-                                                    </h6>
-                                                    <span class="badge bg-light text-primary font-monospace fs-xxs">5 Alertas Ativos</span>
-                                                </div>
-                                                <p class="text-muted fs-xs mb-2.5">
-                                                    Detecção proativa de anomalias contábeis, divergências de adquirentes e projeções fiscais.
-                                                </p>
-
-                                                <!-- Alertas de Inteligência Contábil -->
-                                                <div class="d-flex flex-column gap-2" id="acc-intelligence-alerts-container" style="max-height: 280px; overflow-y: auto;">
-                                                    <!-- Alerta 1: Crítico -->
-                                                    <div class="p-2.5 border border-danger border-opacity-25 rounded bg-danger bg-opacity-10 d-flex justify-content-between align-items-center fs-xxs">
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                                                                <span class="badge bg-danger text-white py-0.5 px-1 font-monospace" style="font-size: 8px;">CRÍTICO</span>
-                                                                <strong class="text-danger">R$ 84.320 em repasses não conciliados</strong>
-                                                            </div>
-                                                            <span class="text-muted">Lote #42 com divergência de liquidação com Itaú Movimento</span>
-                                                        </div>
-                                                        <button type="button" class="btn btn-xxs btn-outline-danger fw-bold text-nowrap" onclick="window.switchAccountingCategory('repasses', 'repasses')">Investigar</button>
-                                                    </div>
-
-                                                    <!-- Alerta 2: Atenção -->
-                                                    <div class="p-2.5 border border-warning border-opacity-25 rounded bg-warning bg-opacity-10 d-flex justify-content-between align-items-center fs-xxs">
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                                                                <span class="badge bg-warning text-dark py-0.5 px-1 font-monospace" style="font-size: 8px;">ATENÇÃO</span>
-                                                                <strong class="text-dark">Taxa efetiva do Gateway Stone aumentou +0,37%</strong>
-                                                            </div>
-                                                            <span class="text-muted">MDR real calculado em 2,85% vs contratual 2,48%</span>
-                                                        </div>
-                                                        <button type="button" class="btn btn-xxs btn-outline-warning text-dark fw-bold text-nowrap" onclick="window.openDivergenciasModal()">Auditar MDR</button>
-                                                    </div>
-
-                                                    <!-- Alerta 3: Fiscal -->
-                                                    <div class="p-2.5 border border-info border-opacity-25 rounded bg-info bg-opacity-10 d-flex justify-content-between align-items-center fs-xxs">
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                                                                <span class="badge bg-info text-white py-0.5 px-1 font-monospace" style="font-size: 8px;">FISCAL</span>
-                                                                <strong class="text-dark">17 lançamentos sem classificação fiscal</strong>
-                                                            </div>
-                                                            <span class="text-muted">Requerem validação de enquadramento Simples Nacional / ISS</span>
-                                                        </div>
-                                                        <button type="button" class="btn btn-xxs btn-outline-info text-dark fw-bold text-nowrap" onclick="window.switchAccountingCategory('fiscal', 'impostos')">Classificar</button>
-                                                    </div>
-
-                                                    <!-- Alerta 4: Anomalia -->
-                                                    <div class="p-2.5 border border-primary border-opacity-25 rounded bg-primary bg-opacity-10 d-flex justify-content-between align-items-center fs-xxs">
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                                                                <span class="badge bg-primary text-white py-0.5 px-1 font-monospace" style="font-size: 8px;">ANOMALIA</span>
-                                                                <strong class="text-dark">Diferença de R$ 3.421 no Evento EV-1677</strong>
-                                                            </div>
-                                                            <span class="text-muted">Vendas brutas divergem da liquidação bancária em 1.4%</span>
-                                                        </div>
-                                                        <button type="button" class="btn btn-xxs btn-outline-primary fw-bold text-nowrap" onclick="window.openTransactionAuditModal(1677)">Rastrear</button>
-                                                    </div>
-
-                                                    <!-- Alerta 5: Previsão -->
-                                                    <div class="p-2.5 border border-success border-opacity-25 rounded bg-success bg-opacity-10 d-flex justify-content-between align-items-center fs-xxs">
-                                                        <div>
-                                                            <div class="d-flex align-items-center gap-1.5 mb-0.5">
-                                                                <span class="badge bg-success text-white py-0.5 px-1 font-monospace" style="font-size: 8px;">PREVISÃO</span>
-                                                                <strong class="text-dark">Obrigações projetadas (próximos 7 dias): R$ 428.500</strong>
-                                                            </div>
-                                                            <span class="text-muted">Repasses a produtores programados e guia DAS no dia 20</span>
-                                                        </div>
-                                                        <span class="text-success fw-bold font-monospace">Saldo OK</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
-                                                <span class="fs-xxs text-muted"><i class="ph-cpu me-1"></i> Motor de Regras: <strong>Disk AI v2.6</strong></span>
-                                                <button type="button" class="btn btn-xxs btn-flat-primary fw-bold" onclick="window.switchAccountingMode('expert')">
-                                                    <i class="ph-sliders me-1"></i> Calibrar Parâmetros
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Fechamento Contábil Mensal -->
-                                    <div class="col-lg-6">
-                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
-                                            <div>
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="fs-xxs font-semibold uppercase tracking-wider text-muted">Rotina de Fechamento</span>
-                                                    <span class="badge bg-primary text-white font-monospace fs-xxs">Junho / 2026</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="fw-bold text-dark mb-0">Progresso do Fechamento Contábil</h6>
-                                                    <strong class="text-primary font-monospace fs-sm" id="acc-closing-pct">82% Concluído</strong>
-                                                </div>
-                                                <!-- Progress bar -->
-                                                <div class="progress mb-3" style="height: 8px; border-radius: 6px; background-color: #f1f5f9;">
-                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 82%" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100"></div>
-                                                </div>
-
-                                                <!-- 10 Steps Checklist -->
-                                                <div class="row g-1.5 font-monospace fs-xxs">
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-check-circle-fill text-success fs-6"></i>
-                                                            <span class="text-truncate">1. Importação Vendas Yii</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-check-circle-fill text-success fs-6"></i>
-                                                            <span class="text-truncate">2. Gateway Conciliado</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-check-circle-fill text-success fs-6"></i>
-                                                            <span class="text-truncate">3. Bancos Conciliados (OFX)</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate border-warning">
-                                                            <i class="ph-warning-circle-fill text-warning fs-6"></i>
-                                                            <span class="text-truncate text-dark fw-bold">4. Repasses Conciliados</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-check-circle-fill text-success fs-6"></i>
-                                                            <span class="text-truncate">5. Tributos Provisionados</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-check-circle-fill text-success fs-6"></i>
-                                                            <span class="text-truncate">6. Competências Checadas</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate border-warning">
-                                                            <i class="ph-warning-circle-fill text-warning fs-6"></i>
-                                                            <span class="text-truncate text-dark fw-bold">7. Lançamentos Manuais</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-check-circle-fill text-success fs-6"></i>
-                                                            <span class="text-truncate">8. DRE Consolidada</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-clock-countdown text-muted fs-6"></i>
-                                                            <span class="text-truncate text-muted">9. Balanço Pré-Validado</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="p-1.5 border rounded bg-light d-flex align-items-center gap-1.5 text-truncate">
-                                                            <i class="ph-lock text-muted fs-6"></i>
-                                                            <span class="text-truncate text-muted">10. Encerramento Período</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex justify-content-between align-items-center pt-2.5 border-top mt-2">
-                                                <button type="button" class="btn btn-xs btn-outline-primary fw-bold" onclick="window.switchAccountingCategory('configuracoes', 'fechamento')">
-                                                    <i class="ph-list-checks me-1"></i> Abrir Checklist Completo
-                                                </button>
-                                                <button type="button" class="btn btn-xs btn-success fw-bold text-white" onclick="window.concluirEtapaFechamento()">
-                                                    <i class="ph-lock-key me-1"></i> Avançar Fechamento
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 6. LANÇADOR DO SIMULADOR DE CICLO COMPLETO -->
-                                <div class="card shadow-sm border mb-3" style="border-radius: 10px; background: linear-gradient(135deg, #fff9f5 0%, #ffffff 100%); border-left: 4px solid #f38d4f !important;">
-                                    <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="rounded-circle bg-warning bg-opacity-10 p-2.5 text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
-                                                <i class="ph-cpu fs-4"></i>
-                                            </div>
-                                            <div>
-                                                <div class="d-flex align-items-center gap-2 mb-1">
-                                                    <h6 class="fw-bold mb-0 text-dark">Simulador Contábil de Ciclo de Venda Completo</h6>
-                                                    <span class="badge bg-light text-primary font-monospace fs-xxs">Yii & Gateways</span>
-                                                </div>
-                                                <p class="text-muted fs-xs mb-0">Simule vendas em tempo real e visualize o fluxo contábil de ponta a ponta: faturamento, MDR, comissão, DAS e partidas dobradas.</p>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-xs btn-primary fw-bold px-3 py-1.5 text-nowrap" onclick="window.switchAccountingCategory('simulador', 'simulador')">
-                                            <i class="ph-arrow-square-out me-1"></i> Abrir Simulador Dedicado
+                                        <!-- Atualizar Button -->
+                                        <button type="button" class="btn btn-sm btn-primary fw-bold text-white shadow-xs d-flex align-items-center gap-1 px-3" style="border-radius: 8px;" onclick="window.syncAccountingData()">
+                                            <i class="ph-arrows-clockwise"></i>
+                                            <span>Atualizar</span>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- 7. TABELA OPERACIONAL DE EVENTOS COM RASTREABILIDADE PEDIDO → CONTABILIDADE -->
-                                <div class="card shadow-sm border">
-                                    <div class="card-header bg-transparent py-2.5 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                                        <div>
-                                            <h6 class="fw-bold mb-0 text-dark"><i class="ph-calculator text-muted me-1"></i> Apuração por Evento & Rastreabilidade Contábil</h6>
-                                            <span class="fs-xxs text-muted">Conciliação de GMV, Receita Disk, Taxas e Repasses por Evento</span>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <button type="button" class="btn btn-xxs btn-outline-primary fw-bold" onclick="window.syncAccountingData()"><i class="ph-arrows-clockwise me-1"></i> Atualizar Dados</button>
-                                            <button type="button" class="btn btn-xxs btn-outline-secondary fw-bold" onclick="window.exportarExtratoEventos()"><i class="ph-file-csv me-1"></i> Exportar CSV</button>
+                                <!-- 8 METRIC CARDS (4 COLUMNS X 2 ROWS) -->
+                                <div class="row g-3 mb-4">
+                                    <!-- Card 1: Receita Bruta Transacionada (GMV) -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #ecfdf5; color: #10b981;">
+                                                    <i class="ph-ticket fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 12,4%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Receita Bruta Transacionada (GMV)</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-gmv">R$ 8.432.110,50</div>
+                                            <div class="text-muted fs-xxs">Total de ingressos vendidos</div>
                                         </div>
                                     </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0" style="font-size: 12px;">
-                                            <thead>
-                                                <tr class="table-light">
-                                                    <th>Evento</th>
-                                                    <th>Produtor</th>
-                                                    <th class="text-end">GMV Transacionado</th>
-                                                    <th class="text-end">Receita Disk</th>
-                                                    <th class="text-end">Custo Gateway</th>
-                                                    <th class="text-end">Tributos (DAS)</th>
-                                                    <th class="text-end">Repasse Produtor</th>
-                                                    <th class="text-end">Resultado Líquido</th>
-                                                    <th class="text-center">Conciliação</th>
-                                                    <th class="text-center">Ações</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="acc-dashboard-events-tbody">
-                                                <!-- Preenchido dinamicamente via JS com suporte a clique para auditoria -->
-                                            </tbody>
-                                        </table>
+
+                                    <!-- Card 2: Valores de Terceiros -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #fff1f2; color: #f43f5e;">
+                                                    <i class="ph-receipt fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 11,8%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Valores de Terceiros</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-third-party">R$ 6.972.430,20</div>
+                                            <div class="text-muted fs-xxs">Recursos dos produtores (passivo)</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 3: Receita DiskIngressos -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #eff6ff; color: #3b82f6;">
+                                                    <i class="ph-cards fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 18,2%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Receita DiskIngressos</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-disk-rev">R$ 892.345,60</div>
+                                            <div class="text-muted fs-xxs">Taxas, comiss&otilde;es e servi&ccedil;os</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 4: Taxas de Gateway -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #f5f3ff; color: #8b5cf6;">
+                                                    <i class="ph-currency-dollar fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 9,1%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Taxas de Gateway</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-gateway-costs">R$ 312.884,90</div>
+                                            <div class="text-muted fs-xxs">Custos financeiros</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 5: Tributos Provisionados -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #fff1f2; color: #e11d48;">
+                                                    <i class="ph-calculator fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 15,6%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Tributos Provisionados</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-taxes">R$ 148.432,10</div>
+                                            <div class="text-muted fs-xxs">Impostos e contribui&ccedil;&otilde;es</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 6: Repasse a Produtores -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #fff7ed; color: #f97316;">
+                                                    <i class="ph-hand-coins fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 10,9%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Repasse a Produtores</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-payouts">R$ 6.421.003,80</div>
+                                            <div class="text-muted fs-xxs">Valores pagos no per&iacute;odo</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 7: Resultado Operacional -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #ecfdf5; color: #059669;">
+                                                    <i class="ph-briefcase fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 22,7%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Resultado Operacional</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-net-op">R$ 431.028,60</div>
+                                            <div class="text-muted fs-xxs">Ap&oacute;s taxas, tributos e despesas</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 8: Caixa e Bancos -->
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #eff6ff; color: #2563eb;">
+                                                    <i class="ph-bank fs-4"></i>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-1 rounded-pill">
+                                                    &uarr; 5,3%
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fs-xs fw-semibold mb-1">Caixa e Bancos</div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-kpi-cash-avail">R$ 1.284.551,30</div>
+                                            <div class="text-muted fs-xxs">Saldo dispon&iacute;vel</div>
+                                        </div>
                                     </div>
                                 </div>
 
+                                <!-- ROW 2: EVOLUÇÃO FINANCEIRA (50%), RECURSOS DE TERCEIROS (25%), ÍNDICE DE CONCILIAÇÃO (25%) -->
+                                <div class="row g-3 mb-4">
+                                    <!-- Evolução Financeira e Resultado -->
+                                    <div class="col-12 col-xl-6">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
+                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Evolu&ccedil;&atilde;o Financeira e Resultado</h6>
+                                                <div class="btn-group btn-group-sm font-monospace" role="group" id="acc-chart-range-group">
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="window.updateChartRange('hoje', this)">Hoje</button>
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="window.updateChartRange('7d', this)">7 dias</button>
+                                                    <button type="button" class="btn btn-xs btn-primary active text-white" onclick="window.updateChartRange('30d', this)">30 dias</button>
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="window.updateChartRange('mes', this)">M&ecirc;s</button>
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="window.updateChartRange('ano', this)">Ano</button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Legend Items -->
+                                            <div class="d-flex align-items-center gap-3 flex-wrap fs-xxs text-muted mb-2">
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #3b82f6; display: inline-block;"></span> Receita Disk</span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span> Repasse Produtores</span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #f97316; display: inline-block;"></span> Taxas Gateway</span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; display: inline-block;"></span> Tributos</span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #8b5cf6; display: inline-block;"></span> Resultado</span>
+                                            </div>
+
+                                            <!-- Chart SVG Evolution Area Visualizer -->
+                                            <div class="position-relative pt-2" style="height: 250px;" id="dashboard-evolution-chart-container">
+                                                <svg viewBox="0 0 540 220" class="w-100 h-100" preserveAspectRatio="none">
+                                                    <defs>
+                                                        <linearGradient id="gradRepasse" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+                                                            <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                                                        </linearGradient>
+                                                        <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
+                                                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
+                                                        </linearGradient>
+                                                    </defs>
+
+                                                    <!-- Horizontal Gridlines & Y-Axis Labels -->
+                                                    <line x1="45" y1="20" x2="530" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+                                                    <text x="5" y="24" fill="#94a3b8" font-size="9" font-family="monospace">R$ 1.2M</text>
+
+                                                    <line x1="45" y1="65" x2="530" y2="65" stroke="#f1f5f9" stroke-width="1"/>
+                                                    <text x="5" y="69" fill="#94a3b8" font-size="9" font-family="monospace">R$ 900k</text>
+
+                                                    <line x1="45" y1="110" x2="530" y2="110" stroke="#f1f5f9" stroke-width="1"/>
+                                                    <text x="5" y="114" fill="#94a3b8" font-size="9" font-family="monospace">R$ 600k</text>
+
+                                                    <line x1="45" y1="155" x2="530" y2="155" stroke="#f1f5f9" stroke-width="1"/>
+                                                    <text x="5" y="159" fill="#94a3b8" font-size="9" font-family="monospace">R$ 300k</text>
+
+                                                    <line x1="45" y1="190" x2="530" y2="190" stroke="#e2e8f0" stroke-width="1"/>
+                                                    <text x="18" y="194" fill="#94a3b8" font-size="9" font-family="monospace">R$ 0</text>
+
+                                                    <!-- X-Axis Labels -->
+                                                    <text x="45" y="208" fill="#94a3b8" font-size="9" font-family="monospace">01/09</text>
+                                                    <text x="125" y="208" fill="#94a3b8" font-size="9" font-family="monospace">05/09</text>
+                                                    <text x="205" y="208" fill="#94a3b8" font-size="9" font-family="monospace">10/09</text>
+                                                    <text x="285" y="208" fill="#94a3b8" font-size="9" font-family="monospace">15/09</text>
+                                                    <text x="365" y="208" fill="#94a3b8" font-size="9" font-family="monospace">20/09</text>
+                                                    <text x="445" y="208" fill="#94a3b8" font-size="9" font-family="monospace">25/09</text>
+                                                    <text x="505" y="208" fill="#94a3b8" font-size="9" font-family="monospace">30/09</text>
+
+                                                    <!-- Area 1: Repasse Produtores (Green curve) -->
+                                                    <path d="M 45 190 Q 60 110 80 125 T 130 90 T 170 145 T 220 70 T 260 130 T 310 95 T 350 145 T 390 75 T 440 135 T 480 50 T 525 80 L 525 190 Z" fill="url(#gradRepasse)" />
+                                                    <path d="M 45 190 Q 60 110 80 125 T 130 90 T 170 145 T 220 70 T 260 130 T 310 95 T 350 145 T 390 75 T 440 135 T 480 50 T 525 80" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/>
+
+                                                    <!-- Area 2: Receita Disk (Blue curve) -->
+                                                    <path d="M 45 190 Q 65 170 85 160 T 130 155 T 175 168 T 220 140 T 265 160 T 310 130 T 355 155 T 390 120 T 435 145 T 480 135 T 525 150 L 525 190 Z" fill="url(#gradReceita)" />
+                                                    <path d="M 45 190 Q 65 170 85 160 T 130 155 T 175 168 T 220 140 T 265 160 T 310 130 T 355 155 T 390 120 T 435 145 T 480 135 T 525 150" fill="none" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round"/>
+
+                                                    <!-- Line 3: Taxas Gateway (Orange curve) -->
+                                                    <path d="M 45 190 Q 70 180 130 178 T 220 172 T 310 168 T 390 165 T 480 160 T 525 165" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round"/>
+
+                                                    <!-- Bar accents at bottom: Resultado Líquido & Tributos -->
+                                                    <rect x="210" y="172" width="10" height="18" fill="#8b5cf6" opacity="0.8" rx="2"/>
+                                                    <rect x="222" y="176" width="10" height="14" fill="#ef4444" opacity="0.8" rx="2"/>
+
+                                                    <rect x="300" y="168" width="10" height="22" fill="#8b5cf6" opacity="0.8" rx="2"/>
+                                                    <rect x="312" y="173" width="10" height="17" fill="#ef4444" opacity="0.8" rx="2"/>
+
+                                                    <rect x="380" y="164" width="10" height="26" fill="#8b5cf6" opacity="0.8" rx="2"/>
+                                                    <rect x="392" y="170" width="10" height="20" fill="#ef4444" opacity="0.8" rx="2"/>
+
+                                                    <rect x="470" y="160" width="10" height="30" fill="#8b5cf6" opacity="0.8" rx="2"/>
+                                                    <rect x="482" y="166" width="10" height="24" fill="#ef4444" opacity="0.8" rx="2"/>
+
+                                                    <rect x="510" y="165" width="10" height="25" fill="#8b5cf6" opacity="0.8" rx="2"/>
+                                                    <rect x="522" y="171" width="10" height="19" fill="#ef4444" opacity="0.8" rx="2"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recursos de Terceiros Breakdown -->
+                                    <div class="col-12 col-md-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Recursos de Terceiros</h6>
+                                                <button class="btn btn-sm btn-light p-0 text-muted" style="width: 24px; height: 24px;"><i class="ph-dots-three-vertical"></i></button>
+                                            </div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-3" id="acc-third-party-big">R$ 6.972.430,20</div>
+
+                                            <!-- Breakdown List with Square Dots -->
+                                            <div class="d-flex flex-column gap-2 fs-xs">
+                                                <div class="d-flex justify-content-between align-items-center py-1">
+                                                    <span class="d-flex align-items-center gap-2 text-muted">
+                                                        <span style="width: 10px; height: 10px; border-radius: 2px; background-color: #06b6d4; display: inline-block;"></span>
+                                                        Aguardando liquida&ccedil;&atilde;o
+                                                    </span>
+                                                    <strong class="font-monospace text-dark">R$ 1.234.552,10</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center py-1">
+                                                    <span class="d-flex align-items-center gap-2 text-muted">
+                                                        <span style="width: 10px; height: 10px; border-radius: 2px; background-color: #3b82f6; display: inline-block;"></span>
+                                                        Dispon&iacute;vel para repasse
+                                                    </span>
+                                                    <strong class="font-monospace text-dark">R$ 3.421.884,30</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center py-1">
+                                                    <span class="d-flex align-items-center gap-2 text-muted">
+                                                        <span style="width: 10px; height: 10px; border-radius: 2px; background-color: #f97316; display: inline-block;"></span>
+                                                        Repasse programado
+                                                    </span>
+                                                    <strong class="font-monospace text-dark">R$ 1.842.110,50</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center py-1">
+                                                    <span class="d-flex align-items-center gap-2 text-muted">
+                                                        <span style="width: 10px; height: 10px; border-radius: 2px; background-color: #ef4444; display: inline-block;"></span>
+                                                        Repasse bloqueado
+                                                    </span>
+                                                    <strong class="font-monospace text-dark">R$ 284.331,20</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center py-1">
+                                                    <span class="d-flex align-items-center gap-2 text-muted">
+                                                        <span style="width: 10px; height: 10px; border-radius: 2px; background-color: #64748b; display: inline-block;"></span>
+                                                        Em concilia&ccedil;&atilde;o
+                                                    </span>
+                                                    <strong class="font-monospace text-dark">R$ 145.220,60</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center py-1 border-top pt-2">
+                                                    <span class="d-flex align-items-center gap-2 text-danger fw-semibold">
+                                                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #dc2626; display: inline-block;"></span>
+                                                        Diverg&ecirc;ncia
+                                                    </span>
+                                                    <strong class="font-monospace text-danger">R$ 44.331,50</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Índice de Conciliação Gauge & Counts -->
+                                    <div class="col-12 col-md-6 col-xl-3">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white d-flex flex-column justify-content-between" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div>
+                                                <h6 class="fw-bold mb-3 text-dark" style="font-size: 0.95rem;">&Iacute;ndice de Concilia&ccedil;&atilde;o</h6>
+
+                                                <div class="d-flex align-items-center gap-3 mb-3">
+                                                    <!-- Circular Gauge -->
+                                                    <div class="position-relative d-flex align-items-center justify-content-center shrink-0" style="width: 110px; height: 110px;">
+                                                        <svg viewBox="0 0 36 36" class="w-100 h-100" style="transform: rotate(-90deg);">
+                                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f1f5f9" stroke-width="3.2"/>
+                                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" stroke-dasharray="98.7, 100" stroke-width="3.2" stroke-linecap="round"/>
+                                                        </svg>
+                                                        <div class="position-absolute text-center">
+                                                            <div class="fs-5 fw-bold text-dark font-monospace lh-1">98,7%</div>
+                                                            <span class="text-muted" style="font-size: 0.58rem; display: block; margin-top: 2px;">Transa&ccedil;&otilde;es conciliadas</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Counts Breakdown List -->
+                                                    <div class="d-flex flex-column gap-1 fs-xxs flex-grow-1 font-monospace">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span> Conciliadas</span>
+                                                            <strong class="text-dark">125.432</strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #f97316;"></span> Pendentes</span>
+                                                            <strong class="text-dark">1.021</strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #a855f7;"></span> Divergentes</span>
+                                                            <strong class="text-danger">312</strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #64748b;"></span> N&atilde;o localizadas</span>
+                                                            <strong class="text-muted">48</strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6;"></span> Duplicadas</span>
+                                                            <strong class="text-muted">23</strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #1e293b;"></span> Estornos</span>
+                                                            <strong class="text-muted">156</strong>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="d-flex align-items-center gap-1.5 font-sans"><span style="width: 6px; height: 6px; border-radius: 50%; background: #475569;"></span> Chargebacks</span>
+                                                            <strong class="text-muted">42</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- CTA Button to Conciliação -->
+                                            <button type="button" class="btn btn-primary fw-bold text-white w-100 py-2 d-flex align-items-center justify-content-center gap-2" style="border-radius: 10px;" onclick="window.switchAccountingCategory('conciliacao', 'conciliacao'); window.setReconciliationStatusFilter('DIVERGENTE');">
+                                                <span>Analisar 312 diverg&ecirc;ncias</span>
+                                                <i class="ph-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ROW 3: RECEITA POR ORIGEM (DONUT), RECEITA POR GATEWAY (BARS), PRÓXIMOS REPASSES (LIST) -->
+                                <div class="row g-3 mb-4">
+                                    <!-- Receita DiskIngressos por Origem -->
+                                    <div class="col-12 col-xl-4">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <h6 class="fw-bold mb-3 text-dark" style="font-size: 0.95rem;">Receita DiskIngressos por Origem</h6>
+
+                                            <div class="d-flex align-items-center justify-content-between gap-3">
+                                                <!-- Donut Graphic -->
+                                                <div class="position-relative d-flex align-items-center justify-content-center shrink-0" style="width: 140px; height: 140px;">
+                                                    <svg viewBox="0 0 42 42" class="w-100 h-100" style="transform: rotate(-90deg);">
+                                                        <!-- Donut segments -->
+                                                        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#3b82f6" stroke-width="4.5" stroke-dasharray="52.4 47.6" stroke-dashoffset="0"/>
+                                                        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#f97316" stroke-width="4.5" stroke-dasharray="28.6 71.4" stroke-dashoffset="-52.4"/>
+                                                        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#10b981" stroke-width="4.5" stroke-dasharray="12.1 87.9" stroke-dashoffset="-81"/>
+                                                        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#a855f7" stroke-width="4.5" stroke-dasharray="6.9 93.1" stroke-dashoffset="-93.1"/>
+                                                    </svg>
+                                                    <div class="position-absolute text-center" style="width: 95px;">
+                                                        <div class="fw-bold text-dark font-monospace" style="font-size: 0.72rem; line-height: 1.1;">R$ 892.345,60</div>
+                                                        <span class="text-muted" style="font-size: 0.55rem;">Receita Total</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Origin breakdown list -->
+                                                <div class="d-flex flex-column gap-2 fs-xs flex-grow-1">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span class="d-flex align-items-center gap-1.5 text-muted">
+                                                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></span>
+                                                            Taxa de conveni&ecirc;ncia
+                                                        </span>
+                                                        <div>
+                                                            <span class="badge bg-light text-muted me-1 font-monospace">52,4%</span>
+                                                            <strong class="font-monospace text-dark">R$ 467.112,30</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span class="d-flex align-items-center gap-1.5 text-muted">
+                                                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #f97316;"></span>
+                                                            Comiss&otilde;es
+                                                        </span>
+                                                        <div>
+                                                            <span class="badge bg-light text-muted me-1 font-monospace">28,6%</span>
+                                                            <strong class="font-monospace text-dark">R$ 255.330,10</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span class="d-flex align-items-center gap-1.5 text-muted">
+                                                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                                                            Servi&ccedil;os
+                                                        </span>
+                                                        <div>
+                                                            <span class="badge bg-light text-muted me-1 font-monospace">12,1%</span>
+                                                            <strong class="font-monospace text-dark">R$ 107.884,40</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span class="d-flex align-items-center gap-1.5 text-muted">
+                                                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #a855f7;"></span>
+                                                            Outras receitas
+                                                        </span>
+                                                        <div>
+                                                            <span class="badge bg-light text-muted me-1 font-monospace">6,9%</span>
+                                                            <strong class="font-monospace text-dark">R$ 62.018,80</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Receita por Gateway Progress Bars -->
+                                    <div class="col-12 col-xl-4">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <h6 class="fw-bold mb-3 text-dark" style="font-size: 0.95rem;">Receita por Gateway</h6>
+
+                                            <div class="d-flex flex-column gap-2.5 fs-xs">
+                                                <!-- Mercado Pago -->
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="fw-semibold text-dark">Mercado Pago</span>
+                                                        <span class="font-monospace text-dark fw-bold">R$ 341.102,40</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 7px; background-color: #f1f5f9;">
+                                                            <div class="progress-bar" role="progressbar" style="width: 38.2%; background-color: #2563eb; border-radius: 4px;"></div>
+                                                        </div>
+                                                        <span class="text-muted font-monospace fs-xxs" style="width: 38px;">38,2%</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- PagSeguro -->
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="fw-semibold text-dark">PagSeguro</span>
+                                                        <span class="font-monospace text-dark fw-bold">R$ 202.654,10</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 7px; background-color: #f1f5f9;">
+                                                            <div class="progress-bar" role="progressbar" style="width: 22.7%; background-color: #2563eb; border-radius: 4px;"></div>
+                                                        </div>
+                                                        <span class="text-muted font-monospace fs-xxs" style="width: 38px;">22,7%</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Cielo -->
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="fw-semibold text-dark">Cielo</span>
+                                                        <span class="font-monospace text-dark fw-bold">R$ 164.330,80</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 7px; background-color: #f1f5f9;">
+                                                            <div class="progress-bar" role="progressbar" style="width: 18.4%; background-color: #2563eb; border-radius: 4px;"></div>
+                                                        </div>
+                                                        <span class="text-muted font-monospace fs-xxs" style="width: 38px;">18,4%</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Stone -->
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="fw-semibold text-dark">Stone</span>
+                                                        <span class="font-monospace text-dark fw-bold">R$ 112.441,20</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 7px; background-color: #f1f5f9;">
+                                                            <div class="progress-bar" role="progressbar" style="width: 12.6%; background-color: #2563eb; border-radius: 4px;"></div>
+                                                        </div>
+                                                        <span class="text-muted font-monospace fs-xxs" style="width: 38px;">12,6%</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Outros -->
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="fw-semibold text-dark">Outros</span>
+                                                        <span class="font-monospace text-dark fw-bold">R$ 72.142,10</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 7px; background-color: #f1f5f9;">
+                                                            <div class="progress-bar" role="progressbar" style="width: 8.1%; background-color: #2563eb; border-radius: 4px;"></div>
+                                                        </div>
+                                                        <span class="text-muted font-monospace fs-xxs" style="width: 38px;">8,1%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Próximos Repasses -->
+                                    <div class="col-12 col-xl-4">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Pr&oacute;ximos Repasses</h6>
+                                                <a href="#" class="text-primary fs-xs text-decoration-none fw-semibold" onclick="window.switchAccountingCategory('conciliacao', 'repasses'); return false;">Ver todos</a>
+                                            </div>
+
+                                            <div class="d-flex flex-column gap-3 fs-xs">
+                                                <!-- Item 1 -->
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2.5">
+                                                        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: #ecfdf5; color: #10b981;">
+                                                            <i class="ph-map-pin fs-5"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-dark">Festival de Ver&atilde;o 2024</div>
+                                                            <div class="text-muted fs-xxs">Produtor Eventos BR</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="font-monospace fw-bold text-dark">R$ 428.110,50</div>
+                                                        <div class="text-muted fs-xxs font-monospace">15/09/2024</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Item 2 -->
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2.5">
+                                                        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: #ecfdf5; color: #10b981;">
+                                                            <i class="ph-map-pin fs-5"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-dark">Show Harmonia</div>
+                                                            <div class="text-muted fs-xxs">Harmonia Produ&ccedil;&otilde;es</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="font-monospace fw-bold text-dark">R$ 312.884,20</div>
+                                                        <div class="text-muted fs-xxs font-monospace">16/09/2024</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Item 3 -->
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2.5">
+                                                        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: #ecfdf5; color: #10b981;">
+                                                            <i class="ph-map-pin fs-5"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-dark">Virada Cultural</div>
+                                                            <div class="text-muted fs-xxs">Cultura &amp; Arte</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="font-monospace fw-bold text-dark">R$ 284.552,10</div>
+                                                        <div class="text-muted fs-xxs font-monospace">18/09/2024</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Item 4 -->
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2.5">
+                                                        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: #ecfdf5; color: #10b981;">
+                                                            <i class="ph-map-pin fs-5"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-dark">Arena Music</div>
+                                                            <div class="text-muted fs-xxs">Arena Produ&ccedil;&otilde;es</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="font-monospace fw-bold text-dark">R$ 221.441,80</div>
+                                                        <div class="text-muted fs-xxs font-monospace">20/09/2024</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ROW 4: INTELIGÊNCIA CONTÁBIL (5/12) & EVENTOS EM DESTAQUE (7/12) -->
+                                <div class="row g-3 mb-4">
+                                    <!-- Inteligência Contábil Alerts -->
+                                    <div class="col-12 col-xl-5">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" id="acc-intelligence-alerts-container" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Intelig&ecirc;ncia Cont&aacute;bil</h6>
+                                                <a href="#" class="text-primary fs-xs text-decoration-none fw-semibold" onclick="window.switchAccountingTab(event, 'inteligencia-contabil'); return false;">Ver todas</a>
+                                            </div>
+
+                                            <div class="d-flex flex-column gap-2.5 fs-xs">
+                                                <!-- Alert 1 -->
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background-color: #fafafa; border: 1px solid #f1f5f9;">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center shrink-0" style="width: 26px; height: 26px; background-color: #fee2e2; color: #ef4444;">
+                                                            <i class="ph-warning-circle fs-6"></i>
+                                                        </div>
+                                                        <span class="badge bg-danger text-white px-2 py-0.5 rounded-pill" style="font-size: 0.65rem;">Cr&iacute;tico</span>
+                                                        <span class="text-dark fw-medium text-truncate" style="max-width: 240px;">R$ 84.320 em repasses n&atilde;o conciliados.</span>
+                                                    </div>
+                                                    <span class="text-muted font-monospace fs-xxs text-nowrap">Hoje 10:24</span>
+                                                </div>
+
+                                                <!-- Alert 2 -->
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background-color: #fafafa; border: 1px solid #f1f5f9;">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center shrink-0" style="width: 26px; height: 26px; background-color: #fef3c7; color: #d97706;">
+                                                            <i class="ph-warning fs-6"></i>
+                                                        </div>
+                                                        <span class="badge bg-warning text-dark px-2 py-0.5 rounded-pill" style="font-size: 0.65rem;">Aten&ccedil;&atilde;o</span>
+                                                        <span class="text-dark fw-medium text-truncate" style="max-width: 240px;">Taxa efetiva do Mercado Pago aumentou 0,37%.</span>
+                                                    </div>
+                                                    <span class="text-muted font-monospace fs-xxs text-nowrap">Hoje 09:12</span>
+                                                </div>
+
+                                                <!-- Alert 3 -->
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background-color: #fafafa; border: 1px solid #f1f5f9;">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center shrink-0" style="width: 26px; height: 26px; background-color: #eff6ff; color: #3b82f6;">
+                                                            <i class="ph-receipt fs-6"></i>
+                                                        </div>
+                                                        <span class="badge bg-primary text-white px-2 py-0.5 rounded-pill" style="font-size: 0.65rem;">Fiscal</span>
+                                                        <span class="text-dark fw-medium text-truncate" style="max-width: 240px;">17 lan&ccedil;amentos sem classifica&ccedil;&atilde;o fiscal.</span>
+                                                    </div>
+                                                    <span class="text-muted font-monospace fs-xxs text-nowrap">Ontem 16:45</span>
+                                                </div>
+
+                                                <!-- Alert 4 -->
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background-color: #fafafa; border: 1px solid #f1f5f9;">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center shrink-0" style="width: 26px; height: 26px; background-color: #f5f3ff; color: #8b5cf6;">
+                                                            <i class="ph-sparkle fs-6"></i>
+                                                        </div>
+                                                        <span class="badge text-white px-2 py-0.5 rounded-pill" style="background-color: #8b5cf6; font-size: 0.65rem;">Oportunidade</span>
+                                                        <span class="text-dark fw-medium text-truncate" style="max-width: 240px;">Poss&iacute;vel redu&ccedil;&atilde;o de 12% nas taxas do gateway.</span>
+                                                    </div>
+                                                    <span class="text-muted font-monospace fs-xxs text-nowrap">Ontem 11:20</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Eventos em Destaque Table -->
+                                    <div class="col-12 col-xl-7">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Eventos em Destaque</h6>
+                                                <a href="#" class="text-primary fs-xs text-decoration-none fw-semibold" onclick="window.switchActiveView('events'); return false;">Ver todos</a>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle mb-0 fs-xxs">
+                                                    <thead class="text-muted text-uppercase" style="border-bottom: 1px solid #f1f5f9; font-size: 0.68rem;">
+                                                        <tr>
+                                                            <th class="py-2 px-2 text-start">Evento</th>
+                                                            <th class="py-2 px-2 text-start">Produtor</th>
+                                                            <th class="py-2 px-2 text-end">GMV</th>
+                                                            <th class="py-2 px-2 text-end">Receita Disk</th>
+                                                            <th class="py-2 px-2 text-end">Repasse</th>
+                                                            <th class="py-2 px-2 text-center">Concilia&ccedil;&atilde;o</th>
+                                                            <th class="py-2 px-2 text-center">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Row 1 -->
+                                                        <tr style="border-bottom: 1px solid #f8fafc;">
+                                                            <td class="py-2 px-2 fw-semibold text-dark">Festival de Ver&atilde;o 2024</td>
+                                                            <td class="py-2 px-2 text-muted">Eventos BR</td>
+                                                            <td class="py-2 px-2 text-end font-monospace fw-bold text-dark">R$ 1.245.884,30</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-primary fw-semibold">R$ 128.441,20</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-dark">R$ 1.102.331,10</td>
+                                                            <td class="py-2 px-2 text-center font-monospace">100%</td>
+                                                            <td class="py-2 px-2 text-center">
+                                                                <span class="d-inline-flex align-items-center gap-1 text-success fw-medium">
+                                                                    <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span>
+                                                                    Conciliado
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <!-- Row 2 -->
+                                                        <tr style="border-bottom: 1px solid #f8fafc;">
+                                                            <td class="py-2 px-2 fw-semibold text-dark">Show Harmonia</td>
+                                                            <td class="py-2 px-2 text-muted">Harmonia Produ&ccedil;&otilde;es</td>
+                                                            <td class="py-2 px-2 text-end font-monospace fw-bold text-dark">R$ 892.441,20</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-primary fw-semibold">R$ 94.220,10</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-dark">R$ 782.110,30</td>
+                                                            <td class="py-2 px-2 text-center font-monospace">98%</td>
+                                                            <td class="py-2 px-2 text-center">
+                                                                <span class="d-inline-flex align-items-center gap-1 text-warning fw-medium">
+                                                                    <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #f59e0b; display: inline-block;"></span>
+                                                                    Pendente
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <!-- Row 3 -->
+                                                        <tr style="border-bottom: 1px solid #f8fafc;">
+                                                            <td class="py-2 px-2 fw-semibold text-dark">Virada Cultural</td>
+                                                            <td class="py-2 px-2 text-muted">Cultura &amp; Arte</td>
+                                                            <td class="py-2 px-2 text-end font-monospace fw-bold text-dark">R$ 654.320,80</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-primary fw-semibold">R$ 68.442,30</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-dark">R$ 572.884,10</td>
+                                                            <td class="py-2 px-2 text-center font-monospace">97%</td>
+                                                            <td class="py-2 px-2 text-center">
+                                                                <span class="d-inline-flex align-items-center gap-1 text-warning fw-medium">
+                                                                    <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #f59e0b; display: inline-block;"></span>
+                                                                    Pendente
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <!-- Row 4 -->
+                                                        <tr style="border-bottom: 1px solid #f8fafc;">
+                                                            <td class="py-2 px-2 fw-semibold text-dark">Arena Music</td>
+                                                            <td class="py-2 px-2 text-muted">Arena Produ&ccedil;&otilde;es</td>
+                                                            <td class="py-2 px-2 text-end font-monospace fw-bold text-dark">R$ 521.110,40</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-primary fw-semibold">R$ 54.331,80</td>
+                                                            <td class="py-2 px-2 text-end font-monospace text-dark">R$ 456.778,20</td>
+                                                            <td class="py-2 px-2 text-center font-monospace">100%</td>
+                                                            <td class="py-2 px-2 text-center">
+                                                                <span class="d-inline-flex align-items-center gap-1 text-success fw-medium">
+                                                                    <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span>
+                                                                    Conciliado
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- TAB PANE: Dedicated Simulador Contábil -->

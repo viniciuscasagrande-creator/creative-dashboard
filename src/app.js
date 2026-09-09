@@ -7065,171 +7065,175 @@ const brlFormatter = new Intl.NumberFormat('pt-BR', {
 
 const ENTERPRISE_ACCOUNTING_DATASETS = {
   '30d': {
-    period: { start: '2026-06-01', end: '2026-06-30', label: 'Últimos 30 dias' },
-    grossTransactionValue: 1842500.00,
+    period: { start: '2026-09-01', end: '2026-09-30', label: 'Últimos 30 dias' },
+    grossTransactionValue: 8432110.50,
     thirdPartyFunds: {
-      total: 1513200.00,
-      awaitingSettlement: 380000.00,
-      availableForPayout: 615000.00,
-      scheduledPayout: 310000.00,
-      blockedPayout: 42000.00,
-      reconciling: 124000.00,
-      divergent: 42200.00,
+      total: 6972430.20,
+      awaitingSettlement: 1234552.10,
+      availableForPayout: 3421884.30,
+      scheduledPayout: 1842110.50,
+      blockedPayout: 284331.20,
+      reconciling: 145220.60,
+      divergent: 44331.50,
     },
     diskRevenue: {
-      total: 229300.00,
-      convenienceFee: 178500.00,
-      commission: 26300.00,
-      services: 18500.00,
-      other: 6000.00,
+      total: 892345.60,
+      convenienceFee: 467112.30,
+      commission: 255330.10,
+      services: 107884.40,
+      other: 62018.80,
     },
     financialCosts: {
-      gatewayFees: 54820.00,
-      acquiringFees: 32100.00,
-      antifraud: 11200.00,
-      anticipation: 8520.00,
-      other: 3000.00,
+      gatewayFees: 312884.90,
+      acquiringFees: 184500.00,
+      antifraud: 62100.00,
+      anticipation: 48284.90,
+      other: 18000.00,
     },
     taxes: {
-      provisioned: 28440.00,
-      paid: 22100.00,
+      provisioned: 148432.10,
+      paid: 112000.00,
     },
     payouts: {
-      pending: 414700.00,
-      paid: 1098500.00,
+      pending: 2126441.70,
+      paid: 6421003.80,
     },
-    netRevenue: 146040.00,
-    operatingResult: 118900.00,
+    cashAvailable: 1284551.30,
+    netRevenue: 431028.60,
+    operatingResult: 431028.60,
     reconciliation: {
-      rate: 98.73,
-      divergentItems: 27,
-      divergentAmount: 34210.00,
+      rate: 98.7,
+      divergentItems: 312,
+      divergentAmount: 44331.50,
     }
   },
   '7d': {
-    period: { start: '2026-06-24', end: '2026-06-30', label: 'Últimos 7 dias' },
-    grossTransactionValue: 462100.00,
+    period: { start: '2026-09-24', end: '2026-09-30', label: 'Últimos 7 dias' },
+    grossTransactionValue: 2108027.60,
     thirdPartyFunds: {
-      total: 379400.00,
-      awaitingSettlement: 98000.00,
-      availableForPayout: 162000.00,
-      scheduledPayout: 85000.00,
-      blockedPayout: 9400.00,
-      reconciling: 18000.00,
-      divergent: 7000.00,
+      total: 1743107.55,
+      awaitingSettlement: 308638.00,
+      availableForPayout: 855471.00,
+      scheduledPayout: 460527.00,
+      blockedPayout: 71082.00,
+      reconciling: 36305.00,
+      divergent: 11082.00,
     },
     diskRevenue: {
-      total: 58200.00,
-      convenienceFee: 45600.00,
-      commission: 6800.00,
-      services: 4300.00,
-      other: 1500.00,
+      total: 223086.40,
+      convenienceFee: 116778.00,
+      commission: 63832.00,
+      services: 26971.00,
+      other: 15505.00,
     },
     financialCosts: {
-      gatewayFees: 13900.00,
-      acquiringFees: 8200.00,
-      antifraud: 2800.00,
-      anticipation: 2100.00,
-      other: 800.00,
+      gatewayFees: 78221.20,
+      acquiringFees: 46125.00,
+      antifraud: 15525.00,
+      anticipation: 12071.20,
+      other: 4500.00,
     },
     taxes: {
-      provisioned: 7150.00,
-      paid: 5400.00,
+      provisioned: 37108.00,
+      paid: 28000.00,
     },
     payouts: {
-      pending: 105000.00,
-      paid: 274400.00,
+      pending: 531610.00,
+      paid: 1605250.95,
     },
-    netRevenue: 37150.00,
-    operatingResult: 30400.00,
+    cashAvailable: 321137.80,
+    netRevenue: 107757.15,
+    operatingResult: 107757.15,
     reconciliation: {
       rate: 99.12,
-      divergentItems: 6,
-      divergentAmount: 7000.00,
+      divergentItems: 68,
+      divergentAmount: 11082.00,
     }
   },
   'hoje': {
-    period: { start: '2026-06-30', end: '2026-06-30', label: 'Hoje' },
-    grossTransactionValue: 64981.90,
+    period: { start: '2026-09-30', end: '2026-09-30', label: 'Hoje' },
+    grossTransactionValue: 281070.35,
     thirdPartyFunds: {
-      total: 53360.00,
-      awaitingSettlement: 14200.00,
-      availableForPayout: 23500.00,
-      scheduledPayout: 12000.00,
-      blockedPayout: 1200.00,
-      reconciling: 1800.00,
-      divergent: 660.00,
+      total: 232414.34,
+      awaitingSettlement: 41151.70,
+      availableForPayout: 114062.80,
+      scheduledPayout: 61403.68,
+      blockedPayout: 9477.70,
+      reconciling: 4840.68,
+      divergent: 1477.71,
     },
     diskRevenue: {
-      total: 8190.00,
-      convenienceFee: 6450.00,
-      commission: 950.00,
-      services: 610.00,
-      other: 180.00,
+      total: 29744.85,
+      convenienceFee: 15570.41,
+      commission: 8511.00,
+      services: 3596.14,
+      other: 2067.29,
     },
     financialCosts: {
-      gatewayFees: 1950.00,
-      acquiringFees: 1150.00,
-      antifraud: 390.00,
-      anticipation: 290.00,
-      other: 120.00,
+      gatewayFees: 10429.49,
+      acquiringFees: 6150.00,
+      antifraud: 2070.00,
+      anticipation: 1609.49,
+      other: 600.00,
     },
     taxes: {
-      provisioned: 1010.00,
+      provisioned: 4947.73,
       paid: 0.00,
     },
     payouts: {
-      pending: 15400.00,
-      paid: 37960.00,
+      pending: 70881.39,
+      paid: 214033.46,
     },
-    netRevenue: 5230.00,
-    operatingResult: 4350.00,
+    cashAvailable: 42818.37,
+    netRevenue: 14367.62,
+    operatingResult: 14367.62,
     reconciliation: {
       rate: 99.45,
-      divergentItems: 2,
-      divergentAmount: 660.00,
+      divergentItems: 8,
+      divergentAmount: 1477.71,
     }
   },
   'mes': {
-    period: { start: '2026-06-01', end: '2026-06-30', label: 'Mês Atual (Junho/2026)' },
-    grossTransactionValue: 1842500.00,
+    period: { start: '2026-09-01', end: '2026-09-30', label: 'Este mês (Setembro/2026)' },
+    grossTransactionValue: 8432110.50,
     thirdPartyFunds: {
-      total: 1513200.00,
-      awaitingSettlement: 380000.00,
-      availableForPayout: 615000.00,
-      scheduledPayout: 310000.00,
-      blockedPayout: 42000.00,
-      reconciling: 124000.00,
-      divergent: 42200.00,
+      total: 6972430.20,
+      awaitingSettlement: 1234552.10,
+      availableForPayout: 3421884.30,
+      scheduledPayout: 1842110.50,
+      blockedPayout: 284331.20,
+      reconciling: 145220.60,
+      divergent: 44331.50,
     },
     diskRevenue: {
-      total: 229300.00,
-      convenienceFee: 178500.00,
-      commission: 26300.00,
-      services: 18500.00,
-      other: 6000.00,
+      total: 892345.60,
+      convenienceFee: 467112.30,
+      commission: 255330.10,
+      services: 107884.40,
+      other: 62018.80,
     },
     financialCosts: {
-      gatewayFees: 54820.00,
-      acquiringFees: 32100.00,
-      antifraud: 11200.00,
-      anticipation: 8520.00,
-      other: 3000.00,
+      gatewayFees: 312884.90,
+      acquiringFees: 184500.00,
+      antifraud: 62100.00,
+      anticipation: 48284.90,
+      other: 18000.00,
     },
     taxes: {
-      provisioned: 28440.00,
-      paid: 22100.00,
+      provisioned: 148432.10,
+      paid: 112000.00,
     },
     payouts: {
-      pending: 414700.00,
-      paid: 1098500.00,
+      pending: 2126441.70,
+      paid: 6421003.80,
     },
-    netRevenue: 146040.00,
-    operatingResult: 118900.00,
+    cashAvailable: 1284551.30,
+    netRevenue: 431028.60,
+    operatingResult: 431028.60,
     reconciliation: {
-      rate: 98.73,
-      divergentItems: 27,
-      divergentAmount: 34210.00,
+      rate: 98.7,
+      divergentItems: 312,
+      divergentAmount: 44331.50,
     }
   },
   'ano': {
@@ -7278,9 +7282,16 @@ const ENTERPRISE_ACCOUNTING_DATASETS = {
 
 function setAccountingFilter(period, btn) {
   currentAccountingPeriod = period;
-  if (btn && btn.parentElement) {
-    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+  if (btn) {
+    if (btn.parentElement) {
+      btn.parentElement.querySelectorAll('button, a').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    const dd = btn.closest('.dropdown');
+    if (dd) {
+      const toggle = dd.querySelector('.dropdown-toggle');
+      if (toggle) toggle.textContent = btn.textContent.trim();
+    }
   }
   applyAccountingFilters();
 }
@@ -7291,7 +7302,7 @@ function applyAccountingFilters() {
   currentProducerFilter = producerSelect ? producerSelect.value : 'todos';
   currentGatewayFilter = gatewaySelect ? gatewaySelect.value : 'todos';
 
-  const base = ENTERPRISE_ACCOUNTING_DATASETS[currentAccountingPeriod] || ENTERPRISE_ACCOUNTING_DATASETS['30d'];
+  const base = ENTERPRISE_ACCOUNTING_DATASETS[currentAccountingPeriod] || ENTERPRISE_ACCOUNTING_DATASETS['mes'] || ENTERPRISE_ACCOUNTING_DATASETS['30d'];
   const d = JSON.parse(JSON.stringify(base));
 
   // Ajuste por produtor
@@ -7315,51 +7326,44 @@ function applyAccountingFilters() {
     d.payouts.paid *= factor;
     d.netRevenue *= factor;
     d.operatingResult *= factor;
+    if (d.cashAvailable) d.cashAvailable *= factor;
     d.reconciliation.divergentAmount *= factor;
     d.reconciliation.divergentItems = Math.max(1, Math.round(d.reconciliation.divergentItems * factor));
   }
 
-  // 1. Atualiza os 8 Cards do Resumo Executivo
-  const elGmv = document.getElementById('acc-card-gmv');
-  const elTerc = document.getElementById('acc-card-terceiros');
-  const elDisk = document.getElementById('acc-card-receita-disk');
-  const elGw = document.getElementById('acc-card-gateway');
-  const elTrib = document.getElementById('acc-card-tributos');
-  const elRep = document.getElementById('acc-card-repasses');
-  const elLiq = document.getElementById('acc-card-receita-liquida');
-  const elOp = document.getElementById('acc-card-resultado-operacional');
-
-  if (elGmv) elGmv.textContent = brlFormatter.format(d.grossTransactionValue);
-  if (elTerc) elTerc.textContent = brlFormatter.format(d.thirdPartyFunds.total);
-  if (elDisk) elDisk.textContent = brlFormatter.format(d.diskRevenue.total);
-  if (elGw) elGw.textContent = brlFormatter.format(d.financialCosts.gatewayFees);
-  if (elTrib) elTrib.textContent = brlFormatter.format(d.taxes.provisioned);
-  if (elRep) elRep.textContent = brlFormatter.format(d.payouts.paid);
-  if (elLiq) elLiq.textContent = brlFormatter.format(d.netRevenue);
-  if (elOp) elOp.textContent = brlFormatter.format(d.operatingResult);
-
-  // 2. Atualiza Linhas de Recursos de Terceiros
-  const setElText = (id, val) => {
-    const el = document.getElementById(id);
+  // 1. Atualiza os 8 Cards do Resumo Executivo (IDs Novos do ChatGPT Image + IDs Legados)
+  const setVal = (kpiId, fallbackId, val) => {
+    const el = document.getElementById(kpiId) || (fallbackId ? document.getElementById(fallbackId) : null);
     if (el) el.textContent = typeof val === 'number' ? brlFormatter.format(val) : val;
   };
 
-  setElText('acc-terc-aguardando', d.thirdPartyFunds.awaitingSettlement);
-  setElText('acc-terc-disponivel', d.thirdPartyFunds.availableForPayout);
-  setElText('acc-terc-programado', d.thirdPartyFunds.scheduledPayout);
-  setElText('acc-terc-bloqueado', d.thirdPartyFunds.blockedPayout);
-  setElText('acc-terc-conciliando', d.thirdPartyFunds.reconciling);
-  setElText('acc-terc-divergente', d.thirdPartyFunds.divergent);
-  setElText('acc-terc-total', d.thirdPartyFunds.total);
+  setVal('acc-kpi-gmv', 'acc-card-gmv', d.grossTransactionValue);
+  setVal('acc-kpi-third-party', 'acc-card-terceiros', d.thirdPartyFunds.total);
+  setVal('acc-kpi-disk-rev', 'acc-card-receita-disk', d.diskRevenue.total);
+  setVal('acc-kpi-gateway-costs', 'acc-card-gateway', d.financialCosts.gatewayFees);
+  setVal('acc-kpi-taxes', 'acc-card-tributos', d.taxes.provisioned);
+  setVal('acc-kpi-payouts', 'acc-card-repasses', d.payouts.paid);
+  setVal('acc-kpi-net-op', 'acc-card-resultado-operacional', d.operatingResult);
+  setVal('acc-kpi-cash-avail', 'acc-card-receita-liquida', d.cashAvailable || 1284551.30);
+
+  // 2. Atualiza Linhas de Recursos de Terceiros
+  setVal('acc-third-party-big', null, d.thirdPartyFunds.total);
+  setVal('acc-terc-aguardando', null, d.thirdPartyFunds.awaitingSettlement);
+  setVal('acc-terc-disponivel', null, d.thirdPartyFunds.availableForPayout);
+  setVal('acc-terc-programado', null, d.thirdPartyFunds.scheduledPayout);
+  setVal('acc-terc-bloqueado', null, d.thirdPartyFunds.blockedPayout);
+  setVal('acc-terc-conciliando', null, d.thirdPartyFunds.reconciling);
+  setVal('acc-terc-divergente', null, d.thirdPartyFunds.divergent);
+  setVal('acc-terc-total', null, d.thirdPartyFunds.total);
 
   // 3. Atualiza Linhas de Receita Própria DiskIngressos
-  setElText('acc-disk-taxas', d.diskRevenue.convenienceFee);
-  setElText('acc-disk-comissao', d.diskRevenue.commission);
-  setElText('acc-disk-servicos', d.diskRevenue.services);
-  setElText('acc-disk-outras', d.diskRevenue.other);
-  setElText('acc-disk-deducoes', '-' + brlFormatter.format(d.financialCosts.gatewayFees + d.taxes.provisioned));
-  setElText('acc-disk-liquida', d.netRevenue);
-  setElText('acc-disk-total', d.diskRevenue.total);
+  setVal('acc-disk-taxas', null, d.diskRevenue.convenienceFee);
+  setVal('acc-disk-comissao', null, d.diskRevenue.commission);
+  setVal('acc-disk-servicos', null, d.diskRevenue.services);
+  setVal('acc-disk-outras', null, d.diskRevenue.other);
+  setVal('acc-disk-deducoes', null, '-' + brlFormatter.format(d.financialCosts.gatewayFees + d.taxes.provisioned));
+  setVal('acc-disk-liquida', null, d.netRevenue);
+  setVal('acc-disk-total', null, d.diskRevenue.total);
 
   // 4. Centro de Conciliação e Divergências
   const elReconcilRate = document.getElementById('acc-reconcil-rate');
@@ -7367,7 +7371,7 @@ function applyAccountingFilters() {
   const elDivergCount = document.getElementById('acc-diverg-count');
   const elDivergAmount = document.getElementById('acc-diverg-amount');
 
-  if (elReconcilRate) elReconcilRate.textContent = d.reconciliation.rate.toFixed(2) + '%';
+  if (elReconcilRate) elReconcilRate.textContent = d.reconciliation.rate.toFixed(1) + '%';
   if (elReconcilBar) {
     elReconcilBar.style.width = Math.min(100, Math.max(0, d.reconciliation.rate)) + '%';
     elReconcilBar.setAttribute('aria-valuenow', d.reconciliation.rate);
@@ -7376,20 +7380,22 @@ function applyAccountingFilters() {
   if (elDivergAmount) elDivergAmount.textContent = brlFormatter.format(d.reconciliation.divergentAmount);
 
   // 5. DRE Gerencial Sintética
-  setElText('acc-dre-rec-propria', d.diskRevenue.total);
-  setElText('acc-dre-impostos', '-' + brlFormatter.format(d.taxes.provisioned));
-  setElText('acc-dre-gateway', '-' + brlFormatter.format(d.financialCosts.gatewayFees));
-  setElText('acc-dre-rec-liquida', d.netRevenue);
-  setElText('acc-dre-resultado-final', d.operatingResult);
+  setVal('acc-dre-rec-propria', null, d.diskRevenue.total);
+  setVal('acc-dre-impostos', null, '-' + brlFormatter.format(d.taxes.provisioned));
+  setVal('acc-dre-gateway', null, '-' + brlFormatter.format(d.financialCosts.gatewayFees));
+  setVal('acc-dre-rec-liquida', null, d.netRevenue);
+  setVal('acc-dre-resultado-final', null, d.operatingResult);
   const margemPct = ((d.operatingResult / d.diskRevenue.total) * 100).toFixed(1) + '%';
   const elMargem = document.getElementById('acc-dre-margem-pct');
   if (elMargem) elMargem.textContent = margemPct;
 
-  // 6. Atualiza o Gráfico Analítico
+  // 6. Atualiza o Gráfico Analítico se presente
   renderAnalyticsChart(currentAnalyticsView, currentAccountingPeriod, d);
 
-  // 7. Atualiza a Tabela de Eventos com Auditoria e Rastreabilidade
-  renderAccountingEventsTable(d);
+  // 7. Atualiza a Tabela de Eventos com Auditoria e Rastreabilidade se presente
+  if (typeof renderAccountingEventsTable === 'function') {
+    renderAccountingEventsTable(d);
+  }
 }
 
 function switchAnalyticsView(view, btn) {
