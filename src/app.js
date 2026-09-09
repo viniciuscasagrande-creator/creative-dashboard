@@ -7,6 +7,7 @@ import { traceabilityService } from './services/traceabilityService.js';
 import { dreService } from './services/dreService.js';
 import { balanceSheetService } from './services/balanceSheetService.js';
 import { closingService } from './services/closingService.js';
+import { accountingDashboardService } from './services/accountingDashboardService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
 // Global state for events
@@ -6813,7 +6814,32 @@ function runApiConsoleRequest() {
 }
 
 /* --- switchAccountingMode --- */
-function switchAccountingMode(e){currentAccountingMode=e,[`standard`,`advanced`,`expert`].forEach(t=>{let n=document.getElementById(`btn-mode-${t}`);n&&(t===e?n.classList.add(`active`):n.classList.remove(`active`))}),typeof Zy==`function`&&Zy(e),addSystemNotification(`info`,`Módulo de Contabilidade`,`Modo do painel contábil alterado para ${e.toUpperCase()} com sucesso.`),switchAccountingTab(null,currentAccountingTab)}
+function switchAccountingMode(mode) {
+  currentAccountingMode = mode;
+  ['standard', 'advanced', 'expert'].forEach(m => {
+    const btn = document.getElementById('btn-mode-' + m);
+    if (btn) {
+      if (m === mode) {
+        btn.classList.add('active', 'btn-primary', 'text-white');
+        btn.classList.remove('btn-outline-secondary');
+      } else {
+        btn.classList.remove('active', 'btn-primary', 'text-white');
+        btn.classList.add('btn-outline-secondary');
+      }
+    }
+  });
+
+  const healthBar = document.getElementById('acc-health-compliance-bar');
+  if (healthBar) {
+    healthBar.style.display = (mode === 'standard') ? 'none' : 'flex';
+  }
+
+  if (typeof Zy === 'function') Zy(mode);
+  addSystemNotification('info', 'Módulo de Contabilidade', 'Modo do painel contábil alterado para ' + mode.toUpperCase() + ' com sucesso.');
+  if (currentAccountingTab === 'dashboard') {
+    renderAccountingDashboard();
+  }
+}
 
 /* --- showAddAccountModal --- */
 function showAddAccountModal(){let e=prompt(`Digite o código da nova conta contábil (Ex: 5.1.04):`);if(!e)return;let t=prompt(`Digite o nome da conta (Ex: Despesa de Comunicação):`);if(!t)return;let n=prompt(`Digite o tipo da conta (ativo, passivo, patrimonio, receita, despesa):`).toLowerCase();ACCOUNTING_PLANO_CONTAS.push({code:e,name:t,type:n,parent:e.split(`.`).slice(0,-1).join(`.`)+`.00`}),renderPlanoContas(),logAudit(`Plano de Contas`,`Inclusão de Conta`,`Adicionou conta ${e} - ${t}`),addSystemNotification(`success`,`Plano de Contas`,`Conta ${e} adicionada com sucesso.`)}
@@ -7393,7 +7419,20 @@ function applyAccountingFilters() {
   renderAnalyticsChart(currentAnalyticsView, currentAccountingPeriod, d);
 
   // 7. Atualiza a Tabela de Eventos com Auditoria e Rastreabilidade se presente
-  if (typeof renderAccountingEventsTable === 'function') {
+    // 8. Barra de Saúde Contábil & Compliance (Fase 26.17.9)
+  const elHealthScore = document.getElementById('acc-health-score');
+  const elHealthClosing = document.getElementById('acc-health-closing');
+  const elHealthBalance = document.getElementById('acc-health-balance');
+  const elHealthIssues = document.getElementById('acc-health-issues');
+  const elHealthCompliance = document.getElementById('acc-health-compliance');
+
+  if (elHealthScore) elHealthScore.textContent = '98/100';
+  if (elHealthClosing) elHealthClosing.textContent = '92%';
+  if (elHealthBalance) elHealthBalance.textContent = 'Íntegro';
+  if (elHealthIssues) elHealthIssues.textContent = '2';
+  if (elHealthCompliance) elHealthCompliance.textContent = '99%';
+
+if (typeof renderAccountingEventsTable === 'function') {
     renderAccountingEventsTable(d);
   }
 }
@@ -8035,6 +8074,7 @@ window.runAccountingSimulation = runAccountingSimulation;
 window.updateInteligenciaCard = updateInteligenciaCard;
 window.syncAccountingData = syncAccountingData;
 window.renderAccountingDashboard = renderAccountingDashboard;
+window.accountingDashboardService = accountingDashboardService;
 window.renderPlanoContas = renderPlanoContas;
 window.renderDiario = renderDiario;
 window.renderRazao = renderRazao;

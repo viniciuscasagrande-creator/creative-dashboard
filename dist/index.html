@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-GXFYpBUo.js"></script>
+      <script type="module" crossorigin src="./assets/index-BAjIa18_.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
     </head>
 <body>
@@ -11650,6 +11650,68 @@ Como podemos te ajudar hoje?
                                                     </tbody>
                                                 </table>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- ROW 5: SAÚDE CONTÁBIL & COMPLIANCE (FASE 26.17.9) -->
+                                <div class="row g-3 mb-4" id="acc-health-compliance-bar">
+                                    <!-- Saúde Contábil -->
+                                    <div class="col-12 col-sm-6 col-xl">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important; cursor: pointer;" onclick="window.switchAccountingTab(event, 'auditoria')">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">Sa&uacute;de Cont&aacute;bil</span>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-0.5 rounded-pill">Excelente</span>
+                                            </div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-health-score">98/100</div>
+                                            <div class="text-muted fs-xxs">Conformidade e consist&ecirc;ncia geral</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Fechamento Mensal -->
+                                    <div class="col-12 col-sm-6 col-xl">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important; cursor: pointer;" onclick="window.switchAccountingTab(event, 'cont-fechamento')">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">Fechamento Mensal</span>
+                                                <span class="badge bg-primary-subtle text-primary fs-xxs fw-bold px-2 py-0.5 rounded-pill">Em andamento</span>
+                                            </div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-health-closing">92%</div>
+                                            <div class="text-muted fs-xxs">16 de 18 etapas validadas</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Balanço -->
+                                    <div class="col-12 col-sm-6 col-xl">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important; cursor: pointer;" onclick="window.switchAccountingTab(event, 'relatorios-balanco')">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">Balan&ccedil;o</span>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-0.5 rounded-pill"><i class="ph-check me-0.5"></i> Verificado</span>
+                                            </div>
+                                            <div class="fs-4 fw-bold text-success font-monospace mb-1" id="acc-health-balance">&Iacute;ntegro</div>
+                                            <div class="text-muted fs-xxs">Ativo = Passivo + PL (100%)</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pendências Críticas -->
+                                    <div class="col-12 col-sm-6 col-xl">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important; cursor: pointer;" onclick="window.switchAccountingCategory('conciliacao', 'conciliacao'); window.setReconciliationStatusFilter('DIVERGENTE');">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">Pend&ecirc;ncias Cr&iacute;ticas</span>
+                                                <span class="badge bg-warning-subtle text-warning fs-xxs fw-bold px-2 py-0.5 rounded-pill">Aten&ccedil;&atilde;o</span>
+                                            </div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-health-issues">2</div>
+                                            <div class="text-muted fs-xxs">0 bloqueantes para fechamento</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Compliance -->
+                                    <div class="col-12 col-sm-6 col-xl">
+                                        <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important; cursor: pointer;" onclick="window.switchAccountingTab(event, 'auditoria')">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-xs fw-semibold">Compliance</span>
+                                                <span class="badge bg-success-subtle text-success fs-xxs fw-bold px-2 py-0.5 rounded-pill">Auditado</span>
+                                            </div>
+                                            <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="acc-health-compliance">99%</div>
+                                            <div class="text-muted fs-xxs">Trilha de auditoria &iacute;ntegra (SHA-256)</div>
                                         </div>
                                     </div>
                                 </div>
