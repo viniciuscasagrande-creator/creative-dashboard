@@ -2253,3 +2253,150 @@ div:has(> canvas),
     padding-left: 0 !important;
   }
 }
+
+/* ==========================================================================
+   CONTABILIDADE DISK - MODERN EXECUTIVE STYLES & MOBILE RESPONSIVENESS
+   ========================================================================== */
+
+/* Category Navigation Pills */
+.accounting-category-pills {
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.accounting-category-pills::-webkit-scrollbar {
+  height: 4px;
+}
+
+.accounting-category-pills::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.accounting-category-pills .nav-link {
+  font-size: 12.5px;
+  color: #495057;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0.4rem 0.85rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.accounting-category-pills .nav-link:hover:not(.active) {
+  background-color: #f1f5f9;
+  color: #0d6efd;
+  border-color: #cbd5e1;
+}
+
+.accounting-category-pills .nav-link.active {
+  background: #0d6efd !important;
+  color: #ffffff !important;
+  border-color: #0d6efd !important;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+}
+
+.accounting-category-pills .nav-link i {
+  font-size: 15px;
+}
+
+/* Contextual Subnav Chips */
+.accounting-subnav-group {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.accounting-subnav-group::-webkit-scrollbar {
+  display: none;
+}
+
+.accounting-subnav-group .btn {
+  font-size: 11.5px;
+  border-radius: 20px;
+  padding: 0.25rem 0.7rem;
+  font-weight: 500;
+  transition: all 0.18s ease-in-out;
+  white-space: nowrap;
+}
+
+.accounting-subnav-group .btn.btn-primary {
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+}
+
+/* Revenue Dynamic Chart Bars */
+.chart-bar-custom {
+  cursor: pointer;
+  transform-origin: bottom;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s ease, filter 0.2s ease, transform 0.2s ease;
+}
+
+.chart-bar-custom:hover {
+  filter: brightness(1.15);
+  transform: scaleY(1.02);
+}
+
+/* Accounting Content Container */
+.accounting-content-container {
+  width: 100%;
+}
+
+.accounting-pane {
+  animation: fadeInPane 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInPane {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Step Flow Simulator */
+#step-sim-venda, #step-sim-gateway, #step-sim-financeiro,
+#step-sim-contabil, #step-sim-conciliacao, #step-sim-repasse {
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+/* Mobile Responsiveness for Accounting Section */
+@media (max-width: 767.98px) {
+  .accounting-category-pills .nav-link {
+    font-size: 11.5px;
+    padding: 0.35rem 0.65rem;
+  }
+
+  .accounting-subnav-group .btn {
+    font-size: 11px;
+    padding: 0.2rem 0.55rem;
+  }
+
+  .accounting-pane .card {
+    border-radius: 8px !important;
+  }
+
+  #acc-chart-bars-container {
+    overflow-x: auto;
+    gap: 4px !important;
+  }
+
+  /* Simulator flow on small screens */
+  .step-flow-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .step-flow-row .col {
+    min-width: 85px;
+    flex: 0 0 auto;
+  }
+}

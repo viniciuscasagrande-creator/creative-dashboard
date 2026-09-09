@@ -6477,8 +6477,290 @@ if (document.readyState === 'loading') {
 
 
 
+/* --- ACCOUNTING CATEGORY MAP & EXECUTIVE NAVIGATION --- */
+const ACCOUNTING_CATEGORY_MAP = {
+  'dashboard': 'visao-geral',
+  'demonstracoes': 'demonstracoes',
+  'plano-contas': 'demonstracoes',
+  'diario': 'demonstracoes',
+  'razao': 'demonstracoes',
+  'lancamentos': 'demonstracoes',
+  'custos': 'demonstracoes',
+  'relatorios-diario': 'demonstracoes',
+  'relatorios-razao': 'demonstracoes',
+  'impostos': 'fiscal',
+  'nfe': 'fiscal',
+  'retencoes': 'fiscal',
+  'declaracoes': 'fiscal',
+  'sped': 'fiscal',
+  'calendario-fiscal': 'fiscal',
+  'conciliacao': 'repasses',
+  'repasses': 'repasses',
+  'receber': 'repasses',
+  'pagar': 'repasses',
+  'movimentacoes': 'repasses',
+  'extratos': 'repasses',
+  'solicitacoes-payout': 'repasses',
+  'regras-split': 'repasses',
+  'simulador': 'simulador',
+  'config-empresas': 'configuracoes',
+  'config-plano': 'configuracoes',
+  'config-users': 'configuracoes',
+  'config-perms': 'configuracoes',
+  'config-integracoes': 'configuracoes',
+  'config-automacoes': 'configuracoes',
+  'auditoria': 'configuracoes',
+  'api': 'configuracoes'
+};
+
+function switchAccountingCategory(category, defaultTab) {
+  // Update category navigation pills
+  const catButtons = document.querySelectorAll('#accounting-category-nav .nav-link');
+  catButtons.forEach(btn => {
+    if (btn.getAttribute('data-category') === category) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Display only matching subnav group
+  const subnavGroups = document.querySelectorAll('.accounting-subnav-group');
+  subnavGroups.forEach(grp => {
+    if (grp.id === `subnav-group-${category}`) {
+      grp.classList.remove('d-none');
+      grp.classList.add('d-flex');
+    } else {
+      grp.classList.remove('d-flex');
+      grp.classList.add('d-none');
+    }
+  });
+
+  // Pick target tab
+  let targetTab = defaultTab;
+  if (!targetTab) {
+    const firstSubBtn = document.querySelector(`#subnav-group-${category} button[data-tab]`);
+    targetTab = firstSubBtn ? firstSubBtn.getAttribute('data-tab') : 'dashboard';
+  }
+
+  switchAccountingTab(null, targetTab);
+}
+
 /* --- switchAccountingTab --- */
-function switchAccountingTab(e,t){e&&e.preventDefault(),currentAccountingTab=t;let n=document.querySelectorAll(`#accounting-nav-pills .nav-link`);n.forEach(e=>e.classList.remove(`active`));let r=Array.from(n).find(e=>{let n=e.getAttribute(`onclick`)||``;return n.includes(`'${t}'`)||n.includes(`"${t}"`)});r&&r.classList.add(`active`),document.querySelectorAll(`.accounting-pane`).forEach(e=>e.style.display=`none`);let i=document.getElementById(`accpane-${t}`);if(i&&(i.style.display=`block`),t===`dashboard`?renderAccountingDashboard():t===`plano-contas`?renderPlanoContas():t===`diario`?renderDiario():t===`razao`?renderRazao():t===`lancamentos`?renderLancamentos():t===`custos`?renderCustos():t===`conciliacao`?renderConciliacao():t===`receber`?renderContasReceber():t===`pagar`?renderContasPagar():t===`repasses`&&renderRepasses(),t===`demonstracoes`){let e=currentAccountingMode===`expert`,t=document.getElementById(`acc-demo-actions-divider`),n=document.getElementById(`acc-demo-expert-actions`);t&&(t.style.display=e?`block`:`none`),n&&(n.style.display=e?`flex`:`none`)}logAudit(`Navegação de Tab`,`Tab anterior`,`Entrou na aba ${t}`)}
+function switchAccountingTab(e, tabName) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  currentAccountingTab = tabName;
+
+  const category = ACCOUNTING_CATEGORY_MAP[tabName] || 'visao-geral';
+
+  // 1. Sync category header nav pills
+  const catButtons = document.querySelectorAll('#accounting-category-nav .nav-link');
+  catButtons.forEach(btn => {
+    if (btn.getAttribute('data-category') === category) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // 2. Sync contextual subnav groups
+  const subnavGroups = document.querySelectorAll('.accounting-subnav-group');
+  subnavGroups.forEach(grp => {
+    if (grp.id === `subnav-group-${category}`) {
+      grp.classList.remove('d-none');
+      grp.classList.add('d-flex');
+    } else {
+      grp.classList.remove('d-flex');
+      grp.classList.add('d-none');
+    }
+  });
+
+  // 3. Highlight the active subnav chip
+  document.querySelectorAll('.accounting-subnav-group button[data-tab]').forEach(btn => {
+    if (btn.getAttribute('data-tab') === tabName) {
+      btn.classList.remove('btn-outline-secondary', 'btn-light');
+      btn.classList.add('btn-primary', 'text-white', 'shadow-xs');
+    } else {
+      btn.classList.remove('btn-primary', 'text-white', 'shadow-xs');
+      btn.classList.add('btn-outline-secondary');
+    }
+  });
+
+  // 4. Sync legacy sidebar pills if still referenced
+  const legacyLinks = document.querySelectorAll('#accounting-nav-pills .nav-link');
+  legacyLinks.forEach(link => {
+    const oc = link.getAttribute('onclick') || '';
+    if (oc.includes(`'${tabName}'`) || oc.includes(`"${tabName}"`)) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+
+  // 5. Switch visible accounting-pane
+  document.querySelectorAll('.accounting-pane').forEach(pane => {
+    pane.style.display = 'none';
+  });
+  const activePane = document.getElementById(`accpane-${tabName}`);
+  if (activePane) {
+    activePane.style.display = 'block';
+  }
+
+  // 6. Invoke pane render functions
+  if (tabName === 'dashboard') {
+    renderAccountingDashboard();
+  } else if (tabName === 'simulador') {
+    const simIngressos = document.getElementById('sim-res-rec-ingressos');
+    if (!simIngressos || simIngressos.textContent === 'R$ 0,00' || simIngressos.textContent === '-') {
+      if (typeof runAccountingSimulation === 'function') runAccountingSimulation();
+    }
+  } else if (tabName === 'plano-contas') {
+    renderPlanoContas();
+  } else if (tabName === 'diario') {
+    renderDiario();
+  } else if (tabName === 'razao') {
+    renderRazao();
+  } else if (tabName === 'lancamentos') {
+    renderLancamentos();
+  } else if (tabName === 'custos') {
+    renderCustos();
+  } else if (tabName === 'conciliacao') {
+    renderConciliacao();
+  } else if (tabName === 'receber') {
+    renderContasReceber();
+  } else if (tabName === 'pagar') {
+    renderContasPagar();
+  } else if (tabName === 'repasses') {
+    renderRepasses();
+  } else if (tabName === 'impostos') {
+    if (typeof renderImpostos === 'function') renderImpostos();
+  } else if (tabName === 'nfe') {
+    if (typeof renderNfe === 'function') renderNfe();
+  } else if (tabName === 'auditoria') {
+    if (typeof renderAuditoria === 'function') renderAuditoria();
+  }
+
+  if (tabName === 'demonstracoes') {
+    const isExp = currentAccountingMode === 'expert';
+    const divider = document.getElementById('acc-demo-actions-divider');
+    const expertActions = document.getElementById('acc-demo-expert-actions');
+    if (divider) divider.style.display = isExp ? 'block' : 'none';
+    if (expertActions) expertActions.style.display = isExp ? 'flex' : 'none';
+  }
+
+  if (typeof logAudit === 'function') {
+    logAudit('Navegação Contábil', 'Mudar Aba', `Acessou aba ${tabName} (Pilar: ${category})`);
+  }
+}
+
+/* --- updateChartRange --- */
+function updateChartRange(range, btn) {
+  if (btn && btn.parentElement) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  const container = document.getElementById('acc-chart-bars-container');
+  if (!container) return;
+
+  const configs = {
+    'hoje': [
+      { label: '00-04h', val: 3200, pct: 35 },
+      { label: '04-08h', val: 1800, pct: 20 },
+      { label: '08-12h', val: 14500, pct: 75 },
+      { label: '12-16h', val: 22100, pct: 95 },
+      { label: '16-20h', val: 18900, pct: 82 },
+      { label: '20-24h', val: 4481, pct: 40 }
+    ],
+    '7d': [
+      { label: 'Seg', val: 8200, pct: 55 },
+      { label: 'Ter', val: 9400, pct: 62 },
+      { label: 'Qua', val: 12100, pct: 80 },
+      { label: 'Qui', val: 14800, pct: 95 },
+      { label: 'Sex', val: 11200, pct: 72 },
+      { label: 'Sáb', val: 6100, pct: 42 },
+      { label: 'Dom', val: 3181, pct: 25 }
+    ],
+    '30d': [
+      { label: '01-05', val: 8450, pct: 45 },
+      { label: '06-10', val: 11200, pct: 60 },
+      { label: '11-15', val: 15800, pct: 85 },
+      { label: '16-20', val: 18400, pct: 95 },
+      { label: '21-25', val: 7600, pct: 42 },
+      { label: '26-30', val: 3531, pct: 28 }
+    ],
+    '90d': [
+      { label: 'Mês -2 (Abr)', val: 48200, pct: 68 },
+      { label: 'Mês -1 (Mai)', val: 56400, pct: 80 },
+      { label: 'Mês Atual (Jun)', val: 64981, pct: 92 }
+    ],
+    'ano': [
+      { label: 'Jan', val: 34000, pct: 50 },
+      { label: 'Fev', val: 38500, pct: 58 },
+      { label: 'Mar', val: 42100, pct: 64 },
+      { label: 'Abr', val: 48200, pct: 72 },
+      { label: 'Mai', val: 56400, pct: 84 },
+      { label: 'Jun', val: 64981, pct: 96 }
+    ]
+  };
+
+  const series = configs[range] || configs['30d'];
+  container.innerHTML = series.map(item => `
+    <div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end" style="min-width: 32px;" title="${item.label}: R$ ${item.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}">
+      <span class="fs-xxs fw-bold font-monospace text-muted mb-1" style="font-size: 9px;">${item.pct}%</span>
+      <div class="w-100 rounded-top chart-bar-custom" style="height: ${item.pct}%; background: linear-gradient(180deg, #3d78e3 0%, #1e52b5 100%); transition: height 0.4s ease;"></div>
+      <span class="fs-xxs text-muted mt-1 text-nowrap" style="font-size: 10px;">${item.label}</span>
+    </div>
+  `).join('');
+}
+
+/* --- exportAccountingPDF --- */
+function exportAccountingPDF() {
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('info', 'Exportação Contábil', 'Preparando relatório executivo contábil para impressão/PDF...');
+  }
+  setTimeout(() => {
+    window.print();
+  }, 400);
+}
+
+/* --- runApiConsoleRequest --- */
+function runApiConsoleRequest() {
+  const methodEl = document.getElementById('api-console-method');
+  const endpointEl = document.getElementById('api-console-endpoint');
+  const statusEl = document.getElementById('api-console-status');
+  const responseEl = document.getElementById('api-console-response');
+  const endpoint = endpointEl ? endpointEl.value : '/v1/accounting/lancamentos';
+  
+  if (statusEl) statusEl.textContent = 'HTTP Status: 200 OK';
+  if (responseEl) {
+    if (endpoint.includes('lancamentos')) {
+      responseEl.textContent = JSON.stringify({
+        status: 'success',
+        endpoint: endpoint,
+        timestamp: new Date().toISOString(),
+        total_records: typeof ACC_LANCAMENTOS !== 'undefined' ? ACC_LANCAMENTOS.length : 12,
+        sample: typeof ACC_LANCAMENTOS !== 'undefined' ? ACC_LANCAMENTOS.slice(0, 3) : []
+      }, null, 2);
+    } else if (endpoint.includes('dre')) {
+      responseEl.textContent = JSON.stringify({
+        status: 'success',
+        period: '2026-06',
+        receita_bruta: 64981.90,
+        taxas_markup: 5198.55,
+        custos_gateway: 1624.54,
+        repasses_liquidados: 55434.62,
+        resultado_liquido: 3574.01
+      }, null, 2);
+    } else {
+      responseEl.textContent = JSON.stringify({
+        status: 'success',
+        message: `Endpoint ${endpoint} respondendo normalmente via API Gateway DiskIngressos.`,
+        latency_ms: 38
+      }, null, 2);
+    }
+  }
+}
 
 /* --- switchAccountingMode --- */
 function switchAccountingMode(e){currentAccountingMode=e,[`standard`,`advanced`,`expert`].forEach(t=>{let n=document.getElementById(`btn-mode-${t}`);n&&(t===e?n.classList.add(`active`):n.classList.remove(`active`))}),typeof Zy==`function`&&Zy(e),addSystemNotification(`info`,`Módulo de Contabilidade`,`Modo do painel contábil alterado para ${e.toUpperCase()} com sucesso.`),switchAccountingTab(null,currentAccountingTab)}
@@ -6717,17 +6999,65 @@ function updateInteligenciaCard(e){let t=document.getElementById(`acc-intelligen
 function syncAccountingData(){let e=document.getElementById(`btn-sync-accounting-data`),t=e.innerHTML;e.disabled=!0,e.innerHTML=`<i class="ph-spinner spinner me-1"></i> Sincronizando...`,setTimeout(()=>{e.innerHTML=`<i class="ph-spinner spinner me-1"></i> Processando...`,setTimeout(()=>{e.innerHTML=`<i class="ph-check-circle me-1"></i> Concluído`,e.classList.remove(`btn-outline-primary`),e.classList.add(`btn-success`);let n=new Date().toISOString().split(`T`)[0];ACC_LANCAMENTOS.unshift({id:Date.now(),date:n,desc:`Sincronização Automática - Vendas Balbúrdia (Yii DB)`,debit:`1.1.04 - Contas a Receber (Adquirentes)`,credit:`4.1.01 - Receita Venda Ingressos`,value:5200,eventId:1653,costCenter:`Eventos`}),ACC_LANCAMENTOS.unshift({id:Date.now()+1,date:n,desc:`Sincronização Automática - Taxa Gateway Stone`,debit:`5.1.01 - Despesa Gateway de Pagamento`,credit:`1.1.04 - Contas a Receber (Adquirentes)`,value:130,eventId:1653,costCenter:`Financeiro`}),renderAccountingDashboard(),window.renderDiario&&window.renderDiario(),window.renderRazao&&window.renderRazao(),logAudit(`Sincronização`,`Vendas & Gateway`,`Sincronização forçada efetuada com sucesso.`),addSystemNotification(`success`,`Sincronização Concluída`,`Todos os indicadores do painel contábil foram atualizados.`),setTimeout(()=>{e.disabled=!1,e.innerHTML=t,e.classList.remove(`btn-success`),e.classList.add(`btn-outline-primary`)},2e3)},1500)},1500)}
 
 /* --- renderAccountingDashboard --- */
-function renderAccountingDashboard(){let e=0,t=0,n=0;ACC_LANCAMENTOS.forEach(r=>{r.credit===`4.1.01 - Receita Venda Ingressos`&&(e+=r.value),(r.debit===`5.1.01 - Despesa Gateway de Pagamento`||r.debit===`5.1.01 - Despesa Gateway`)&&(t+=r.value),r.debit===`2.1.02 - Produtores a Pagar (Repasses)`&&(n+=r.value)});let r=e-t,i=document.getElementById(`acc-kpi-receita-bruta`),a=document.getElementById(`acc-kpi-receita-liquida`),o=document.getElementById(`acc-kpi-taxas`),s=document.getElementById(`acc-kpi-repasses`);i&&(i.textContent=`R$ ${e.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`),a&&(a.textContent=`R$ ${r.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`),o&&(o.textContent=`R$ ${t.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`),s&&(s.textContent=`R$ ${n.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}`);let c=document.getElementById(`acc-dashboard-events-tbody`);c&&EVENTS_DATA&&TICKETS_DATA&&(c.innerHTML=EVENTS_DATA.map(e=>{let t=TICKETS_DATA.filter(t=>t.eventId===e.id||t.eventId===e.id.toString()),n=t.length,r=0;t.forEach(e=>{let t=parseFloat(e.price)||0;r+=t}),r===0&&(r=e.id===1653?18500:e.id===1677?24200:e.id===1545?12900:2500);let i=r*.08,a=r-i;return`
+function renderAccountingDashboard() {
+  let e = 0, t = 0, n = 0;
+  if (typeof ACC_LANCAMENTOS !== 'undefined') {
+    ACC_LANCAMENTOS.forEach(r => {
+      if (r.credit === '4.1.01 - Receita Venda Ingressos') e += r.value;
+      if (r.debit === '5.1.01 - Despesa Gateway de Pagamento' || r.debit === '5.1.01 - Despesa Gateway') t += r.value;
+      if (r.debit === '2.1.02 - Produtores a Pagar (Repasses)') n += r.value;
+    });
+  }
+  let r = e - t;
+  let i = document.getElementById('acc-kpi-receita-bruta');
+  let a = document.getElementById('acc-kpi-receita-liquida');
+  let o = document.getElementById('acc-kpi-taxas');
+  let s = document.getElementById('acc-kpi-repasses');
+  let kImpostos = document.getElementById('acc-kpi-impostos');
+  let kConciliar = document.getElementById('acc-kpi-conciliar');
+
+  if (i) i.textContent = `R$ ${e.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+  if (a) a.textContent = `R$ ${r.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+  if (o) o.textContent = `R$ ${t.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+  if (s) s.textContent = `R$ ${n.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+  // Simples Nacional DAS (~6.5% s/ comissão/markup líquida)
+  let valImpostos = Math.max(0, (r - n) * 0.065);
+  if (kImpostos) {
+    kImpostos.textContent = `R$ ${valImpostos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+  }
+
+  // Pendências de Conciliação
+  let countPend = (typeof ACC_CONCILIACAO_PENDENTES !== 'undefined' && Array.isArray(ACC_CONCILIACAO_PENDENTES)) ? ACC_CONCILIACAO_PENDENTES.length : 3;
+  if (kConciliar) {
+    kConciliar.textContent = `${countPend} pendentes`;
+  }
+
+  // Events Table
+  let c = document.getElementById('acc-dashboard-events-tbody');
+  if (c && typeof EVENTS_DATA !== 'undefined' && typeof TICKETS_DATA !== 'undefined') {
+    c.innerHTML = EVENTS_DATA.map(e => {
+      let t = TICKETS_DATA.filter(t => t.eventId === e.id || t.eventId === e.id.toString());
+      let n = t.length;
+      let r = 0;
+      t.forEach(ev => { let price = parseFloat(ev.price) || 0; r += price; });
+      if (r === 0) r = (e.id === 1653 ? 18500 : e.id === 1677 ? 24200 : e.id === 1545 ? 12900 : 2500);
+      let i = r * 0.08;
+      let a = r - i;
+      return `
         <tr>
           <td><span class="badge bg-light text-dark font-monospace">${e.id}</span></td>
           <td><strong>${e.name}</strong></td>
           <td><i class="ph-map-pin me-1 opacity-70"></i> ${e.location}</td>
-          <td class="text-center font-monospace">${n||12}</td>
-          <td class="text-end fw-bold font-monospace text-dark">R$ ${r.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</td>
-          <td class="text-end text-danger font-monospace">R$ ${i.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</td>
-          <td class="text-end text-success fw-bold font-monospace">R$ ${a.toLocaleString(`pt-BR`,{minimumFractionDigits:2})}</td>
+          <td class="text-center font-monospace">${n || 12}</td>
+          <td class="text-end fw-bold font-monospace text-dark">R$ ${r.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+          <td class="text-end text-danger font-monospace">R$ ${i.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+          <td class="text-end text-success fw-bold font-monospace">R$ ${a.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
         </tr>
-      `}).join(``))}
+      `;
+    }).join('');
+  }
+}
 
 /* --- renderPlanoContas --- */
 function renderPlanoContas(){let e=document.getElementById(`acc-plano-contas-tree`);e&&(e.innerHTML=ACCOUNTING_PLANO_CONTAS.map(e=>{let t=`ps-0`,n=e.parent===null,r=e.code.split(`.`).length>2;return r?t=`ps-4`:n||(t=`ps-3`),`
@@ -7117,6 +7447,11 @@ window.initAgendaGeneralModule = initAgendaGeneralModule;
 
 // Bind all accounting functions to window
 window.switchAccountingTab = switchAccountingTab;
+window.switchAccountingCategory = switchAccountingCategory;
+window.updateChartRange = updateChartRange;
+window.exportAccountingPDF = exportAccountingPDF;
+window.runApiConsoleRequest = runApiConsoleRequest;
+
 window.switchAccountingMode = switchAccountingMode;
 window.showAddAccountModal = showAddAccountModal;
 window.filterLivroRazao = filterLivroRazao;

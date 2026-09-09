@@ -614,7 +614,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </section>
                     <!-- SUBTAB 1.2: Agenda (Calendário de Eventos) -->
                     <section id="view-dashboard-agenda" class="page-section"  style="display:none;">
@@ -1225,9 +1224,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                             </div>
-                        </div>
                     </section>
                     <!-- SUBTAB 2.4: Cupons Manager -->
                     <section id="view-events-cupons" class="page-section" style="display: none;">
@@ -1253,7 +1250,6 @@
                                         <!-- Will be populated dynamically -->
                                     </tbody>
                                 </table>
-                            </div>
                         </div>
                     </section>
                     <!-- SUBTAB 2.5: Check-in Portaria -->
@@ -1300,7 +1296,6 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
                         </div>
                     </section>
                     <!-- SUBTAB 2.7: Página do Evento -->
@@ -1320,9 +1315,7 @@
                                         <button class="btn btn-outline-light border text-dark me-2"><i class="ph-qr-code me-1"></i> Gerar QR Code</button>
                                         <button class="btn btn-outline-light border text-dark"><i class="ph-share-network me-1"></i> Compartilhar Link</button>
                                     </div>
-                                </div>
                             </div>
-                        </div>
                     </section>
                     <!-- ==========================================================================
                        3. FINANCEIRO SECTION
@@ -1643,7 +1636,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
                         </div>
                     </section>
 
@@ -1892,7 +1884,6 @@
                                     </tbody>
                                 </table>
                                 </div>
-                            </div>
                         </div>
                     </section>
 
@@ -1959,7 +1950,6 @@
                                     </tbody>
                                 </table>
                                 </div>
-                            </div>
                         </div>
                     </section>
 
@@ -2272,7 +2262,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
                         </div>
                     </section>
 
@@ -2439,7 +2428,6 @@
                                         </table>
                                     </div>
                                 </div>
-                            </div>
                         </div>
                     </section>
 
@@ -10745,371 +10733,543 @@ Como podemos te ajudar hoje?
                             </div>
                         </div>
 
-                        <!-- Main Split Grid layout -->
-                        <div class="row g-3">
-                            <!-- Left Sub-Tabs Navigation Column -->
-                            <div class="col-lg-3 col-xl-2.5">
-                                <div class="card shadow-sm border p-2" style="border-radius: 12px;">
-                                    <div class="nav flex-column nav-pills text-start fs-xs fw-semibold gap-1" id="accounting-nav-pills" role="tablist" style="max-height: 80vh; overflow-y: auto;">
-                                        <!-- CONTABILIDADE -->
-                                        <div class="px-2 py-1 text-uppercase fw-bold text-muted bg-light rounded fs-xxs mt-2 d-flex align-items-center gap-1">
-                                            <i class="ph-book-open"></i> Contabilidade
-                                        </div>
-                                        <a class="nav-link active py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'dashboard')">
-                                            <i class="ph-presentation-chart fs-6"></i> Dashboard Contábil
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'plano-contas')">
-                                            <i class="ph-list-bullets fs-6"></i> Plano de Contas
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'diario')">
-                                            <i class="ph-notebook fs-6"></i> Livro Diário
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'razao')">
-                                            <i class="ph-book fs-6"></i> Livro Razão
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'lancamentos')">
-                                            <i class="ph-pencil fs-6"></i> Lançamentos Contábeis
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'custos')">
-                                            <i class="ph-chart-pie-slice fs-6"></i> Centro de Custos
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'cont-hist')">
-                                            <i class="ph-clock-counter-clockwise fs-6"></i> Histórico
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'auditoria')">
-                                            <i class="ph-shield-check fs-6"></i> Auditoria
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'cont-fechamento')">
-                                            <i class="ph-lock fs-6"></i> Fechamento
-                                        </a>
+                        <!-- Category & Subtabs Navigation Controller Card -->
+                        <div class="card shadow-sm border mb-3 p-2 bg-white" style="border-radius: 10px;">
+                            <!-- Main Category Pills (Horizontal, responsive, scrollable on mobile) -->
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                                <ul class="nav nav-pills accounting-category-pills flex-nowrap overflow-x-auto py-1 px-1 gap-1" id="accounting-category-nav" role="tablist" style="scrollbar-width: thin;">
+                                    <li class="nav-item text-nowrap">
+                                        <button type="button" class="nav-link active px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" data-category="visao-geral" onclick="window.switchAccountingCategory('visao-geral', 'dashboard')">
+                                            <i class="ph-presentation-chart fs-6"></i>
+                                            <span>Visão Geral</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item text-nowrap">
+                                        <button type="button" class="nav-link px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" data-category="demonstracoes" onclick="window.switchAccountingCategory('demonstracoes', 'demonstracoes')">
+                                            <i class="ph-book-open fs-6"></i>
+                                            <span>Demonstrações & Livros</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item text-nowrap">
+                                        <button type="button" class="nav-link px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" data-category="fiscal" onclick="window.switchAccountingCategory('fiscal', 'impostos')">
+                                            <i class="ph-scales fs-6"></i>
+                                            <span>Fiscal & Tributário</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item text-nowrap">
+                                        <button type="button" class="nav-link px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" data-category="repasses" onclick="window.switchAccountingCategory('repasses', 'repasses')">
+                                            <i class="ph-hand-coins fs-6"></i>
+                                            <span>Repasses & Conciliação</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item text-nowrap">
+                                        <button type="button" class="nav-link px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" data-category="simulador" onclick="window.switchAccountingCategory('simulador', 'simulador')">
+                                            <i class="ph-cpu fs-6 text-warning"></i>
+                                            <span>Simulador de Ciclo</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item text-nowrap">
+                                        <button type="button" class="nav-link px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" data-category="configuracoes" onclick="window.switchAccountingCategory('configuracoes', 'auditoria')">
+                                            <i class="ph-gear fs-6"></i>
+                                            <span>Configurações & Auditoria</span>
+                                        </button>
+                                    </li>
+                                </ul>
 
-                                        <!-- FISCAL -->
-                                        <div class="px-2 py-1 text-uppercase fw-bold text-muted bg-light rounded fs-xxs mt-2 d-flex align-items-center gap-1">
-                                            <i class="ph-scales"></i> Fiscal
-                                        </div>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'impostos')">
-                                            <i class="ph-file-text fs-6"></i> Impostos
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'fiscal-nfse')">
-                                            <i class="ph-receipt fs-6"></i> NFS-e
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'fiscal-nfe')">
-                                            <i class="ph-ticket fs-6"></i> NF-e
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'fiscal-sped')">
-                                            <i class="ph-hard-drive fs-6"></i> SPED
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'fiscal-obrigacoes')">
-                                            <i class="ph-calendar fs-6"></i> Obrigações
-                                        </a>
-
-                                        <!-- REPASSES -->
-                                        <div class="px-2 py-1 text-uppercase fw-bold text-muted bg-light rounded fs-xxs mt-2 d-flex align-items-center gap-1">
-                                            <i class="ph-hand-coins"></i> Repasses
-                                        </div>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'repasses')">
-                                            <i class="ph-users fs-6"></i> Produtores
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'repasses-extratos')">
-                                            <i class="ph-article fs-6"></i> Extratos
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'repasses-pix')">
-                                            <i class="ph-lightning fs-6"></i> PIX
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'repasses-ted')">
-                                            <i class="ph-bank fs-6"></i> TED
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'repasses-hist')">
-                                            <i class="ph-history fs-6"></i> Histórico
-                                        </a>
-
-                                        <!-- RELATÓRIOS -->
-                                        <div class="px-2 py-1 text-uppercase fw-bold text-muted bg-light rounded fs-xxs mt-2 d-flex align-items-center gap-1">
-                                            <i class="ph-file-pdf"></i> Relatórios
-                                        </div>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'relatorios-dre')">
-                                            <i class="ph-presentation fs-6"></i> DRE
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'relatorios-balanco')">
-                                            <i class="ph-activity fs-6"></i> Balanço
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'relatorios-fluxo')">
-                                            <i class="ph-chart-line-up fs-6"></i> Fluxo Caixa
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'relatorios-balancete')">
-                                            <i class="ph-file-text fs-6"></i> Balancete
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'relatorios-diario')">
-                                            <i class="ph-book-open-text fs-6"></i> Livro Diário
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'relatorios-razao')">
-                                            <i class="ph-book-bookmark fs-6"></i> Livro Razão
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'demonstracoes')">
-                                            <i class="ph-export fs-6"></i> Exportações
-                                        </a>
-
-                                        <!-- CONFIGURAÇÕES -->
-                                        <div class="px-2 py-1 text-uppercase fw-bold text-muted bg-light rounded fs-xxs mt-2 d-flex align-items-center gap-1">
-                                            <i class="ph-gear"></i> Configurações
-                                        </div>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'config-empresas')">
-                                            <i class="ph-buildings fs-6"></i> Empresas
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'config-plano')">
-                                            <i class="ph-squares-four fs-6"></i> Plano Contábil
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'config-users')">
-                                            <i class="ph-users-four fs-6"></i> Usuários
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'config-perms')">
-                                            <i class="ph-key fs-6"></i> Permissões
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'config-integracoes')">
-                                            <i class="ph-plugs fs-6"></i> Integrações
-                                        </a>
-                                        <a class="nav-link py-1 px-3 d-flex align-items-center gap-2" href="#" onclick="window.switchAccountingTab(event, 'config-automacoes')">
-                                            <i class="ph-cpu fs-6"></i> Automações
-                                        </a>
-                                    </div>
+                                <div class="d-none d-lg-flex align-items-center gap-2 pe-2 text-nowrap">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs py-1 px-2">
+                                        <i class="ph-shield-check me-1"></i> Livros Fiscais em Dia
+                                    </span>
                                 </div>
                             </div>
 
-                            <!-- Right Content Panes Column -->
-                            <div class="col-lg-9 col-xl-9.5">
-                                <!-- TAB PANE: Dashboard -->
-                                <div class="accounting-pane" id="accpane-dashboard">
-                                    <!-- Realtime accounting metrics widgets row -->
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-md-3 col-sm-6">
-                                            <div class="card card-body p-3 shadow-sm border border-light text-start h-100">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Receita Bruta</span>
-                                                <h4 class="fw-bold mb-0 text-primary font-monospace" id="acc-kpi-receita-bruta">R$ 64.981,90</h4>
-                                                <span class="fs-xxs text-muted mt-2"><i class="ph-chart-line text-success"></i> Sincronizado do Vendas</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 col-sm-6">
-                                            <div class="card card-body p-3 shadow-sm border border-light text-start h-100">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Receita Líquida</span>
-                                                <h4 class="fw-bold mb-0 text-success font-monospace" id="acc-kpi-receita-liquida">R$ 55.434,62</h4>
-                                                <span class="fs-xxs text-muted mt-2"><i class="ph-percent"></i> Taxas deduzidas</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 col-sm-6">
-                                            <div class="card card-body p-3 shadow-sm border border-light text-start h-100">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Taxas Gateway / Plataforma</span>
-                                                <h4 class="fw-bold mb-0 text-danger font-monospace" id="acc-kpi-taxas">R$ 9.547,28</h4>
-                                                <span class="fs-xxs text-muted mt-2"><i class="ph-warning"></i> Custos financeiros</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 col-sm-6">
-                                            <div class="card card-body p-3 shadow-sm border border-light text-start h-100">
-                                                <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Repasses Efetuados</span>
-                                                <h4 class="fw-bold mb-0 text-dark font-monospace" id="acc-kpi-repasses">R$ 22.880,00</h4>
-                                                <span class="fs-xxs text-muted mt-2"><i class="ph-check-circle text-success"></i> Pago via PIX/TED</span>
-                                            </div>
+                            <!-- Contextual Sub-Nav Bar (Shown when a category with sub-views is active) -->
+                            <div id="accounting-subnav-container" class="border-top pt-2 mt-1" style="display: none;">
+                                <!-- Group: Demonstrações & Livros -->
+                                <div class="accounting-subnav-group flex-nowrap overflow-x-auto gap-1" id="subnav-group-demonstracoes" style="display: none; scrollbar-width: thin;">
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="demonstracoes" onclick="window.switchAccountingTab(event, 'demonstracoes')"><i class="ph-file-text me-1 text-primary"></i> DRE & Balanço</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="relatorios-dre" onclick="window.switchAccountingTab(event, 'relatorios-dre')"><i class="ph-presentation me-1 text-primary"></i> DRE Gerencial</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="relatorios-balanco" onclick="window.switchAccountingTab(event, 'relatorios-balanco')"><i class="ph-activity me-1 text-primary"></i> Balanço Patrimonial</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="relatorios-balancete" onclick="window.switchAccountingTab(event, 'relatorios-balancete')"><i class="ph-file-text me-1 text-primary"></i> Balancete</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="diario" onclick="window.switchAccountingTab(event, 'diario')"><i class="ph-notebook me-1 text-primary"></i> Livro Diário</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="razao" onclick="window.switchAccountingTab(event, 'razao')"><i class="ph-book me-1 text-primary"></i> Livro Razão</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="lancamentos" onclick="window.switchAccountingTab(event, 'lancamentos')"><i class="ph-pencil me-1 text-primary"></i> Lançamentos Contábeis</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="plano-contas" onclick="window.switchAccountingTab(event, 'plano-contas')"><i class="ph-list-bullets me-1 text-primary"></i> Plano de Contas</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="custos" onclick="window.switchAccountingTab(event, 'custos')"><i class="ph-chart-pie-slice me-1 text-primary"></i> Centro de Custos</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="relatorios-fluxo" onclick="window.switchAccountingTab(event, 'relatorios-fluxo')"><i class="ph-chart-line-up me-1 text-primary"></i> Fluxo de Caixa</button>
+                                </div>
+
+                                <!-- Group: Fiscal & Tributário -->
+                                <div class="accounting-subnav-group flex-nowrap overflow-x-auto gap-1" id="subnav-group-fiscal" style="display: none; scrollbar-width: thin;">
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="impostos" onclick="window.switchAccountingTab(event, 'impostos')"><i class="ph-scales me-1 text-danger"></i> Apuração de Impostos</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="fiscal-nfse" onclick="window.switchAccountingTab(event, 'fiscal-nfse')"><i class="ph-receipt me-1 text-primary"></i> NFS-e Prefeitura</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="fiscal-nfe" onclick="window.switchAccountingTab(event, 'fiscal-nfe')"><i class="ph-ticket me-1 text-primary"></i> NF-e Faturamento</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="fiscal-sped" onclick="window.switchAccountingTab(event, 'fiscal-sped')"><i class="ph-hard-drive me-1 text-primary"></i> SPED Contábil ECD/ECF</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="fiscal-obrigacoes" onclick="window.switchAccountingTab(event, 'fiscal-obrigacoes')"><i class="ph-calendar me-1 text-warning"></i> Calendário de Obrigações</button>
+                                </div>
+
+                                <!-- Group: Repasses & Conciliação -->
+                                <div class="accounting-subnav-group flex-nowrap overflow-x-auto gap-1" id="subnav-group-repasses" style="display: none; scrollbar-width: thin;">
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="repasses" onclick="window.switchAccountingTab(event, 'repasses')"><i class="ph-users me-1 text-success"></i> Repasses a Produtores</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="conciliacao" onclick="window.switchAccountingTab(event, 'conciliacao')"><i class="ph-arrows-left-right me-1 text-primary"></i> Conciliação Bancária & OFX</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="receber" onclick="window.switchAccountingTab(event, 'receber')"><i class="ph-arrow-down-left me-1 text-success"></i> Contas a Receber</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="pagar" onclick="window.switchAccountingTab(event, 'pagar')"><i class="ph-arrow-up-right me-1 text-danger"></i> Contas a Pagar</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="repasses-extratos" onclick="window.switchAccountingTab(event, 'repasses-extratos')"><i class="ph-article me-1 text-primary"></i> Extratos de Borderô</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="repasses-pix" onclick="window.switchAccountingTab(event, 'repasses-pix')"><i class="ph-lightning me-1 text-warning"></i> PIX Instantâneo</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="repasses-ted" onclick="window.switchAccountingTab(event, 'repasses-ted')"><i class="ph-bank me-1 text-primary"></i> TED Bancária</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="repasses-hist" onclick="window.switchAccountingTab(event, 'repasses-hist')"><i class="ph-clock-counter-clockwise me-1 text-muted"></i> Histórico de Repasses</button>
+                                </div>
+
+                                <!-- Group: Configurações & Auditoria -->
+                                <div class="accounting-subnav-group flex-nowrap overflow-x-auto gap-1" id="subnav-group-configuracoes" style="display: none; scrollbar-width: thin;">
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="auditoria" onclick="window.switchAccountingTab(event, 'auditoria')"><i class="ph-shield-check me-1 text-primary"></i> Auditoria & Logs</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="cont-fechamento" onclick="window.switchAccountingTab(event, 'cont-fechamento')"><i class="ph-lock me-1 text-warning"></i> Fechamento Contábil</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="config-empresas" onclick="window.switchAccountingTab(event, 'config-empresas')"><i class="ph-buildings me-1 text-primary"></i> Empresas & Filiais</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="config-plano" onclick="window.switchAccountingTab(event, 'config-plano')"><i class="ph-squares-four me-1 text-primary"></i> Config. Plano Contábil</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="config-integracoes" onclick="window.switchAccountingTab(event, 'config-integracoes')"><i class="ph-plugs me-1 text-primary"></i> Integrações ERP (Conta Azul / SAP)</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="config-automacoes" onclick="window.switchAccountingTab(event, 'config-automacoes')"><i class="ph-cpu me-1 text-primary"></i> Automações Fiscais</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold text-nowrap" data-tab="config-users" onclick="window.switchAccountingTab(event, 'config-users')"><i class="ph-users-four me-1 text-primary"></i> Usuários & Permissões</button>
+                                </div>
+                            </div>
+
+                            <!-- Fallback hidden list for legacy script compatibility with #accounting-nav-pills -->
+                            <div class="d-none" id="accounting-nav-pills" role="tablist">
+                                <a class="nav-link active" href="#" onclick="window.switchAccountingTab(event, 'dashboard')">Dashboard</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'plano-contas')">Plano de Contas</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'diario')">Livro Diário</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'razao')">Livro Razão</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'lancamentos')">Lançamentos</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'custos')">Centro de Custos</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'cont-hist')">Histórico</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'auditoria')">Auditoria</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'cont-fechamento')">Fechamento</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'impostos')">Impostos</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-nfse')">NFS-e</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-nfe')">NF-e</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-sped')">SPED</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-obrigacoes')">Obrigações</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses')">Produtores</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-extratos')">Extratos</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-pix')">PIX</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-ted')">TED</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-hist')">Histórico</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-dre')">DRE</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-balanco')">Balanço</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-fluxo')">Fluxo Caixa</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-balancete')">Balancete</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-diario')">Livro Diário</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-razao')">Livro Razão</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'demonstracoes')">Exportações</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-empresas')">Empresas</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-plano')">Plano Contábil</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-users')">Usuários</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-perms')">Permissões</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-integracoes')">Integrações</a>
+                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-automacoes')">Automações</a>
+                            </div>
+                        </div>
+
+                        <!-- All Accounting Panes Container (Full Width, Spacious) -->
+                        <div class="accounting-content-container">
+                            <!-- TAB PANE: Dashboard -->
+                            <div class="accounting-pane" id="accpane-dashboard">
+                                <!-- Realtime accounting metrics widgets row (6 KPI Cards) -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card card-body p-2.5 shadow-sm border border-light text-start h-100 bg-white">
+                                            <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Receita Bruta Total</span>
+                                            <h5 class="fw-bold mb-0 text-primary font-monospace" id="acc-kpi-receita-bruta">R$ 64.981,90</h5>
+                                            <span class="fs-xxs text-muted mt-2 text-truncate"><i class="ph-chart-line text-success"></i> Sincronizado Yii</span>
                                         </div>
                                     </div>
-                                    </div>
-
-                                    <!-- INTERACTIVE CONTABILIDADE LIFECYCLE SIMULATOR -->
-                                    <div class="card shadow-sm border mb-3" style="border-radius: 12px; border-left: 4px solid #f38d4f;">
-                                        <div class="card-header bg-transparent py-2.5 d-flex justify-content-between align-items-center">
-                                            <h6 class="fw-bold mb-0 text-dark"><i class="ph-cpu text-warning me-1"></i> Simulador Contábil de Ciclo de Venda Completo (Yii & Gateway)</h6>
-                                            <span class="badge bg-light text-primary font-monospace fs-xxs">Demonstrador Integrado</span>
-                                        </div>
-                                        <div class="card-body p-3">
-                                            <p class="text-muted fs-xs mb-3">Simule uma venda de ingresso e veja como os valores fluem em tempo real do faturamento até o Balanço Patrimonial e DRE.</p>
-                                            
-                                            <!-- Simulation form inputs -->
-                                            <div class="row g-2 mb-3 bg-light p-2 rounded">
-                                                <div class="col-md-2.5 col-sm-6">
-                                                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Preço do Ingresso:</label>
-                                                    <input type="number" class="form-control form-control-sm font-monospace fw-bold" id="sim-ticket-price" value="100.00" step="10">
-                                                </div>
-                                                <div class="col-md-2.5 col-sm-6">
-                                                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Taxa Conveniência:</label>
-                                                    <input type="number" class="form-control form-control-sm font-monospace fw-bold" id="sim-ticket-tax" value="10.00" step="2">
-                                                </div>
-                                                <div class="col-md-3 col-sm-6">
-                                                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Taxa Gateway (Meio):</label>
-                                                    <select class="form-select form-select-sm font-monospace" id="sim-gateway-type">
-                                                        <option value="cc" selected>Crédito (2.5% + R$ 0.50)</option>
-                                                        <option value="pix">PIX API (0.99% fixo)</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-2 col-sm-6">
-                                                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Comissão Produtor:</label>
-                                                    <select class="form-select form-select-sm" id="sim-commission-pct">
-                                                        <option value="10" selected>10%</option>
-                                                        <option value="15">15%</option>
-                                                        <option value="5">5%</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-2 col-sm-12 d-flex align-items-end">
-                                                    <button class="btn btn-sm btn-primary fw-bold w-100 py-1" onclick="window.runAccountingSimulation()"><i class="ph-play me-1"></i> Simular</button>
-                                                </div>
-                                            </div>
-
-                                            <!-- Visual flow diagram map -->
-                                            <div class="row g-2 mb-3 text-center fs-xxs" style="font-size: 10px;">
-                                                <div class="col">
-                                                    <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-venda">
-                                                        <strong class="d-block text-dark">1. Venda</strong>
-                                                        <span id="sim-flow-val-venda">-</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
-                                                <div class="col">
-                                                    <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-gateway">
-                                                        <strong class="d-block text-dark">2. Gateway</strong>
-                                                        <span id="sim-flow-val-gateway">-</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
-                                                <div class="col">
-                                                    <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-financeiro">
-                                                        <strong class="d-block text-dark">3. Financeiro</strong>
-                                                        <span id="sim-flow-val-financeiro">-</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
-                                                <div class="col">
-                                                    <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-contabil">
-                                                        <strong class="d-block text-dark">4. Contabilidade</strong>
-                                                        <span id="sim-flow-val-contabil">-</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
-                                                <div class="col">
-                                                    <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-conciliacao">
-                                                        <strong class="d-block text-dark">5. Conciliação</strong>
-                                                        <span id="sim-flow-val-conciliacao">-</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
-                                                <div class="col">
-                                                    <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-repasse">
-                                                        <strong class="d-block text-dark">6. Repasse</strong>
-                                                        <span id="sim-flow-val-repasse">-</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Step detail outputs -->
-                                            <div id="sim-results-container" style="display: none;">
-                                                <div class="row g-2 font-monospace" style="font-size: 11px;">
-                                                    <div class="col-md-6">
-                                                        <div class="border rounded p-2 bg-light text-start h-100">
-                                                            <strong class="text-primary d-block border-bottom pb-1 mb-1">Apropriação Contábil da Venda</strong>
-                                                            <div class="d-flex justify-content-between"><span>Receita de Ingressos (Yii):</span><span class="text-success" id="sim-res-rec-ingressos">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between"><span>Taxa de Conveniência (Markup):</span><span class="text-success" id="sim-res-rec-taxas">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between"><span>Custo de Gateway (Processador):</span><span class="text-danger" id="sim-res-c-gateway">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between"><span>Comissão Cobrada do Produtor:</span><span class="text-success" id="sim-res-comissao">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between"><span>Provisão Imposto (DAS - 6.5% s/ Markup):</span><span class="text-danger" id="sim-res-imposto">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1 text-dark"><span>Contas a Receber (Bruto):</span><span id="sim-res-receber">R$ 0,00</span></div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="border rounded p-2 bg-light text-start h-100">
-                                                            <strong class="text-success d-block border-bottom pb-1 mb-1">Liquidação, Razão & DRE</strong>
-                                                            <div class="d-flex justify-content-between"><span>Líquido Recebido no Banco (Itaú):</span><span class="text-success" id="sim-res-liq-banco">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between"><span>Provisão Repasse ao Produtor:</span><span class="text-warning" id="sim-res-prov-repasse">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between"><span>Resultado Líquido s/ Venda (DRE):</span><span class="text-success fw-bold" id="sim-res-dre-liq">R$ 0,00</span></div>
-                                                            <div class="d-flex justify-content-between border-top pt-1 mt-1 text-muted fs-xxs"><span>Partidas Dobradas Diário:</span><span>D: Bancos / C: Rec. Recebidas</span></div>
-                                                            <div class="d-flex justify-content-between text-muted fs-xxs"><span>Partidas Dobradas Payout:</span><span>D: Produtores / C: Bancos</span></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="alert alert-success py-1 px-2 mt-2 mb-0 fs-xxs text-start">
-                                                    <i class="ph-check-circle me-1"></i> <strong>Sucesso:</strong> Lançamentos adicionados com sucesso ao Livro Diário, Livro Razão e Conciliação do painel.
-                                                </div>
-                                            </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card card-body p-2.5 shadow-sm border border-light text-start h-100 bg-white">
+                                            <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Receita Líquida</span>
+                                            <h5 class="fw-bold mb-0 text-success font-monospace" id="acc-kpi-receita-liquida">R$ 55.434,62</h5>
+                                            <span class="fs-xxs text-muted mt-2 text-truncate"><i class="ph-percent text-success"></i> Margem 85.3%</span>
                                         </div>
                                     </div>
-                                    <!-- Chart Row -->
-                                    <div class="row g-3 mb-3">
-                                        <div class="col-md-8">
-                                            <div class="card p-3 shadow-sm border" style="height: auto; min-height: 320px; border-radius: 12px;">
-                                                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3">
-                                                    <h6 class="fw-bold text-dark mb-2 mb-sm-0"><i class="ph-chart-bar text-primary me-1"></i> Evolução da Receita (Yii DB)</h6>
-                                                    <div class="btn-group font-monospace" role="group" aria-label="Filtro de Gráfico">
-                                                        <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('hoje', this)">Hoje</button>
-                                                        <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('7d', this)">7 dias</button>
-                                                        <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('30d', this)">30 dias</button>
-                                                        <button type="button" class="btn btn-outline-primary btn-xxs fw-bold active" onclick="window.updateChartRange('90d', this)">90 dias</button>
-                                                        <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('ano', this)">Ano</button>
-                                                        <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('personalizado', this)">Personalizado</button>
-                                                    </div>
-                                                </div>
-                                                <!-- Bar Chart Mock Container -->
-                                                <div id="acc-chart-bars-container" class="d-flex justify-content-around align-items-end h-100 pb-3" style="padding-top: 20px; min-height: 180px;">
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 40px; border-radius: 3px;" title="Ago/2021: R$ 8.900"></div>
-                                                        <span class="fs-xxs text-muted mt-2 fw-semibold">Ago/21</span>
-                                                    </div>
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 75px; border-radius: 3px;" title="Set/2021: R$ 15.600"></div>
-                                                        <span class="fs-xxs text-muted mt-2 fw-semibold">Set/21</span>
-                                                    </div>
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 120px; border-radius: 3px;" title="Out/2021: R$ 28.200"></div>
-                                                        <span class="fs-xxs text-muted mt-2 fw-semibold">Out/21</span>
-                                                    </div>
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 105px; border-radius: 3px;" title="Nov/2021: R$ 25.400"></div>
-                                                        <span class="fs-xxs text-muted mt-2 fw-semibold">Nov/21</span>
-                                                    </div>
-                                                    <div class="d-flex flex-column align-items-center w-100">
-                                                        <div class="bg-primary chart-bar-custom" style="width: 30px; height: 160px; border-radius: 3px;" title="Dez/2021: R$ 42.100"></div>
-                                                        <span class="fs-xxs text-muted mt-2 fw-bold text-primary">Dez/21</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card card-body p-2.5 shadow-sm border border-light text-start h-100 bg-white">
+                                            <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Taxas Gateway / MDR</span>
+                                            <h5 class="fw-bold mb-0 text-danger font-monospace" id="acc-kpi-taxas">R$ 9.547,28</h5>
+                                            <span class="fs-xxs text-muted mt-2 text-truncate"><i class="ph-credit-card text-danger"></i> Custos adquirente</span>
                                         </div>
-                                        <div class="col-md-4">
-                                            <!-- Advanced/Expert Widgets -->
-                                            <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 12px;">
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card card-body p-2.5 shadow-sm border border-light text-start h-100 bg-white">
+                                            <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Repasses Efetuados</span>
+                                            <h5 class="fw-bold mb-0 text-dark font-monospace" id="acc-kpi-repasses">R$ 22.880,00</h5>
+                                            <span class="fs-xxs text-muted mt-2 text-truncate"><i class="ph-check-circle text-success"></i> Pago via PIX/TED</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card card-body p-2.5 shadow-sm border border-light text-start h-100 bg-white">
+                                            <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Provisão Tributária</span>
+                                            <h5 class="fw-bold mb-0 text-warning font-monospace" id="acc-kpi-impostos">R$ 5.620,94</h5>
+                                            <span class="fs-xxs text-muted mt-2 text-truncate"><i class="ph-scales text-warning"></i> Simples Nacional DAS</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card card-body p-2.5 shadow-sm border border-light text-start h-100 bg-white">
+                                            <span class="fs-xxs fw-bold text-muted text-uppercase mb-1">Saldo a Conciliar</span>
+                                            <h5 class="fw-bold mb-0 text-info font-monospace" id="acc-kpi-conciliar">R$ 14.850,00</h5>
+                                            <span class="fs-xxs text-muted mt-2 text-truncate"><i class="ph-arrows-left-right text-info"></i> 3 lançamentos pend.</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chart & Demonstrativo Sintético Row -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-lg-8">
+                                        <div class="card p-3 shadow-sm border h-100" style="border-radius: 10px;">
+                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
                                                 <div>
-                                                    <h6 class="fw-bold text-dark mb-2"><i class="ph-brain text-warning me-1"></i> Inteligência Contábil</h6>
-                                                    <p class="text-muted fs-xs">Detecção de desvios, anomalias e conciliações fiscais baseada em regras parametrizadas.</p>
+                                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-chart-bar text-primary me-1"></i> Evolução da Receita e Faturamento (Yii DB)</h6>
+                                                    <span class="fs-xxs text-muted">Acompanhamento contábil comparativo por período</span>
                                                 </div>
+                                                <div class="btn-group font-monospace flex-wrap" role="group" aria-label="Filtro de Gráfico">
+                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('hoje', this)">Hoje</button>
+                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('7d', this)">7 dias</button>
+                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('30d', this)">30 dias</button>
+                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold active" onclick="window.updateChartRange('90d', this)">90 dias</button>
+                                                    <button type="button" class="btn btn-outline-primary btn-xxs fw-bold" onclick="window.updateChartRange('ano', this)">Ano</button>
+                                                </div>
+                                            </div>
+                                            <!-- Bar Chart Container -->
+                                            <div id="acc-chart-bars-container" class="d-flex justify-content-around align-items-end pb-2 pt-3" style="min-height: 180px;">
+                                                <div class="d-flex flex-column align-items-center w-100">
+                                                    <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 40px; border-radius: 4px;" title="Ago/21: R$ 8.900"></div>
+                                                    <span class="fs-xxs text-muted mt-2 fw-semibold">Ago/21</span>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-center w-100">
+                                                    <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 75px; border-radius: 4px;" title="Set/21: R$ 15.600"></div>
+                                                    <span class="fs-xxs text-muted mt-2 fw-semibold">Set/21</span>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-center w-100">
+                                                    <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 120px; border-radius: 4px;" title="Out/21: R$ 28.200"></div>
+                                                    <span class="fs-xxs text-muted mt-2 fw-semibold">Out/21</span>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-center w-100">
+                                                    <div class="bg-primary-light chart-bar-custom" style="width: 30px; height: 105px; border-radius: 4px;" title="Nov/21: R$ 25.400"></div>
+                                                    <span class="fs-xxs text-muted mt-2 fw-semibold">Nov/21</span>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-center w-100">
+                                                    <div class="bg-primary chart-bar-custom" style="width: 30px; height: 160px; border-radius: 4px;" title="Dez/21: R$ 42.100"></div>
+                                                    <span class="fs-xxs text-muted mt-2 fw-bold text-primary">Dez/21</span>
+                                                </div>
+                                            </div>
+                                            <!-- Sub-indicators summary bar -->
+                                            <div class="border-top pt-2 mt-2 d-flex flex-wrap justify-content-between align-items-center fs-xxs text-muted">
+                                                <span><i class="ph-trend-up text-success me-1"></i> Faturamento Médio por Evento: <strong>R$ 16.245,47</strong></span>
+                                                <span><i class="ph-receipt text-primary me-1"></i> Ticket Médio: <strong>R$ 142,50</strong></span>
+                                                <span><i class="ph-percent text-danger me-1"></i> Custo MDR Médio: <strong>2.85%</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <!-- Demonstrativo Sintético (Mini DRE) -->
+                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-presentation text-primary me-1"></i> DRE Sintética do Mês</h6>
+                                                    <span class="badge bg-light text-primary font-monospace fs-xxs">Jul/2026</span>
+                                                </div>
+                                                <div class="p-2.5 rounded bg-light font-monospace fs-xxs mb-2">
+                                                    <div class="d-flex justify-content-between py-1 border-bottom border-light">
+                                                        <span class="text-muted-dark">Receita Bruta (Vendas):</span>
+                                                        <strong class="text-dark">R$ 64.981,90</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-1 text-danger">
+                                                        <span>(-) Impostos (DAS 6.5%):</span>
+                                                        <span>- R$ 5.620,94</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-1 border-top border-bottom border-light fw-bold text-dark">
+                                                        <span>(=) Receita Líquida:</span>
+                                                        <span class="text-success">R$ 59.360,96</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-1 text-danger">
+                                                        <span>(-) Repasses Produtores:</span>
+                                                        <span>- R$ 22.880,00</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-1 text-danger border-bottom border-light">
+                                                        <span>(-) Gateway / MDR:</span>
+                                                        <span>- R$ 9.547,28</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between pt-1.5 fw-bold text-dark fs-xs">
+                                                        <span>(=) Lucro Líquido:</span>
+                                                        <span class="text-success">R$ 26.933,68</span>
+                                                    </div>
+                                                </div>
+                                                <div class="px-1 mb-2">
+                                                    <div class="d-flex justify-content-between fs-xxs text-muted mb-1">
+                                                        <span>Margem Líquida Real:</span>
+                                                        <strong class="text-success">41.4%</strong>
+                                                    </div>
+                                                    <div class="progress" style="height: 6px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" style="width: 41.4%" aria-valuenow="41.4" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-primary fw-bold w-100" onclick="window.switchAccountingCategory('demonstracoes', 'relatorios-dre')">
+                                                <i class="ph-arrow-right me-1"></i> Ver Demonstrativo DRE Completo
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 3: Prazos Fiscais & Inteligência / Saúde das Integrações -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-lg-6">
+                                        <div class="card p-3 shadow-sm border h-100" style="border-radius: 10px;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold text-dark mb-0"><i class="ph-calendar text-primary me-1"></i> Prazos Fiscais & Obrigações do Mês</h6>
+                                                <button type="button" class="btn btn-xxs btn-outline-primary fw-bold" onclick="window.switchAccountingCategory('fiscal', 'fiscal-obrigacoes')">Ver Todas</button>
+                                            </div>
+                                            <div class="d-flex flex-column gap-2 mb-2">
+                                                <div class="p-2 border rounded bg-light d-flex justify-content-between align-items-center fs-xxs">
+                                                    <div>
+                                                        <strong class="text-dark d-block">Simples Nacional (DAS)</strong>
+                                                        <span class="text-muted">Vencimento: 20/07/2026 | Competência: 06/2026</span>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge bg-warning text-dark font-monospace mb-1 d-block">PENDENTE</span>
+                                                        <strong class="font-monospace text-dark">R$ 5.620,94</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2 border rounded bg-light d-flex justify-content-between align-items-center fs-xxs">
+                                                    <div>
+                                                        <strong class="text-dark d-block">Repasse Produtores (Lote #47)</strong>
+                                                        <span class="text-muted">Programado: 15/07/2026 | Luciano Reis Produções</span>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge bg-info text-white font-monospace mb-1 d-block">PROGRAMADO</span>
+                                                        <strong class="font-monospace text-dark">R$ 22.880,00</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2 border rounded bg-light d-flex justify-content-between align-items-center fs-xxs">
+                                                    <div>
+                                                        <strong class="text-dark d-block">Transmissão SPED ECD/ECF</strong>
+                                                        <span class="text-muted">Prazo limite: 30/07/2026 | Receita Federal</span>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge bg-success text-white font-monospace mb-1 d-block">EM DIA</span>
+                                                        <span class="text-muted font-monospace">Validador PVA</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-danger w-100 fw-bold" onclick="window.emitirGuiaTributaria()">
+                                                <i class="ph-file-pdf me-1"></i> Emitir Guia de Pagamento DARF / DAS
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-6">
+                                        <div class="card p-3 shadow-sm border h-100 d-flex flex-column justify-content-between" style="border-radius: 10px;">
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-brain text-warning me-1"></i> Inteligência Contábil & Integrações</h6>
+                                                    <span class="badge bg-light text-primary font-monospace fs-xxs">Auditoria Ativa</span>
+                                                </div>
+                                                <p class="text-muted fs-xs mb-2">Status em tempo real das conexões bancárias e validações automáticas de auditoria.</p>
+
+                                                <!-- Connections Status Pills -->
+                                                <div class="d-flex flex-wrap gap-1.5 mb-2.5">
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs py-1 px-2">
+                                                        <i class="ph-check-circle me-1"></i> Conta Azul ERP (Conectado)
+                                                    </span>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs py-1 px-2">
+                                                        <i class="ph-check-circle me-1"></i> NFS-e Prefeitura Ginfes (Online)
+                                                    </span>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-xxs py-1 px-2">
+                                                        <i class="ph-check-circle me-1"></i> Itaú API Bank (Ativo)
+                                                    </span>
+                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 fs-xxs py-1 px-2">
+                                                        <i class="ph-arrows-clockwise me-1"></i> Stone MDR (Conciliado)
+                                                    </span>
+                                                </div>
+
+                                                <!-- Dynamic Intelligence Body (Expert Mode or Alerts) -->
                                                 <div id="acc-intelligence-body">
-                                                    <!-- Standard mode status -->
                                                     <div class="alert alert-info py-2 px-3 mb-0 fs-xxs">
                                                         <i class="ph-info me-1"></i> Mude para o <strong>Modo Expert</strong> para ativar o Motor de IA e Simulações de Projeções Fiscais.
                                                     </div>
                                                 </div>
-                                                <button class="btn btn-xs btn-flat-primary w-100 fw-bold mt-2" onclick="window.switchAccountingMode('expert')">Ativar Modo Expert</button>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Table display: Result by event (Yii real database integration) -->
-                                    <div class="card shadow-sm border">
-                                        <div class="card-header bg-transparent py-2">
-                                            <h6 class="fw-bold mb-0 text-dark"><i class="ph-calculator text-muted me-1"></i> Apuração de Resultado por Evento Realizado (Yii DB)</h6>
-                                        </div>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0" style="font-size: 12px;">
-                                                <thead>
-                                                    <tr class="table-light">
-                                                        <th>ID Evento</th>
-                                                        <th>Nome do Evento</th>
-                                                        <th>Localização</th>
-                                                        <th class="text-center">Vendas</th>
-                                                        <th class="text-end">Rec. Bruta</th>
-                                                        <th class="text-end">Taxa Plataforma</th>
-                                                        <th class="text-end">Líquido Contábil</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="acc-dashboard-events-tbody">
-                                                    <!-- Filled dynamically via JS -->
-                                                </tbody>
-                                            </table>
+                                            <button type="button" class="btn btn-xs btn-flat-primary w-100 fw-bold mt-2" onclick="window.switchAccountingMode('expert')">
+                                                <i class="ph-sparkle me-1 text-warning"></i> Ativar Modo Expert
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Row 4: Banner Launcher para o Simulador de Ciclo -->
+                                <div class="card shadow-sm border mb-3" style="border-radius: 10px; background: linear-gradient(135deg, #fff9f5 0%, #ffffff 100%); border-left: 4px solid #f38d4f !important;">
+                                    <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle bg-warning bg-opacity-10 p-2.5 text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                                <i class="ph-cpu fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <h6 class="fw-bold mb-0 text-dark">Simulador Contábil de Ciclo de Venda Completo</h6>
+                                                    <span class="badge bg-light text-primary font-monospace fs-xxs">Yii DB & Gateway</span>
+                                                </div>
+                                                <p class="text-muted fs-xs mb-0">Simule uma venda de ingresso em tempo real e visualize o fluxo contábil imediato: faturamento, retenção de impostos, MDR e apuração no DRE e Balanço.</p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 text-nowrap">
+                                            <button type="button" class="btn btn-xs btn-primary fw-bold px-3 py-1.5" onclick="window.switchAccountingCategory('simulador', 'simulador')">
+                                                <i class="ph-arrow-square-out me-1"></i> Abrir Simulador Dedicado
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 5: Table display: Result by event (Yii real database integration) -->
+                                <div class="card shadow-sm border">
+                                    <div class="card-header bg-transparent py-2.5 d-flex justify-content-between align-items-center">
+                                        <h6 class="fw-bold mb-0 text-dark"><i class="ph-calculator text-muted me-1"></i> Apuração de Resultado por Evento Realizado (Yii DB)</h6>
+                                        <button type="button" class="btn btn-xxs btn-outline-primary fw-bold" onclick="window.syncAccountingData()"><i class="ph-arrows-clockwise me-1"></i> Atualizar Dados</button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0" style="font-size: 12px;">
+                                            <thead>
+                                                <tr class="table-light">
+                                                    <th>ID Evento</th>
+                                                    <th>Nome do Evento</th>
+                                                    <th>Localização</th>
+                                                    <th class="text-center">Vendas</th>
+                                                    <th class="text-end">Rec. Bruta</th>
+                                                    <th class="text-end">Taxa Plataforma</th>
+                                                    <th class="text-end">Líquido Contábil</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="acc-dashboard-events-tbody">
+                                                <!-- Filled dynamically via JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB PANE: Dedicated Simulador Contábil -->
+                            <div class="accounting-pane" id="accpane-simulador" style="display: none;">
+                                <div class="card shadow-sm border mb-3" style="border-radius: 12px; border-left: 4px solid #f38d4f;">
+                                    <div class="card-header bg-transparent py-2.5 d-flex justify-content-between align-items-center">
+                                        <h6 class="fw-bold mb-0 text-dark"><i class="ph-cpu text-warning me-1"></i> Simulador Contábil de Ciclo de Venda Completo (Yii & Gateway)</h6>
+                                        <span class="badge bg-light text-primary font-monospace fs-xxs">Demonstrador Integrado</span>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <p class="text-muted fs-xs mb-3">Simule uma venda de ingresso e veja como os valores fluem em tempo real do faturamento até o Balanço Patrimonial e DRE.</p>
+                                        
+                                        <!-- Simulation form inputs -->
+                                        <div class="row g-2 mb-3 bg-light p-2.5 rounded">
+                                            <div class="col-md-2.5 col-sm-6">
+                                                <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Preço do Ingresso:</label>
+                                                <input type="number" class="form-control form-control-sm font-monospace fw-bold" id="sim-ticket-price" value="100.00" step="10">
+                                            </div>
+                                            <div class="col-md-2.5 col-sm-6">
+                                                <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Taxa Conveniência:</label>
+                                                <input type="number" class="form-control form-control-sm font-monospace fw-bold" id="sim-ticket-tax" value="10.00" step="2">
+                                            </div>
+                                            <div class="col-md-3 col-sm-6">
+                                                <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Taxa Gateway (Meio):</label>
+                                                <select class="form-select form-select-sm font-monospace" id="sim-gateway-type">
+                                                    <option value="cc" selected>Crédito (2.5% + R$ 0.50)</option>
+                                                    <option value="pix">PIX API (0.99% fixo)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2 col-sm-6">
+                                                <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Comissão Produtor:</label>
+                                                <select class="form-select form-select-sm" id="sim-commission-pct">
+                                                    <option value="10" selected>10%</option>
+                                                    <option value="15">15%</option>
+                                                    <option value="5">5%</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2 col-sm-12 d-flex align-items-end">
+                                                <button class="btn btn-sm btn-primary fw-bold w-100 py-1" onclick="window.runAccountingSimulation()"><i class="ph-play me-1"></i> Simular</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Visual flow diagram map -->
+                                        <div class="row g-2 mb-3 text-center fs-xxs" style="font-size: 10px;">
+                                            <div class="col">
+                                                <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-venda">
+                                                    <strong class="d-block text-dark">1. Venda</strong>
+                                                    <span id="sim-flow-val-venda">-</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
+                                            <div class="col">
+                                                <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-gateway">
+                                                    <strong class="d-block text-dark">2. Gateway</strong>
+                                                    <span id="sim-flow-val-gateway">-</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
+                                            <div class="col">
+                                                <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-financeiro">
+                                                    <strong class="d-block text-dark">3. Financeiro</strong>
+                                                    <span id="sim-flow-val-financeiro">-</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
+                                            <div class="col">
+                                                <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-contabil">
+                                                    <strong class="d-block text-dark">4. Contabilidade</strong>
+                                                    <span id="sim-flow-val-contabil">-</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
+                                            <div class="col">
+                                                <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-conciliacao">
+                                                    <strong class="d-block text-dark">5. Conciliação</strong>
+                                                    <span id="sim-flow-val-conciliacao">-</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto align-self-center text-muted"><i class="ph-caret-right-bold"></i></div>
+                                            <div class="col">
+                                                <div class="border rounded p-1 bg-white shadow-xs" id="step-sim-repasse">
+                                                    <strong class="d-block text-dark">6. Repasse</strong>
+                                                    <span id="sim-flow-val-repasse">-</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step detail outputs -->
+                                        <div id="sim-results-container" style="display: none;">
+                                            <div class="row g-2 font-monospace" style="font-size: 11px;">
+                                                <div class="col-md-6">
+                                                    <div class="border rounded p-2.5 bg-light text-start h-100">
+                                                        <strong class="text-primary d-block border-bottom pb-1 mb-1">Apropriação Contábil da Venda</strong>
+                                                        <div class="d-flex justify-content-between"><span>Receita de Ingressos (Yii):</span><span class="text-success" id="sim-res-rec-ingressos">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between"><span>Taxa de Conveniência (Markup):</span><span class="text-success" id="sim-res-rec-taxas">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between"><span>Custo de Gateway (Processador):</span><span class="text-danger" id="sim-res-c-gateway">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between"><span>Comissão Cobrada do Produtor:</span><span class="text-success" id="sim-res-comissao">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between"><span>Provisão Imposto (DAS - 6.5% s/ Markup):</span><span class="text-danger" id="sim-res-imposto">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1 text-dark"><span>Contas a Receber (Bruto):</span><span id="sim-res-receber">R$ 0,00</span></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="border rounded p-2.5 bg-light text-start h-100">
+                                                        <strong class="text-success d-block border-bottom pb-1 mb-1">Liquidação, Razão & DRE</strong>
+                                                        <div class="d-flex justify-content-between"><span>Líquido Recebido no Banco (Itaú):</span><span class="text-success" id="sim-res-liq-banco">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between"><span>Provisão Repasse ao Produtor:</span><span class="text-warning" id="sim-res-prov-repasse">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between"><span>Resultado Líquido s/ Venda (DRE):</span><span class="text-success fw-bold" id="sim-res-dre-liq">R$ 0,00</span></div>
+                                                        <div class="d-flex justify-content-between border-top pt-1 mt-1 text-muted fs-xxs"><span>Partidas Dobradas Diário:</span><span>D: Bancos / C: Rec. Recebidas</span></div>
+                                                        <div class="d-flex justify-content-between text-muted fs-xxs"><span>Partidas Dobradas Payout:</span><span>D: Produtores / C: Bancos</span></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-success py-1 px-2 mt-2 mb-0 fs-xxs text-start">
+                                                <i class="ph-check-circle me-1"></i> <strong>Sucesso:</strong> Lançamentos adicionados com sucesso ao Livro Diário, Livro Razão e Conciliação do painel.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                                 <!-- TAB PANE: Plano de Contas -->
                                 <div class="accounting-pane" id="accpane-plano-contas" style="display: none;">
@@ -12741,7 +12901,6 @@ Como podemos te ajudar hoje?
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </section>
 
                     <!-- View: Recuperação de Carrinho -->
