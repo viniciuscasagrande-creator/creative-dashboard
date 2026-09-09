@@ -11966,7 +11966,7 @@ function syncReconciliationData() {
    ========================================================================== */
 
 // --- FASE 26.17.8.3: RASTREABILIDADE FINANCEIRO -> CONTÁBIL (VISÃO 360º) ---
-let currentTraceOrderId = '#123456';
+let currentTraceOrderId = null;
 
 function formatCurrencyBRL(val) {
   if (val == null || isNaN(val)) return 'R$ 0,00';
@@ -11988,28 +11988,37 @@ function formatPercent(val) {
   return (val * 100).toFixed(2).replace('.', ',') + '%';
 }
 
-function renderTraceability(orderId = null) {
+async function renderTraceability(orderId = null) {
   const container = document.getElementById('traceability-content-container');
   if (!container) return;
 
-  const targetId = orderId || currentTraceOrderId || '#123456';
+  const targetId = orderId || currentTraceOrderId;
+  if (!targetId) {
+    container.innerHTML = `
+      <div class="alert alert-info p-4 text-center">
+        <i class="ph-magnifying-glass fs-2 text-primary mb-2 d-block"></i>
+        <h6 class="fw-bold text-dark">Consulte um pedido real</h6>
+        <p class="text-muted fs-xs mb-0">Informe o número do pedido, ID da transação, NSU ou TID. Nenhum pedido demonstrativo será carregado automaticamente.</p>
+      </div>`;
+    return;
+  }
   currentTraceOrderId = targetId;
+  container.innerHTML = `<div class="p-4 text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Consultando fonte oficial de pedidos...</div>`;
 
-  const res = traceabilityService.getOrderTraceability(targetId, typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
+  const res = await traceabilityService.getOrderTraceability(targetId, typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
   if (!res.success) {
     container.innerHTML = `
       <div class="alert alert-warning p-4 text-center">
         <i class="ph-warning-circle fs-2 text-warning mb-2 d-block"></i>
         <h6 class="fw-bold text-dark">${res.error}</h6>
-        <p class="text-muted fs-xs mb-3">Tente buscar por outro código de pedido, como <strong>#123456</strong>, <strong>#123488</strong> ou <strong>#123512</strong>.</p>
-        <button class="btn btn-sm btn-outline-primary fw-bold" onclick="window.loadTraceabilityOrder('#123456')">Carregar #123456 (Exemplo Padrão)</button>
+        <p class="text-muted fs-xs mb-0">A tela não utiliza mais pedidos de demonstração como fallback. Verifique a API oficial ou tente outro identificador real.</p>
       </div>
     `;
     return;
   }
 
   const data = res.data;
-  const c = data.composition;
+  const c = data.composition || {};
 
   container.innerHTML = `
     <!-- 12 KPI/Summary Cards -->
@@ -12136,7 +12145,7 @@ function renderTraceability(orderId = null) {
           </div>
 
           <div class="reconciliation-timeline pt-2">
-            ${data.timeline.map((evt, idx) => `
+            ${(data.timeline || []).map((evt, idx) => `
               <div class="d-flex gap-3 mb-3">
                 <div class="rounded-circle bg-${evt.status === 'CONCLUIDO' ? 'success' : 'primary'} text-white d-flex align-items-center justify-content-center shrink-0" style="width: 24px; height: 24px; font-size: 11px;">
                   <i class="ph-${evt.status === 'CONCLUIDO' ? 'check' : 'hourglass'}"></i>
@@ -12167,7 +12176,7 @@ function renderTraceability(orderId = null) {
           <span class="text-muted fs-xxs text-uppercase fw-bold">Reflexo Contábil</span>
           <h6 class="fw-bold text-dark mb-0 fs-xs">Lançamentos em Partida Dobrada Vinculados ao Pedido</h6>
         </div>
-        <span class="badge bg-info-subtle text-info border font-monospace fs-xxs">${data.accountingEntries.length} Partidas Dobradas</span>
+        <span class="badge bg-info-subtle text-info border font-monospace fs-xxs">${(data.accountingEntries || []).length} Partidas Dobradas</span>
       </div>
 
       <div class="table-responsive border rounded">
@@ -12185,7 +12194,7 @@ function renderTraceability(orderId = null) {
             </tr>
           </thead>
           <tbody>
-            ${data.accountingEntries.map(entry => `
+            ${(data.accountingEntries || []).map(entry => `
               <tr>
                 <td class="py-2 px-3 text-nowrap">${formatDateBRL(entry.occurredAt)}</td>
                 <td class="py-2 px-3">
@@ -12216,20 +12225,23 @@ function renderTraceability(orderId = null) {
   `;
 }
 
-function searchTraceabilityOrder() {
+async function searchTraceabilityOrder() {
   const input = document.getElementById('acc-trace-search-input');
   if (!input) return;
   const q = input.value.trim();
   if (!q) {
-    renderTraceability('#123456');
+    renderTraceability(null);
     return;
   }
-  const results = traceabilityService.searchOrders(q, typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
-  if (results && results.length > 0) {
-    loadTraceabilityOrder(results[0].orderId);
+  const result = await traceabilityService.searchOrders(q, typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
+  if (result.success && result.data.length > 0) {
+    loadTraceabilityOrder(result.data[0].orderId || result.data[0].id || q);
     if (typeof addSystemNotification === 'function') {
-      addSystemNotification('success', 'Rastreabilidade 360º', `Pedido ${results[0].orderId} localizado.`);
+      addSystemNotification('success', 'Rastreabilidade 360º', `Pedido ${result.data[0].orderId || result.data[0].id || q} localizado na fonte oficial.`);
     }
+  } else if (!result.success) {
+    const container = document.getElementById('traceability-content-container');
+    if (container) container.innerHTML = `<div class="alert alert-warning p-4 text-center"><strong>${result.error}</strong></div>`;
   } else {
     renderTraceability(q);
   }
@@ -12242,8 +12254,9 @@ function loadTraceabilityOrder(orderId) {
   renderTraceability(orderId);
 }
 
-function exportTraceabilityEvidence() {
-  const res = traceabilityService.getOrderTraceability(currentTraceOrderId || '#123456');
+async function exportTraceabilityEvidence() {
+  if (!currentTraceOrderId) return;
+  const res = await traceabilityService.getOrderTraceability(currentTraceOrderId);
   if (!res.success) return;
   const jsonStr = JSON.stringify(res.data, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -12258,10 +12271,16 @@ function exportTraceabilityEvidence() {
   }
 }
 
-function openTraceabilityAuditModal() {
+async function openTraceabilityAuditModal() {
   const container = document.getElementById('trace-audit-list-container');
   if (!container) return;
-  const logs = traceabilityService.getAuditLogs(currentTraceOrderId || '#123456');
+  const auditResult = await traceabilityService.getAuditLogs(currentTraceOrderId);
+  if (!auditResult.success) {
+    container.innerHTML = `<div class="alert alert-warning mb-0">${auditResult.error}</div>`;
+    window.openModal('rastreabilidade-auditoria');
+    return;
+  }
+  const logs = auditResult.data;
   if (logs.length === 0) {
     container.innerHTML = `
       <div class="p-3 bg-light rounded text-center text-muted fs-xs">
