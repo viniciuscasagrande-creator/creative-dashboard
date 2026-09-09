@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-BGI0Yh7G.js"></script>
+      <script type="module" crossorigin src="./assets/index-DaPHC4up.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
     </head>
 <body>
@@ -11799,76 +11799,113 @@ Como podemos te ajudar hoje?
                                     </div>
                                 </div>
 
-                                <!-- TAB PANE: Lançamentos Contábeis -->
+                                                                <!-- TAB PANE: Lançamentos / Rastreabilidade 360º (Fase 26.17.8.3) -->
                                 <div class="accounting-pane" id="accpane-lancamentos" style="display: none;">
-                                    <div class="row g-3">
-                                        <div class="col-md-5">
-                                            <!-- Manual Entry Input Form -->
-                                            <div class="card shadow-sm border p-3">
-                                                <h6 class="fw-bold text-dark mb-3"><i class="ph-pencil text-primary me-1"></i> Lançamento Manual Simples</h6>
-                                                <form id="acc-manual-entry-form" onsubmit="window.saveManualAccountingEntry(event)">
-                                                    <div class="mb-2">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 pb-2 border-bottom">
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fs-xxs">FASE 26.17.8.3</span>
+                                                <h6 class="fw-bold mb-0 text-dark">Rastreabilidade Financeiro &rarr; Cont&aacute;bil (Vis&atilde;o 360&ordm;)</h6>
+                                            </div>
+                                            <p class="text-muted fs-xs mb-0">
+                                                Auditoria completa: Pedido &rarr; Pagamento &rarr; Gateway &rarr; Liquida&ccedil;&atilde;o &rarr; Split &rarr; Repasse &rarr; Receita Disk &rarr; Lan&ccedil;amento Cont&aacute;bil &rarr; Auditoria
+                                            </p>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button class="btn btn-xs btn-outline-secondary fw-semibold" onclick="window.exportTraceabilityEvidence()">
+                                                <i class="ph-download-simple me-1"></i> Exportar Evid&ecirc;ncias
+                                            </button>
+                                            <button class="btn btn-xs btn-primary fw-bold text-white" onclick="window.openTraceabilityAuditModal()">
+                                                <i class="ph-shield-check me-1"></i> Trilha de Auditoria
+                                            </button>
+                                            <button class="btn btn-xs btn-outline-primary fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-manual-entry" aria-expanded="false">
+                                                <i class="ph-pencil-simple-line me-1"></i> Lan&ccedil;amento Manual
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Collapsible Manual Entry Form (Preservando 100% da funcionalidade anterior) -->
+                                    <div class="collapse mb-3" id="collapse-manual-entry">
+                                        <div class="card shadow-sm border p-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold text-dark mb-0 fs-xs"><i class="ph-pencil text-primary me-1"></i> Lan&ccedil;amento Cont&aacute;bil Manual Simples</h6>
+                                                <span class="text-muted fs-xxs">Partida dobrada avulsa</span>
+                                            </div>
+                                            <form id="acc-manual-entry-form" onsubmit="window.saveManualAccountingEntry(event)">
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col-md-3">
                                                         <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Data:</label>
                                                         <input type="date" id="acc-man-date" class="form-control form-control-sm" required>
                                                     </div>
-                                                    <div class="row g-2 mb-2">
-                                                        <div class="col-6">
-                                                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Débito (+):</label>
-                                                            <select id="acc-man-debit" class="form-select form-select-sm" required>
-                                                                <option value="1.1.02 - Bancos Conta Movimento">Bancos</option>
-                                                                <option value="1.1.04 - Contas a Receber">Contas a Receber</option>
-                                                                <option value="5.1.01 - Despesa Gateway">Despesa Gateway</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Crédito (-):</label>
-                                                            <select id="acc-man-credit" class="form-select form-select-sm" required>
-                                                                <option value="4.1.01 - Receita Venda Ingressos">Receita Venda Ingressos</option>
-                                                                <option value="1.1.04 - Contas a Receber">Contas a Receber</option>
-                                                                <option value="2.1.02 - Produtores a Pagar">Produtores a Pagar</option>
-                                                            </select>
-                                                        </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">D&eacute;bito (+):</label>
+                                                        <select id="acc-man-debit" class="form-select form-select-sm" required>
+                                                            <option value="1.1.02.01 - Valores a Receber Gateway">1.1.02.01 - Valores a Receber Gateway</option>
+                                                            <option value="1.1.01.02 - Bancos Conta Movimento">1.1.01.02 - Bancos Conta Movimento</option>
+                                                            <option value="4.1.01.01 - Despesa MDR Adquir&ecirc;ncia">4.1.01.01 - Despesa MDR Adquir&ecirc;ncia</option>
+                                                        </select>
                                                     </div>
-                                                    <div class="row g-2 mb-2">
-                                                        <div class="col-6">
-                                                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Valor (R$):</label>
-                                                            <input type="number" id="acc-man-value" class="form-control form-control-sm font-monospace" placeholder="0,00" step="0.01" required>
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Centro de Custo:</label>
-                                                            <select id="acc-man-cost" class="form-select form-select-sm">
-                                                                <option value="Administrativo">Administrativo</option>
-                                                                <option value="Financeiro" selected>Financeiro</option>
-                                                                <option value="Eventos">Eventos</option>
-                                                            </select>
-                                                        </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Cr&eacute;dito (-):</label>
+                                                        <select id="acc-man-credit" class="form-select form-select-sm" required>
+                                                            <option value="2.1.03.01 - Recursos de Terceiros (Produtores)">2.1.03.01 - Recursos de Terceiros (Produtores)</option>
+                                                            <option value="3.1.01.01 - Receita Taxa Conveni&ecirc;ncia">3.1.01.01 - Receita Taxa Conveni&ecirc;ncia</option>
+                                                            <option value="1.1.02.01 - Valores a Receber Gateway">1.1.02.01 - Valores a Receber Gateway</option>
+                                                        </select>
                                                     </div>
-                                                    <div class="mb-2">
-                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Descrição / Histórico:</label>
-                                                        <input type="text" id="acc-man-desc" class="form-control form-control-sm" placeholder="Ex: Pagamento da fatura do adquirente" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Anexar Comprovante / PDF:</label>
-                                                        <input type="file" class="form-control form-control-sm" id="acc-man-attachment" onchange="alert('Arquivo anexado com sucesso!')">
-                                                    </div>
-                                                    <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold"><i class="ph-floppy-disk me-1"></i> Gravar Lançamento</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Automatic Ledger Actions Log -->
-                                        <div class="col-md-7">
-                                            <div class="card shadow-sm border h-100">
-                                                <div class="card-header bg-transparent py-2">
-                                                    <h6 class="fw-bold mb-0 text-dark"><i class="ph-arrows-clockwise text-muted me-1"></i> Lançamentos Automáticos do Sistema (Integrador Vendas)</h6>
-                                                </div>
-                                                <div class="card-body p-0">
-                                                    <div class="list-group list-group-flush fs-xs" id="acc-automatic-logs-container">
-                                                        <!-- Populate via JS -->
+                                                    <div class="col-md-3">
+                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Valor (R$):</label>
+                                                        <input type="number" id="acc-man-value" class="form-control form-control-sm font-monospace" placeholder="0,00" step="0.01" required>
                                                     </div>
                                                 </div>
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Centro de Custo:</label>
+                                                        <select id="acc-man-cost" class="form-select form-select-sm">
+                                                            <option value="CC-201 Plataforma Digital Disk" selected>CC-201 Plataforma Digital Disk</option>
+                                                            <option value="CC-101 Shows e Festivais">CC-101 Shows e Festivais</option>
+                                                            <option value="CC-001 Tesouraria Central">CC-001 Tesouraria Central</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Hist&oacute;rico Cont&aacute;bil:</label>
+                                                        <input type="text" id="acc-man-desc" class="form-control form-control-sm" placeholder="Ex: Ajuste de tarifa de adquirente por liquida&ccedil;&atilde;o avulsa" required>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <button type="button" class="btn btn-xs btn-light" data-bs-toggle="collapse" data-bs-target="#collapse-manual-entry">Cancelar</button>
+                                                    <button type="submit" class="btn btn-xs btn-primary fw-bold text-white"><i class="ph-floppy-disk me-1"></i> Gravar Lan&ccedil;amento</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <!-- Search & Quick Picker Bar -->
+                                    <div class="card shadow-sm border p-3 mb-3 bg-white">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-12 col-md-7">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="ph-magnifying-glass"></i></span>
+                                                    <input type="text" class="form-control border-start-0" id="acc-trace-search-input" placeholder="Buscar por Pedido (#123456), Transa&ccedil;&atilde;o (TRX-928183), NSU, TID, Evento, Produtor..." onkeydown="if(event.key==='Enter') window.searchTraceabilityOrder()">
+                                                    <button class="btn btn-primary fw-bold text-white px-3" type="button" onclick="window.searchTraceabilityOrder()">
+                                                        Rastrear 360&ordm;
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-md-5">
+                                                <div class="d-flex align-items-center gap-1 flex-wrap justify-content-md-end">
+                                                    <span class="fs-xxs text-muted fw-bold text-uppercase me-1">Exemplos r&aacute;pidos:</span>
+                                                    <button class="btn btn-xxs btn-outline-secondary fw-semibold" onclick="window.loadTraceabilityOrder('#123456')">#123456 (Festival Ver&atilde;o)</button>
+                                                    <button class="btn btn-xxs btn-outline-secondary fw-semibold" onclick="window.loadTraceabilityOrder('#123488')">#123488 (Stand-up)</button>
+                                                    <button class="btn btn-xxs btn-outline-secondary fw-semibold" onclick="window.loadTraceabilityOrder('#123512')">#123512 (Arena Rock)</button>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <!-- Container populated dynamically by renderTraceability() -->
+                                    <div id="traceability-content-container">
+                                        <!-- Dynamic order trace rendered here -->
                                     </div>
                                 </div>
 
@@ -12764,24 +12801,130 @@ Como podemos te ajudar hoje?
                                     </div>
                                 </div>
 
-                                <!-- TAB PANE: Contabilidade - Fechamento -->
+                                                                <!-- TAB PANE: Fiscal & Controle - Fechamento Contábil Mensal (Fase 26.17.8.6) -->
                                 <div class="accounting-pane" id="accpane-cont-fechamento" style="display: none;">
-                                    <div class="card shadow-sm border p-3">
-                                        <h6 class="fw-bold text-dark mb-2"><i class="ph-lock-key text-primary me-1"></i> Assistente de Fechamento Contábil Periódico</h6>
-                                        <p class="text-muted fs-xs">Realize a conciliação final, apuração de impostos e bloqueio de lançamentos do período fiscal atual.</p>
-                                        <div class="border rounded p-3 bg-light text-start mb-3">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <strong class="text-dark text-uppercase fs-xxs">Período de Referência Atual: Julho / 2026</strong>
-                                                <span class="badge bg-warning font-monospace text-dark">ABERTO PARA LANÇAMENTOS</span>
+                                    <div class="card shadow-sm border p-3 mb-3">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 pb-2 border-bottom">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fs-xxs">FASE 26.17.8.6</span>
+                                                    <h6 class="fw-bold mb-0 text-dark">Fechamento Cont&aacute;bil Mensal</h6>
+                                                </div>
+                                                <p class="text-muted fs-xs mb-0">
+                                                    Workflow corporativo: Prepara&ccedil;&atilde;o &rarr; Valida&ccedil;&atilde;o &rarr; Pend&ecirc;ncias &rarr; Aprova&ccedil;&atilde;o &rarr; Fechamento &rarr; Bloqueio
+                                                </p>
                                             </div>
-                                            <p class="fs-xxs text-muted mb-3">Lançamentos em Julho/2026: 5 efetuados. Conciliações bancárias pendentes: 0.</p>
-                                            <div class="d-flex gap-2">
-                                                <button class="btn btn-sm btn-primary fw-bold" onclick="alert('Executando apuração de receitas e depreciação automática...'); setTimeout(() => { alert('Apuração concluída! Todas as contas estão conciliadas.'); }, 1000)"><i class="ph-play me-1"></i> Apurar Competências</button>
-                                                <button class="btn btn-sm btn-danger text-white fw-bold" onclick="if(confirm('Tem certeza que deseja bloquear lançamentos para o mês de Julho/2026? Esta ação só pode ser revertida pelo Contador Admin.')) { alert('Mês de Julho/2026 encerrado e fechado com sucesso!'); }"><i class="ph-lock me-1"></i> Bloquear e Encerrar Mês</button>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <button class="btn btn-xs btn-outline-secondary fw-semibold" onclick="window.executeClosingValidations()">
+                                                    <i class="ph-arrows-clockwise me-1"></i> Executar Valida&ccedil;&otilde;es
+                                                </button>
+                                                <button class="btn btn-xs btn-outline-primary fw-semibold" onclick="window.submitClosingApproval()">
+                                                    <i class="ph-paper-plane-tilt me-1"></i> Enviar p/ Aprova&ccedil;&atilde;o
+                                                </button>
+                                                <button class="btn btn-xs btn-success fw-bold text-white" id="btn-fechar-competencia" onclick="window.executeClosePeriod()">
+                                                    <i class="ph-lock-key me-1"></i> Fechar Compet&ecirc;ncia
+                                                </button>
+                                                <button class="btn btn-xs btn-outline-danger fw-semibold" onclick="window.openReopenPeriodModal()">
+                                                    <i class="ph-arrow-counter-clockwise me-1"></i> Reabrir
+                                                </button>
                                             </div>
                                         </div>
-                                        <div class="alert alert-info py-2 px-3 mb-0 fs-xxs">
-                                            <i class="ph-info me-1"></i> O encerramento definitivo gera automaticamente o diário e razão oficiais que formam a declaração SPED ECD anual.
+
+                                        <!-- Progress and Status Banner -->
+                                        <div class="card border p-3 mb-3 bg-light">
+                                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+                                                <div>
+                                                    <span class="text-muted fs-xxs text-uppercase fw-bold">Progresso do Fechamento Cont&aacute;bil:</span>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <h3 class="fw-bold text-dark mb-0 font-monospace" id="closing-progress-pct">88%</h3>
+                                                        <span class="badge bg-warning text-dark font-monospace" id="closing-status-badge">AGUARDANDO APROVA&Ccedil;&Atilde;O</span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-md-end fs-xs text-muted">
+                                                    <div>Compet&ecirc;ncia: <strong class="text-dark" id="closing-period-val">08/2026</strong></div>
+                                                    <div>Respons&aacute;vel: <strong class="text-dark" id="closing-responsible-val">Controladoria &amp; Contabilidade Disk</strong></div>
+                                                    <div>Prazo Limite: <strong class="text-primary font-monospace" id="closing-due-date-val">10/09/2026</strong></div>
+                                                </div>
+                                            </div>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" id="closing-progress-bar" role="progressbar" style="width: 88%;"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 6 KPIs de Integridade do Fechamento -->
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-white text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Verifica&ccedil;&otilde;es</div>
+                                                    <div class="fs-6 fw-bold text-dark font-monospace" id="closing-kpi-total">18</div>
+                                                    <span class="text-muted fs-xxs">Total de itens</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-white text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Aprovadas</div>
+                                                    <div class="fs-6 fw-bold text-success font-monospace" id="closing-kpi-approved">15</div>
+                                                    <span class="badge bg-success-subtle text-success fs-xxs">Conformes</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-white text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Pendentes</div>
+                                                    <div class="fs-6 fw-bold text-warning font-monospace" id="closing-kpi-pending">3</div>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis fs-xxs">Em an&aacute;lise</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-white text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Cr&iacute;ticas</div>
+                                                    <div class="fs-6 fw-bold text-dark font-monospace" id="closing-kpi-critical">0</div>
+                                                    <span class="badge bg-light text-muted fs-xxs">Sem risco</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-white text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Diverg. Financeira</div>
+                                                    <div class="fs-6 fw-bold text-success font-monospace" id="closing-kpi-fin-div">R$ 0,00</div>
+                                                    <span class="badge bg-success-subtle text-success fs-xxs">Zero discrep&acirc;ncia</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-white text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Diverg. Cont&aacute;bil</div>
+                                                    <div class="fs-6 fw-bold text-success font-monospace" id="closing-kpi-acc-div">R$ 0,00</div>
+                                                    <span class="badge bg-success-subtle text-success fs-xxs">Partidas fechadas</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Category Filter Pills -->
+                                        <div class="d-flex align-items-center gap-1 flex-wrap mb-3" id="closing-category-filters">
+                                            <button class="btn btn-xs btn-primary fw-bold text-white" onclick="window.filterClosingCategory('TODAS', this)">Todas</button>
+                                            <button class="btn btn-xs btn-outline-secondary" onclick="window.filterClosingCategory('Financeiro', this)">Financeiro</button>
+                                            <button class="btn btn-xs btn-outline-secondary" onclick="window.filterClosingCategory('Produtores', this)">Produtores</button>
+                                            <button class="btn btn-xs btn-outline-secondary" onclick="window.filterClosingCategory('Contabilidade', this)">Contabilidade</button>
+                                            <button class="btn btn-xs btn-outline-secondary" onclick="window.filterClosingCategory('Fiscal', this)">Fiscal</button>
+                                            <button class="btn btn-xs btn-outline-secondary" onclick="window.filterClosingCategory('Demonstrações', this)">Demonstra&ccedil;&otilde;es</button>
+                                        </div>
+
+                                        <!-- Checklist Table -->
+                                        <div class="table-responsive border rounded">
+                                            <table class="table table-hover align-middle mb-0 fs-xxs" id="closing-checks-table">
+                                                <thead class="bg-light text-muted text-uppercase">
+                                                    <tr>
+                                                        <th class="py-2 px-3">Categoria</th>
+                                                        <th class="py-2 px-3">Verifica&ccedil;&atilde;o</th>
+                                                        <th class="py-2 px-3 text-center">Severidade</th>
+                                                        <th class="py-2 px-3">Origem</th>
+                                                        <th class="py-2 px-3 text-end">Valor (R$)</th>
+                                                        <th class="py-2 px-3 text-center">Status</th>
+                                                        <th class="py-2 px-3 text-end">A&ccedil;&otilde;es</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="closing-checks-table-body">
+                                                    <!-- Rendered dynamically -->
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
@@ -13101,120 +13244,368 @@ Como podemos te ajudar hoje?
                                     </div>
                                 </div>
 
-                                <!-- TAB PANE: Relatórios - DRE -->
+                                                                <!-- TAB PANE: Relatórios - DRE Gerencial (Fase 26.17.8.4) -->
                                 <div class="accounting-pane" id="accpane-relatorios-dre" style="display: none;">
-                                    <div class="card shadow-sm border p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h6 class="fw-bold mb-0 text-dark"><i class="ph-presentation text-primary me-1"></i> DRE - Demonstração do Resultado do Exercício</h6>
-                                            <button class="btn btn-xs btn-outline-primary fw-bold" onclick="alert('Baixando DRE detalhado em PDF...')"><i class="ph-file-pdf me-1"></i> Exportar DRE</button>
+                                    <div class="card shadow-sm border p-3 mb-3">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 pb-2 border-bottom">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fs-xxs">FASE 26.17.8.4</span>
+                                                    <h6 class="fw-bold mb-0 text-dark">DRE Gerencial Enterprise</h6>
+                                                </div>
+                                                <p class="text-muted fs-xs mb-0">
+                                                    Resultado econ&ocirc;mico com comparativo Real &times; Or&ccedil;ado &times; Ano Anterior. Padr&atilde;o cont&aacute;bil estrito: recursos de terceiros (produtores) segregados.
+                                                </p>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="btn-group btn-group-sm" id="dre-period-selector" role="group">
+                                                    <button type="button" class="btn btn-outline-secondary btn-xs active" id="btn-dre-period-mes" onclick="window.switchDrePeriod('mes')">M&ecirc;s</button>
+                                                    <button type="button" class="btn btn-outline-secondary btn-xs" id="btn-dre-period-trimestre" onclick="window.switchDrePeriod('trimestre')">Trimestre</button>
+                                                    <button type="button" class="btn btn-outline-secondary btn-xs" id="btn-dre-period-ano" onclick="window.switchDrePeriod('ano')">Ano (YTD)</button>
+                                                </div>
+                                                <button class="btn btn-xs btn-outline-secondary fw-semibold" onclick="window.exportDreCsv()">
+                                                    <i class="ph-file-csv me-1"></i> CSV
+                                                </button>
+                                                <button class="btn btn-xs btn-outline-primary fw-bold" onclick="window.printOrExportDrePdf()">
+                                                    <i class="ph-file-pdf me-1"></i> Imprimir / PDF
+                                                </button>
+                                            </div>
                                         </div>
-                                        <p class="text-muted fs-xs">Demonstrativo simplificado referente ao mês de Julho/2026 (Competência contábil).</p>
-                                        <div class="border rounded p-3 bg-light font-monospace fs-xxs">
-                                            <div class="d-flex justify-content-between border-bottom pb-1 fw-bold text-dark">
-                                                <span>CONTA / DESCRIÇÃO</span>
-                                                <span>VALOR ACUMULADO</span>
+
+                                        <!-- Secondary Filters Bar -->
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label fs-xxs text-muted fw-bold text-uppercase mb-1">Produtor:</label>
+                                                <select class="form-select form-select-sm" id="dre-filter-producer" onchange="window.renderDre()">
+                                                    <option value="" selected>Todos os produtores</option>
+                                                    <option value="prod-001">Live Entretenimento Ltda</option>
+                                                    <option value="prod-002">Opus Promo&ccedil;&otilde;es Culturais</option>
+                                                    <option value="prod-003">Mercury Concerts Brasil</option>
+                                                </select>
                                             </div>
-                                            <div class="d-flex justify-content-between pt-2">
-                                                <span><strong>1. RECEITA BRUTA DE VENDAS</strong></span>
-                                                <span><strong>R$ 64.981,90</strong></span>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label fs-xxs text-muted fw-bold text-uppercase mb-1">Evento:</label>
+                                                <select class="form-select form-select-sm" id="dre-filter-event" onchange="window.renderDre()">
+                                                    <option value="" selected>Todos os eventos</option>
+                                                    <option value="ev-1">Festival de Ver&atilde;o 2026</option>
+                                                    <option value="ev-2">Stand-up Comedy Gala</option>
+                                                    <option value="ev-3">Turn&ecirc; Arena Rock</option>
+                                                </select>
                                             </div>
-                                            <div class="d-flex justify-content-between text-muted-dark ps-2">
-                                                <span>Receita de Ingressos (Yii)</span>
-                                                <span>R$ 55.434,62</span>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label fs-xxs text-muted fw-bold text-uppercase mb-1">Centro de Custo:</label>
+                                                <select class="form-select form-select-sm" id="dre-filter-cost-center" onchange="window.renderDre()">
+                                                    <option value="" selected>Todos os centros de custo</option>
+                                                    <option value="cc-201">CC-201 Plataforma Digital</option>
+                                                    <option value="cc-101">CC-101 Shows e Festivais</option>
+                                                    <option value="cc-001">CC-001 Tesouraria Central</option>
+                                                </select>
                                             </div>
-                                            <div class="d-flex justify-content-between text-muted-dark ps-2 border-bottom pb-1">
-                                                <span>Receita de Conveniência (Tax)</span>
-                                                <span>R$ 9.547,28</span>
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-label fs-xxs text-muted fw-bold text-uppercase mb-1">Canal de Venda:</label>
+                                                <select class="form-select form-select-sm" id="dre-filter-channel" onchange="window.renderDre()">
+                                                    <option value="" selected>Todos os canais</option>
+                                                    <option value="online">E-commerce / Web</option>
+                                                    <option value="app">App Mobile</option>
+                                                    <option value="pdv">PDV F&iacute;sico</option>
+                                                </select>
                                             </div>
-                                            <div class="d-flex justify-content-between pt-2">
-                                                <span class="text-danger"><strong>2. DEDUÇÕES E IMPOSTOS</strong></span>
-                                                <span class="text-danger"><strong>- R$ 4.223,82</strong></span>
+                                        </div>
+
+                                        <!-- 6 KPIs Executivos DRE -->
+                                        <div class="row g-2 mb-3" id="dre-kpi-cards-row">
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-light text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Receita L&iacute;quida</div>
+                                                    <div class="fs-6 fw-bold text-dark font-monospace" id="dre-kpi-net-revenue">R$ 486.200,00</div>
+                                                    <span class="badge bg-success-subtle text-success fs-xxs mt-1">+3,0% vs Or&ccedil;ado</span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between text-muted-dark ps-2 border-bottom pb-1">
-                                                <span>Simples Nacional Apurado (Faturamento)</span>
-                                                <span>- R$ 4.223,82</span>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-light text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">EBITDA (LAJIDA)</div>
+                                                    <div class="fs-6 fw-bold text-primary font-monospace" id="dre-kpi-ebitda">R$ 178.900,00</div>
+                                                    <span class="badge bg-primary-subtle text-primary fs-xxs mt-1">+13,2% vs Or&ccedil;ado</span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between pt-2 fw-bold text-dark">
-                                                <span><strong>3. RECEITA LÍQUIDA OPERACIONAL</strong></span>
-                                                <span><strong>R$ 60.758,08</strong></span>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-light text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Margem EBITDA</div>
+                                                    <div class="fs-6 fw-bold text-dark font-monospace" id="dre-kpi-ebitda-margin">36,80%</div>
+                                                    <span class="text-muted fs-xxs d-block mt-1">Efici&ecirc;ncia operacional</span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between pt-2">
-                                                <span class="text-danger"><strong>4. CUSTOS OPERACIONAIS (COGS)</strong></span>
-                                                <span class="text-danger"><strong>- R$ 24.360,00</strong></span>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-light text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Resultado L&iacute;quido</div>
+                                                    <div class="fs-6 fw-bold text-success font-monospace" id="dre-kpi-net-income">R$ 139.600,00</div>
+                                                    <span class="badge bg-success-subtle text-success fs-xxs mt-1">+16,3% vs Or&ccedil;ado</span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between text-muted-dark ps-2 border-bottom pb-1">
-                                                <span>Gateway & MDR Cartão</span>
-                                                <span>- R$ 1.480,00</span>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-light text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Margem L&iacute;quida</div>
+                                                    <div class="fs-6 fw-bold text-dark font-monospace" id="dre-kpi-net-margin">28,71%</div>
+                                                    <span class="text-muted fs-xxs d-block mt-1">Rentabilidade final</span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between text-muted-dark ps-2 border-bottom pb-1">
-                                                <span>Repasses a Produtores (Custos Eventos)</span>
-                                                <span>- R$ 22.880,00</span>
+                                            <div class="col-6 col-md-4 col-xl-2">
+                                                <div class="p-2 border rounded bg-light text-start">
+                                                    <div class="fs-xxs text-muted text-uppercase fw-bold">Crescimento YoY</div>
+                                                    <div class="fs-6 fw-bold text-success font-monospace" id="dre-kpi-yoy-growth">+18,42%</div>
+                                                    <span class="text-muted fs-xxs d-block mt-1">vs Ano Anterior</span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between pt-2 fw-bold text-success border-top border-2">
-                                                <span><strong>5. RESULTADO LÍQUIDO DO PERÍODO</strong></span>
-                                                <span><strong>R$ 36.398,08</strong></span>
+                                        </div>
+
+                                        <!-- Regulatory / Technical Alert -->
+                                        <div class="alert alert-info py-2 px-3 mb-3 fs-xxs d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="ph-info me-1"></i>
+                                                <strong>Conformidade Cont&aacute;bil (NBC TG 47 / CPC 47):</strong> O valor facial de ingressos transacionados pertence integralmente aos produtores (Passivo de Terceiros) e <strong>N&Atilde;O</strong> comp&otilde;e a Receita Operacional Bruta da DiskIngressos.
                                             </div>
+                                            <span class="badge bg-white text-dark border font-monospace" id="dre-current-period-label">M&ecirc;s Atual (Setembro/2026)</span>
+                                        </div>
+
+                                        <!-- DRE Hierarchical Table -->
+                                        <div class="table-responsive border rounded">
+                                            <table class="table table-hover align-middle mb-0 fs-xxs" id="dre-statement-table">
+                                                <thead class="bg-light text-muted text-uppercase">
+                                                    <tr>
+                                                        <th class="py-2 px-3 text-start" style="min-width: 260px;">Conta / Descri&ccedil;&atilde;o</th>
+                                                        <th class="py-2 px-3 text-end">Real (R$)</th>
+                                                        <th class="py-2 px-3 text-end">Or&ccedil;ado (R$)</th>
+                                                        <th class="py-2 px-3 text-end">Var. (R$)</th>
+                                                        <th class="py-2 px-3 text-end">Var. (%)</th>
+                                                        <th class="py-2 px-3 text-end">Ano Ant. (R$)</th>
+                                                        <th class="py-2 px-3 text-end">YoY (R$)</th>
+                                                        <th class="py-2 px-3 text-end">YoY (%)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="dre-table-body">
+                                                    <!-- Rendered dynamically by renderDre() -->
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- TAB PANE: Relatórios - Balanço -->
+                                                                <!-- TAB PANE: Relatórios - Balanço & Posição Financeira (Fase 26.17.8.5) -->
                                 <div class="accounting-pane" id="accpane-relatorios-balanco" style="display: none;">
-                                    <div class="card shadow-sm border p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h6 class="fw-bold mb-0 text-dark"><i class="ph-activity text-primary me-1"></i> Balanço Patrimonial (BP)</h6>
-                                            <button class="btn btn-xs btn-outline-primary fw-bold" onclick="alert('Exportando Balanço Patrimonial completo...')"><i class="ph-download-simple me-1"></i> Baixar Relatório</button>
+                                    <div class="card shadow-sm border p-3 mb-3">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 pb-2 border-bottom">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fs-xxs">FASE 26.17.8.5</span>
+                                                    <h6 class="fw-bold mb-0 text-dark">Balan&ccedil;o Patrimonial &amp; Posi&ccedil;&atilde;o Financeira</h6>
+                                                </div>
+                                                <p class="text-muted fs-xs mb-0">
+                                                    Vis&atilde;o corporativa DiskIngressos com segrega&ccedil;&atilde;o de recursos pr&oacute;prios e de terceiros (produtores em cust&oacute;dia).
+                                                </p>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-outline-primary btn-xs active fw-semibold" id="btn-balance-view-posicao" onclick="window.switchBalanceView('position')">
+                                                        <i class="ph-wallet me-1"></i> Posi&ccedil;&atilde;o Financeira
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-xs fw-semibold" id="btn-balance-view-balanco" onclick="window.switchBalanceView('balance')">
+                                                        <i class="ph-scales me-1"></i> Balan&ccedil;o Patrimonial (BP)
+                                                    </button>
+                                                </div>
+                                                <button class="btn btn-xs btn-outline-secondary fw-semibold" onclick="window.printOrExportBalancePdf()">
+                                                    <i class="ph-download-simple me-1"></i> Baixar Relat&oacute;rio
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="row g-2 fs-xxs font-monospace">
-                                            <div class="col-md-6 border-end">
-                                                <div class="p-2 bg-light fw-bold text-dark border-bottom mb-2">ATIVO (Bens e Direitos)</div>
-                                                <div class="d-flex justify-content-between ps-2 py-1 border-bottom">
-                                                    <span><strong>1. ATIVO CIRCULANTE</strong></span>
-                                                    <span><strong>R$ 269.830,22</strong></span>
+
+                                        <!-- VIEW 1: POSIÇÃO FINANCEIRA -->
+                                        <div id="balance-view-position-container">
+                                            <!-- 8 KPIs Executivos -->
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border rounded bg-light text-start">
+                                                        <div class="fs-xxs text-muted text-uppercase fw-bold">Caixa e Bancos</div>
+                                                        <div class="fs-6 fw-bold text-dark font-monospace" id="pos-kpi-cash">R$ 1.420.000,00</div>
+                                                        <span class="text-muted fs-xxs">Ita&uacute; + Inter C/C</span>
+                                                    </div>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-3 text-muted-dark">
-                                                    <span>1.1.01 - Caixa Geral</span>
-                                                    <span>R$ 68.410,00</span>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border rounded bg-light text-start">
+                                                        <div class="fs-xxs text-muted text-uppercase fw-bold">Gateway a Receber</div>
+                                                        <div class="fs-6 fw-bold text-dark font-monospace" id="pos-kpi-gateways">R$ 2.180.000,00</div>
+                                                        <span class="text-muted fs-xxs">Stone + Cielo + Pagar.me</span>
+                                                    </div>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-3 text-muted-dark">
-                                                    <span>1.1.02 - Itaú Conta Movimento</span>
-                                                    <span>R$ 142.950,22</span>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border rounded bg-light text-start">
+                                                        <div class="fs-xxs text-muted text-uppercase fw-bold">Disponibilidades Totais</div>
+                                                        <div class="fs-6 fw-bold text-primary font-monospace" id="pos-kpi-availability">R$ 3.600.000,00</div>
+                                                        <span class="text-muted fs-xxs">Caixa + Receb&iacute;veis</span>
+                                                    </div>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-3 text-muted-dark border-bottom pb-1">
-                                                    <span>1.1.04 - Contas a Receber Adq</span>
-                                                    <span>R$ 58.470,00</span>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border border-warning-subtle rounded bg-warning-subtle text-start">
+                                                        <div class="fs-xxs text-warning-emphasis text-uppercase fw-bold">Valores de Terceiros</div>
+                                                        <div class="fs-6 fw-bold text-dark font-monospace" id="pos-kpi-third-party">R$ 2.850.000,00</div>
+                                                        <span class="badge bg-warning text-dark fs-xxs">Em Cust&oacute;dia Produtores</span>
+                                                    </div>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-2 fw-bold text-primary pt-2">
-                                                    <span>TOTAL DO ATIVO</span>
-                                                    <span>R$ 269.830,22</span>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border rounded bg-light text-start">
+                                                        <div class="fs-xxs text-muted text-uppercase fw-bold">Repasses Pendentes</div>
+                                                        <div class="fs-6 fw-bold text-danger font-monospace" id="pos-kpi-payouts">R$ 2.850.000,00</div>
+                                                        <span class="text-muted fs-xxs">Border&ocirc;s programados</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border rounded bg-light text-start">
+                                                        <div class="fs-xxs text-muted text-uppercase fw-bold">Tributos a Recolher</div>
+                                                        <div class="fs-6 fw-bold text-danger font-monospace" id="pos-kpi-taxes">R$ 85.000,00</div>
+                                                        <span class="text-muted fs-xxs">ISS + PIS + COFINS</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border rounded bg-light text-start">
+                                                        <div class="fs-xxs text-muted text-uppercase fw-bold">Outras Obriga&ccedil;&otilde;es</div>
+                                                        <div class="fs-6 fw-bold text-dark font-monospace" id="pos-kpi-other">R$ 65.000,00</div>
+                                                        <span class="text-muted fs-xxs">Fornecedores operacionais</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="p-2 border border-success-subtle rounded bg-success-subtle text-start">
+                                                        <div class="fs-xxs text-success-emphasis text-uppercase fw-bold">Posi&ccedil;&atilde;o L&iacute;quida</div>
+                                                        <div class="fs-6 fw-bold text-success font-monospace" id="pos-kpi-net">R$ 600.000,00</div>
+                                                        <span class="badge bg-success text-white fs-xxs">Liquidez Livre Disk</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="p-2 bg-light fw-bold text-dark border-bottom mb-2">PASSIVO & PL (Obrigações e Capital)</div>
-                                                <div class="d-flex justify-content-between ps-2 py-1 border-bottom">
-                                                    <span><strong>2. PASSIVO CIRCULANTE</strong></span>
-                                                    <span><strong>R$ 22.880,00</strong></span>
+
+                                            <!-- Comparison & Third-Party Highlighting Cards -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-md-6">
+                                                    <div class="card border border-warning-subtle shadow-xs h-100 p-3 bg-white">
+                                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                                            <i class="ph-shield-warning text-warning fs-5"></i>
+                                                            <h6 class="fw-bold mb-0 text-dark fs-xs">Segrega&ccedil;&atilde;o de Recursos de Terceiros</h6>
+                                                        </div>
+                                                        <div class="fs-4 fw-bold text-dark font-monospace mb-1" id="pos-card-third-party-amount">R$ 2.850.000,00</div>
+                                                        <p class="fs-xs text-muted mb-2">
+                                                            Valores fiduci&aacute;rios arrecadados na venda de ingressos pertencentes aos produtores de eventos. <strong>N&atilde;o comp&otilde;em o patrim&ocirc;nio pr&oacute;prio da DiskIngressos</strong> e permanecem segregados at&eacute; a liquida&ccedil;&atilde;o do border&ocirc;.
+                                                        </p>
+                                                        <div class="table-responsive border rounded">
+                                                            <table class="table table-sm align-middle mb-0 fs-xxs">
+                                                                <thead class="bg-light">
+                                                                    <tr>
+                                                                        <th>Produtor / Evento</th>
+                                                                        <th class="text-end">Valor Cust&oacute;dia</th>
+                                                                        <th class="text-center">Data Repasse</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="pos-table-third-party-body">
+                                                                    <!-- Rendered dynamically -->
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-3 text-muted-dark">
-                                                    <span>2.1.02 - Produtores a Pagar</span>
-                                                    <span>R$ 18.656,18</span>
+                                                <div class="col-md-6">
+                                                    <div class="card border shadow-xs h-100 p-3 bg-white">
+                                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                                            <i class="ph-chart-pie-slice text-primary fs-5"></i>
+                                                            <h6 class="fw-bold mb-0 text-dark fs-xs">Cobertura: Disponibilidades &times; Obriga&ccedil;&otilde;es</h6>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mb-2">
+                                                            A rela&ccedil;&atilde;o entre ativos l&iacute;quidos imediatos e passivos de curto prazo demonstra sa&uacute;de financeira s&oacute;lida para honrar 100% dos repasses.
+                                                        </p>
+                                                        <div class="d-flex flex-column gap-2 mb-3">
+                                                            <div class="d-flex justify-content-between align-items-center fs-xs border-bottom pb-1">
+                                                                <span class="text-muted">Disponibilidades Totais (Caixa + Adq):</span>
+                                                                <strong class="text-primary font-monospace">R$ 3.600.000,00</strong>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between align-items-center fs-xs border-bottom pb-1">
+                                                                <span class="text-muted">(-) Repasses a Produtores:</span>
+                                                                <strong class="text-danger font-monospace">R$ 2.850.000,00</strong>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between align-items-center fs-xs border-bottom pb-1">
+                                                                <span class="text-muted">(-) Obriga&ccedil;&otilde;es Tribut&aacute;rias e Outras:</span>
+                                                                <strong class="text-danger font-monospace">R$ 150.000,00</strong>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between align-items-center fs-xs pt-1">
+                                                                <span class="fw-bold text-dark">(=) Saldo L&iacute;quido Livre da Plataforma:</span>
+                                                                <strong class="text-success font-monospace fs-6">R$ 600.000,00</strong>
+                                                            </div>
+                                                        </div>
+                                                        <div class="progress" style="height: 8px;">
+                                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 79%;" title="79% Recursos Terceiros"></div>
+                                                            <div class="progress-bar bg-success" role="progressbar" style="width: 21%;" title="21% Liquidez Própria"></div>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between fs-xxs text-muted mt-1">
+                                                            <span>79% Recursos Produtores</span>
+                                                            <span>21% Liquidez Pr&oacute;pria Disk</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-3 text-muted-dark border-bottom pb-1">
-                                                    <span>2.1.03 - Impostos a Recolher</span>
-                                                    <span>R$ 4.223,82</span>
+                                            </div>
+
+                                            <!-- Gateways Breakdown Table -->
+                                            <div class="card border shadow-xs p-3 bg-white">
+                                                <h6 class="fw-bold mb-2 text-dark fs-xs"><i class="ph-credit-card text-muted me-1"></i> Detalhamento de Adquirentes &amp; Gateways a Liquidar</h6>
+                                                <div class="table-responsive border rounded">
+                                                    <table class="table table-hover align-middle mb-0 fs-xxs">
+                                                        <thead class="bg-light text-muted text-uppercase">
+                                                            <tr>
+                                                                <th>Adquirente / Gateway</th>
+                                                                <th class="text-end">Saldo a Liquidar (R$)</th>
+                                                                <th class="text-end">Diverg&ecirc;ncia Pendente</th>
+                                                                <th class="text-center">Prazo Contratual</th>
+                                                                <th class="text-center">Status</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="pos-table-gateways-body">
+                                                            <!-- Rendered dynamically -->
+                                                        </tbody>
+                                                    </table>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-2 py-1 border-bottom mt-2">
-                                                    <span><strong>3. PATRIMÔNIO LÍQUIDO</strong></span>
-                                                    <span><strong>R$ 246.950,22</strong></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- VIEW 2: BALANÇO PATRIMONIAL -->
+                                        <div id="balance-view-sheet-container" style="display: none;">
+                                            <!-- Equation Card -->
+                                            <div class="alert alert-success py-2 px-3 mb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                                                <div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="ph-check-circle fs-5 text-success"></i>
+                                                        <strong class="text-dark fs-xs">Equa&ccedil;&atilde;o Patrimonial: Ativo = Passivo + Patrim&ocirc;nio L&iacute;quido</strong>
+                                                    </div>
+                                                    <span class="fs-xxs text-muted">Balan&ccedil;o 100% equilibrado e auditado conforme as normas NBC TG Estrutura Conceitual.</span>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-3 text-muted-dark border-bottom pb-1">
-                                                    <span>3.1.00 - Capital Social</span>
-                                                    <span>R$ 246.950,22</span>
+                                                <div class="text-md-end">
+                                                    <span class="badge bg-success text-white font-monospace fs-xxs">Diferen&ccedil;a: R$ 0,00</span>
+                                                    <span class="text-muted fs-xxs d-block">Compet&ecirc;ncia: 31/08/2026</span>
                                                 </div>
-                                                <div class="d-flex justify-content-between ps-2 fw-bold text-success pt-2">
-                                                    <span>TOTAL PASSIVO + PL</span>
-                                                    <span>R$ 269.830,22</span>
-                                                </div>
+                                            </div>
+
+                                            <!-- Balance Sheet Structure Table -->
+                                            <div class="table-responsive border rounded mb-3">
+                                                <table class="table table-hover align-middle mb-0 fs-xxs" id="balance-sheet-table">
+                                                    <thead class="bg-light text-muted text-uppercase">
+                                                        <tr>
+                                                            <th class="py-2 px-3 text-start" style="min-width: 280px;">Conta / Grupo Cont&aacute;bil</th>
+                                                            <th class="py-2 px-3 text-end">Atual (31/08/2026)</th>
+                                                            <th class="py-2 px-3 text-end">Anterior (31/12/2025)</th>
+                                                            <th class="py-2 px-3 text-end">Varia&ccedil;&atilde;o (R$)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="balance-sheet-table-body">
+                                                        <!-- Rendered dynamically -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="alert alert-secondary py-2 px-3 mb-0 fs-xxs text-muted">
+                                                <i class="ph-lock-key me-1"></i>
+                                                <strong>Seguran&ccedil;a e Governan&ccedil;a:</strong> O Balan&ccedil;o Corporativo da DiskIngressos &eacute; de visualiza&ccedil;&atilde;o restrita &agrave; Diretoria e Contabilidade. O perfil Produtor n&atilde;o possui autoriza&ccedil;&atilde;o para visualizar demonstra&ccedil;&otilde;es patrimoniais corporativas.
                                             </div>
                                         </div>
                                     </div>
@@ -15208,6 +15599,7 @@ Como podemos te ajudar hoje?
                     <button type="button" class="btn btn-outline-primary btn-sm fw-semibold" id="btn-modal-assumir" onclick="window.assignReconciliationAnalysis()">
                         <i class="ph-user-check me-1"></i> Assumir Análise
                     </button>
+                    <button type="button" class="btn btn-outline-info btn-sm fw-semibold text-info" id="btn-modal-rastrear" onclick="window.traceOrderFromActiveReconciliation()"><i class="ph-magnifying-glass me-1"></i> Rastrear Pedido 360º</button>
                     <button type="button" class="btn btn-success btn-sm fw-bold text-white" id="btn-modal-resolver" onclick="window.openResolveManualFromDetail()">
                         <i class="ph-check-circle me-1"></i> Resolver Manualmente
                     </button>
@@ -15320,6 +15712,63 @@ Como podemos te ajudar hoje?
                 <button type="button" class="btn btn-light btn-sm fw-bold" onclick="closeModal('importar-extrato-conciliacao')">Cancelar</button>
                 <button type="button" class="btn btn-primary btn-sm fw-bold" id="btn-exec-import-ofx" onclick="window.executeImportExtratoModal()">
                     <i class="ph-sparkle me-1"></i> Processar Arquivo
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL: TRILHA DE AUDITORIA DE RASTREABILIDADE (FASE 26.17.8.3) -->
+    <div class="modal-overlay" id="modal-rastreabilidade-auditoria" style="display: none; z-index: 1060;">
+        <div class="modal-content" style="max-width: 640px; border-radius: 10px;">
+            <div class="modal-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph-shield-check text-primary fs-5"></i>
+                    <span class="modal-title fw-bold text-dark">Trilha de Auditoria Cont&aacute;bil</span>
+                </div>
+                <button class="btn-close-modal" type="button" onclick="closeModal('rastreabilidade-auditoria')" style="color: #64748b; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body p-4 text-start bg-white">
+                <p class="fs-xs text-muted mb-3">
+                    Hist&oacute;rico cronol&oacute;gico indel&eacute;vel de apropria&ccedil;&otilde;es, reconcilia&ccedil;&otilde;es e lan&ccedil;amentos cont&aacute;beis auditados vinculados ao pedido.
+                </p>
+                <div class="d-flex flex-column gap-2" id="trace-audit-list-container">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 d-flex justify-content-end">
+                <button type="button" class="btn btn-light btn-sm fw-bold" onclick="closeModal('rastreabilidade-auditoria')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: JUSTIFICATIVA DE REABERTURA DE PERÍODO (FASE 26.17.8.6) -->
+    <div class="modal-overlay" id="modal-fechamento-reabertura" style="display: none; z-index: 1060;">
+        <div class="modal-content" style="max-width: 520px; border-radius: 10px;">
+            <div class="modal-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph-warning-octagon text-danger fs-5"></i>
+                    <span class="modal-title fw-bold text-dark">Reabertura Excepcional de Compet&ecirc;ncia</span>
+                </div>
+                <button class="btn-close-modal" type="button" onclick="closeModal('fechamento-reabertura')" style="color: #64748b; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body p-4 text-start bg-white">
+                <div class="alert alert-danger py-2 px-3 mb-3 fs-xs">
+                    <i class="ph-warning me-1"></i> A reabertura de uma compet&ecirc;ncia fechada desbloqueia lan&ccedil;amentos cont&aacute;beis e exige justificativa formal para auditoria externa.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fs-xxs fw-bold text-danger text-uppercase mb-1">Motivo / Justificativa (Obrigat&oacute;rio, m&iacute;nimo 10 caracteres):</label>
+                    <textarea class="form-control form-control-sm" id="reopen-period-reason" rows="3" placeholder="Informe o parecer cont&aacute;bil ou decis&atilde;o da diretoria que motivou a reabertura da compet&ecirc;ncia..."></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fs-xxs fw-bold text-muted text-uppercase mb-1">Auditor / Aprovador:</label>
+                    <input type="text" class="form-control form-control-sm bg-light" value="controladoria@diskingressos.com.br" readonly>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-light btn-sm fw-bold" onclick="closeModal('fechamento-reabertura')">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm fw-bold text-white" onclick="window.submitReopenPeriod()">
+                    <i class="ph-check me-1"></i> Confirmar Reabertura
                 </button>
             </div>
         </div>

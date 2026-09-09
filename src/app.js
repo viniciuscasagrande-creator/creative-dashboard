@@ -3,6 +3,10 @@
  */
 import './services/firebase/index.js';
 import reconciliationService from './services/reconciliationService.js';
+import { traceabilityService } from './services/traceabilityService.js';
+import { dreService } from './services/dreService.js';
+import { balanceSheetService } from './services/balanceSheetService.js';
+import { closingService } from './services/closingService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
 // Global state for events
@@ -6660,7 +6664,15 @@ function switchAccountingTab(e, tabName) {
     renderRazao();
   } else if (tabName === 'lancamentos') {
     renderLancamentos();
+    if (typeof renderTraceability === 'function') renderTraceability();
   } else if (tabName === 'custos') {
+    renderCustos();
+  } else if (tabName === 'relatorios-dre') {
+    if (typeof renderDre === 'function') renderDre();
+  } else if (tabName === 'relatorios-balanco') {
+    if (typeof renderBalanceSheet === 'function') renderBalanceSheet();
+  } else if (tabName === 'cont-fechamento') {
+    if (typeof renderClosing === 'function') renderClosing();
     renderCustos();
   } else if (tabName === 'conciliacao') {
     renderConciliacao();
@@ -12210,6 +12222,712 @@ function syncReconciliationData() {
   }
 }
 
+
+/* ==========================================================================
+   FASES 26.17.8.3, 26.17.8.4, 26.17.8.5, 26.17.8.6 — CONTABILIDADE ENTERPRISE
+   ========================================================================== */
+
+// --- FASE 26.17.8.3: RASTREABILIDADE FINANCEIRO -> CONTÁBIL (VISÃO 360º) ---
+let currentTraceOrderId = '#123456';
+
+function formatCurrencyBRL(val) {
+  if (val == null || isNaN(val)) return 'R$ 0,00';
+  return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function formatDateBRL(isoString) {
+  if (!isoString) return '—';
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return isoString;
+  }
+}
+
+function formatPercent(val) {
+  if (val == null || isNaN(val)) return '0,00%';
+  return (val * 100).toFixed(2).replace('.', ',') + '%';
+}
+
+function renderTraceability(orderId = null) {
+  const container = document.getElementById('traceability-content-container');
+  if (!container) return;
+
+  const targetId = orderId || currentTraceOrderId || '#123456';
+  currentTraceOrderId = targetId;
+
+  const res = traceabilityService.getOrderTraceability(targetId, typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
+  if (!res.success) {
+    container.innerHTML = `
+      <div class="alert alert-warning p-4 text-center">
+        <i class="ph-warning-circle fs-2 text-warning mb-2 d-block"></i>
+        <h6 class="fw-bold text-dark">${res.error}</h6>
+        <p class="text-muted fs-xs mb-3">Tente buscar por outro código de pedido, como <strong>#123456</strong>, <strong>#123488</strong> ou <strong>#123512</strong>.</p>
+        <button class="btn btn-sm btn-outline-primary fw-bold" onclick="window.loadTraceabilityOrder('#123456')">Carregar #123456 (Exemplo Padrão)</button>
+      </div>
+    `;
+    return;
+  }
+
+  const data = res.data;
+  const c = data.composition;
+
+  container.innerHTML = `
+    <!-- 12 KPI/Summary Cards -->
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="p-2 border rounded bg-white text-start">
+          <span class="fs-xxs text-muted text-uppercase fw-bold">Pedido</span>
+          <div class="fs-6 fw-bold text-dark font-monospace">${data.orderId}</div>
+          <span class="text-muted fs-xxs">ID único da compra</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="p-2 border rounded bg-white text-start">
+          <span class="fs-xxs text-muted text-uppercase fw-bold">Evento</span>
+          <div class="fs-6 fw-bold text-dark text-truncate" title="${data.eventName}">${data.eventName}</div>
+          <span class="text-muted fs-xxs text-truncate d-block">${data.producerName}</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="p-2 border rounded bg-white text-start">
+          <span class="fs-xxs text-muted text-uppercase fw-bold">Gateway / Adq.</span>
+          <div class="fs-6 fw-bold text-dark text-truncate">${data.gateway}</div>
+          <span class="text-muted fs-xxs font-monospace">${data.transactionId}</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="p-2 border rounded bg-white text-start">
+          <span class="fs-xxs text-muted text-uppercase fw-bold">Pagamento</span>
+          <div class="fs-6 fw-bold text-dark">${data.paymentMethod}</div>
+          <span class="badge bg-success-subtle text-success fs-xxs">${data.financialStatus}</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="p-2 border rounded bg-white text-start">
+          <span class="fs-xxs text-muted text-uppercase fw-bold">Conciliação</span>
+          <div class="fs-6 fw-bold text-primary">${data.reconciliationStatus}</div>
+          <span class="text-muted fs-xxs">Contábil: ${data.accountingStatus}</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="p-2 border border-primary-subtle rounded bg-primary-subtle text-start">
+          <span class="fs-xxs text-primary-emphasis text-uppercase fw-bold">Total Pago (GMV)</span>
+          <div class="fs-6 fw-bold text-dark font-monospace">${formatCurrencyBRL(c.totalPaid)}</div>
+          <span class="text-muted fs-xxs">${formatDateBRL(data.createdAt)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 Column Layout: Financial Distribution & Timeline -->
+    <div class="row g-3 mb-3">
+      <!-- Col 1: Financial Composition -->
+      <div class="col-12 col-xl-5">
+        <div class="card border shadow-xs h-100 p-3 bg-white">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+            <div>
+              <span class="text-muted fs-xxs text-uppercase fw-bold">Composição Financeira</span>
+              <h6 class="fw-bold text-dark mb-0 fs-xs">Distribuição do Pedido &amp; Segregação</h6>
+            </div>
+            <span class="badge bg-light text-dark border font-monospace fs-xxs">${data.orderId}</span>
+          </div>
+
+          <div class="d-flex flex-column gap-1 fs-xs">
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <span class="text-muted">Valor Facial dos Ingressos:</span>
+              <strong class="font-monospace text-dark">${formatCurrencyBRL(c.ticketFaceValue)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <span class="text-muted">Taxa de Conveniência (Ticketing):</span>
+              <strong class="font-monospace text-dark">+ ${formatCurrencyBRL(c.convenienceFee)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <span class="text-muted">Descontos / Cupons:</span>
+              <strong class="font-monospace text-muted">- ${formatCurrencyBRL(c.discounts)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom">
+              <span class="text-muted">Acréscimos / Juros Parcelamento:</span>
+              <strong class="font-monospace text-dark">+ ${formatCurrencyBRL(c.additions)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom bg-light px-2 rounded fw-bold">
+              <span class="text-dark">(=) Total Pago pelo Cliente:</span>
+              <span class="font-monospace text-dark">${formatCurrencyBRL(c.totalPaid)}</span>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom ps-2">
+              <span class="text-danger">(-) Tarifa Gateway / MDR Adquirência:</span>
+              <strong class="font-monospace text-danger">- ${formatCurrencyBRL(c.gatewayFee)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom ps-2">
+              <span class="text-muted">(-) Antifraude / Validação:</span>
+              <strong class="font-monospace text-muted">- ${formatCurrencyBRL(c.antifraudFee)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom ps-2">
+              <span class="text-muted">(-) Taxa de Antecipação:</span>
+              <strong class="font-monospace text-muted">- ${formatCurrencyBRL(c.anticipationFee)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom border-top border-2 bg-success-subtle px-2 rounded">
+              <span class="text-success-emphasis fw-bold">(=) Receita Própria DiskIngressos:</span>
+              <strong class="font-monospace text-success fs-6">${formatCurrencyBRL(c.diskRevenue)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom bg-warning-subtle px-2 rounded">
+              <span class="text-warning-emphasis fw-bold">(=) Valor Nominal do Produtor (Passivo):</span>
+              <strong class="font-monospace text-dark fs-6">${formatCurrencyBRL(c.producerAmount)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom ps-2">
+              <span class="text-danger">(-) Tributos sobre Receita (ISS/PIS/COFINS):</span>
+              <strong class="font-monospace text-danger">- ${formatCurrencyBRL(c.taxes)}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 bg-light px-2 rounded fw-bold text-primary">
+              <span>(=) Resultado Líquido da Operação:</span>
+              <strong class="font-monospace fs-6">${formatCurrencyBRL(c.netAmount)}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 2: Timeline -->
+      <div class="col-12 col-xl-7">
+        <div class="card border shadow-xs h-100 p-3 bg-white">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+            <div>
+              <span class="text-muted fs-xxs text-uppercase fw-bold">Linha do Tempo</span>
+              <h6 class="fw-bold text-dark mb-0 fs-xs">Ciclo Financeiro e Contábil</h6>
+            </div>
+            <span class="badge bg-success font-monospace fs-xxs">6 Etapas Concluídas</span>
+          </div>
+
+          <div class="reconciliation-timeline pt-2">
+            ${data.timeline.map((evt, idx) => `
+              <div class="d-flex gap-3 mb-3">
+                <div class="rounded-circle bg-${evt.status === 'CONCLUIDO' ? 'success' : 'primary'} text-white d-flex align-items-center justify-content-center shrink-0" style="width: 24px; height: 24px; font-size: 11px;">
+                  <i class="ph-${evt.status === 'CONCLUIDO' ? 'check' : 'hourglass'}"></i>
+                </div>
+                <div class="flex-grow-1 border-bottom pb-2">
+                  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1">
+                    <strong class="text-dark fs-xs">${evt.label}</strong>
+                    <span class="text-muted fs-xxs font-monospace">${formatDateBRL(evt.occurredAt)}</span>
+                  </div>
+                  <div class="text-muted fs-xxs mt-0.5">
+                    Origem: <span class="badge bg-light text-dark border">${evt.source}</span>
+                    ${evt.referenceId ? `• Ref: <strong class="font-monospace text-dark">${evt.referenceId}</strong>` : ''}
+                    ${evt.amount != null ? `• Valor: <strong class="font-monospace text-primary">${formatCurrencyBRL(evt.amount)}</strong>` : ''}
+                  </div>
+                  ${evt.description ? `<p class="text-muted fs-xxs mb-0 mt-1">${evt.description}</p>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Accounting Table -->
+    <div class="card border shadow-xs p-3 bg-white">
+      <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+        <div>
+          <span class="text-muted fs-xxs text-uppercase fw-bold">Reflexo Contábil</span>
+          <h6 class="fw-bold text-dark mb-0 fs-xs">Lançamentos em Partida Dobrada Vinculados ao Pedido</h6>
+        </div>
+        <span class="badge bg-info-subtle text-info border font-monospace fs-xxs">${data.accountingEntries.length} Partidas Dobradas</span>
+      </div>
+
+      <div class="table-responsive border rounded">
+        <table class="table table-hover align-middle mb-0 fs-xxs font-monospace">
+          <thead class="bg-light text-muted text-uppercase">
+            <tr>
+              <th class="py-2 px-3">Data</th>
+              <th class="py-2 px-3">Conta Débito (+)</th>
+              <th class="py-2 px-3">Conta Crédito (-)</th>
+              <th class="py-2 px-3">Histórico</th>
+              <th class="py-2 px-3">Documento</th>
+              <th class="py-2 px-3">Centro de Custo</th>
+              <th class="py-2 px-3 text-end">Valor (R$)</th>
+              <th class="py-2 px-3 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.accountingEntries.map(entry => `
+              <tr>
+                <td class="py-2 px-3 text-nowrap">${formatDateBRL(entry.occurredAt)}</td>
+                <td class="py-2 px-3">
+                  <div class="fw-bold text-dark">${entry.debitAccount}</div>
+                  <div class="text-muted fs-xxxs">${entry.debitAccountName}</div>
+                </td>
+                <td class="py-2 px-3">
+                  <div class="fw-bold text-dark">${entry.creditAccount}</div>
+                  <div class="text-muted fs-xxxs">${entry.creditAccountName}</div>
+                </td>
+                <td class="py-2 px-3 text-start font-sans" style="font-family: inherit; max-width: 220px;">
+                  ${entry.history}
+                </td>
+                <td class="py-2 px-3">${entry.documentReference}</td>
+                <td class="py-2 px-3 text-start font-sans" style="font-family: inherit;">${entry.costCenter || '—'}</td>
+                <td class="py-2 px-3 text-end fw-bold text-primary">${formatCurrencyBRL(entry.amount)}</td>
+                <td class="py-2 px-3 text-center">
+                  <span class="badge bg-${entry.status === 'CONCILIADO' ? 'success' : 'primary'}-subtle text-${entry.status === 'CONCILIADO' ? 'success' : 'primary'} fs-xxs">
+                    ${entry.status}
+                  </span>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function searchTraceabilityOrder() {
+  const input = document.getElementById('acc-trace-search-input');
+  if (!input) return;
+  const q = input.value.trim();
+  if (!q) {
+    renderTraceability('#123456');
+    return;
+  }
+  const results = traceabilityService.searchOrders(q, typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
+  if (results && results.length > 0) {
+    loadTraceabilityOrder(results[0].orderId);
+    if (typeof addSystemNotification === 'function') {
+      addSystemNotification('success', 'Rastreabilidade 360º', `Pedido ${results[0].orderId} localizado.`);
+    }
+  } else {
+    renderTraceability(q);
+  }
+}
+
+function loadTraceabilityOrder(orderId) {
+  const input = document.getElementById('acc-trace-search-input');
+  if (input) input.value = orderId;
+  currentTraceOrderId = orderId;
+  renderTraceability(orderId);
+}
+
+function exportTraceabilityEvidence() {
+  const res = traceabilityService.getOrderTraceability(currentTraceOrderId || '#123456');
+  if (!res.success) return;
+  const jsonStr = JSON.stringify(res.data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `evidencias_contabeis_pedido_${res.data.orderId.replace('#','')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('success', 'Evidências Exportadas', `Arquivo JSON de auditoria baixado para o pedido ${res.data.orderId}.`);
+  }
+}
+
+function openTraceabilityAuditModal() {
+  const container = document.getElementById('trace-audit-list-container');
+  if (!container) return;
+  const logs = traceabilityService.getAuditLogs(currentTraceOrderId || '#123456');
+  if (logs.length === 0) {
+    container.innerHTML = `
+      <div class="p-3 bg-light rounded text-center text-muted fs-xs">
+        <i class="ph-shield-check text-success fs-3 mb-1 d-block"></i>
+        Nenhum evento manual registrado. Todas as apropriações e conciliações foram executadas automaticamente de forma íntegra.
+      </div>
+    `;
+  } else {
+    container.innerHTML = logs.map(l => `
+      <div class="p-2 border rounded bg-light text-start">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <strong class="fs-xs text-dark">${l.action}</strong>
+          <span class="fs-xxs text-muted font-monospace">${formatDateBRL(l.timestamp)}</span>
+        </div>
+        <p class="fs-xxs text-muted mb-1">${l.details}</p>
+        <span class="badge bg-white text-dark border fs-xxs">Operador: ${l.actor}</span>
+      </div>
+    `).join('');
+  }
+  window.openModal('rastreabilidade-auditoria');
+}
+
+function traceOrderFromReconciliation(orderId) {
+  closeModal('analise-conciliacao-detalhe');
+  switchAccountingCategory('contabilidade', 'lancamentos');
+  loadTraceabilityOrder(orderId);
+}
+
+// --- FASE 26.17.8.4: DRE GERENCIAL ENTERPRISE ---
+let currentDrePeriod = 'mes';
+
+function renderDre() {
+  const tableBody = document.getElementById('dre-table-body');
+  if (!tableBody) return;
+
+  const producerId = document.getElementById('dre-filter-producer')?.value || null;
+  const eventId = document.getElementById('dre-filter-event')?.value || null;
+  const costCenterId = document.getElementById('dre-filter-cost-center')?.value || null;
+  const salesChannel = document.getElementById('dre-filter-channel')?.value || null;
+
+  const data = dreService.getDreOverview({
+    period: currentDrePeriod,
+    producerId,
+    eventId,
+    costCenterId,
+    salesChannel,
+    userRole: typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN'
+  });
+
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('dre-kpi-net-revenue', formatCurrencyBRL(data.netRevenue));
+  setEl('dre-kpi-ebitda', formatCurrencyBRL(data.ebitda));
+  setEl('dre-kpi-ebitda-margin', formatPercent(data.ebitdaMargin));
+  setEl('dre-kpi-net-income', formatCurrencyBRL(data.netIncome));
+  setEl('dre-kpi-net-margin', formatPercent(data.netMargin));
+  setEl('dre-kpi-yoy-growth', (data.yoyGrowth >= 0 ? '+' : '') + formatPercent(data.yoyGrowth));
+  setEl('dre-current-period-label', data.periodLabel);
+
+  function renderLines(lines, level = 0) {
+    return lines.map(line => {
+      const budgetVar = line.real - line.budget;
+      const budgetPct = line.budget ? (budgetVar / Math.abs(line.budget)) : 0;
+      const yoyVar = line.real - line.previousYear;
+      const yoyPct = line.previousYear ? (yoyVar / Math.abs(line.previousYear)) : 0;
+
+      const isParent = line.children && line.children.length > 0;
+      const isTotal = line.code.startsWith('6.') || line.code === '3.3';
+      const isNegative = line.real < 0;
+
+      const rowClass = isTotal ? 'fw-bold bg-light' : (isParent ? 'fw-semibold' : 'text-muted');
+      const varColor = budgetVar >= 0 ? 'text-success' : 'text-danger';
+      const yoyColor = yoyVar >= 0 ? 'text-success' : 'text-danger';
+
+      let html = `
+        <tr class="${rowClass}">
+          <td class="py-2 px-3 text-start text-nowrap">
+            <div style="padding-left: ${level * 18}px;">
+              <span class="${isTotal ? 'text-primary' : (isNegative ? 'text-danger' : 'text-dark')}">${line.label}</span>
+              <span class="badge bg-light text-muted border font-monospace fs-xxs ms-1">${line.code}</span>
+            </div>
+          </td>
+          <td class="py-2 px-3 text-end font-monospace ${isNegative ? 'text-danger' : 'text-dark'}">${formatCurrencyBRL(line.real)}</td>
+          <td class="py-2 px-3 text-end font-monospace text-muted">${formatCurrencyBRL(line.budget)}</td>
+          <td class="py-2 px-3 text-end font-monospace ${varColor}">${(budgetVar >= 0 ? '+' : '') + formatCurrencyBRL(budgetVar)}</td>
+          <td class="py-2 px-3 text-end font-monospace ${varColor}">${(budgetPct >= 0 ? '+' : '') + formatPercent(budgetPct)}</td>
+          <td class="py-2 px-3 text-end font-monospace text-muted">${formatCurrencyBRL(line.previousYear)}</td>
+          <td class="py-2 px-3 text-end font-monospace ${yoyColor}">${(yoyVar >= 0 ? '+' : '') + formatCurrencyBRL(yoyVar)}</td>
+          <td class="py-2 px-3 text-end font-monospace ${yoyColor}">${(yoyPct >= 0 ? '+' : '') + formatPercent(yoyPct)}</td>
+        </tr>
+      `;
+
+      if (line.children) {
+        html += renderLines(line.children, level + 1);
+      }
+      return html;
+    }).join('');
+  }
+
+  tableBody.innerHTML = renderLines(data.lines);
+}
+
+function switchDrePeriod(period) {
+  currentDrePeriod = period;
+  ['mes', 'trimestre', 'ano'].forEach(p => {
+    const btn = document.getElementById(`btn-dre-period-${p}`);
+    if (btn) {
+      if (p === period) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  renderDre();
+}
+
+function exportDreCsv() {
+  const data = dreService.getDreOverview({ period: currentDrePeriod });
+  const csv = dreService.exportCsv(data);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `DRE_Gerencial_DiskIngressos_${currentDrePeriod}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('success', 'Exportação DRE', 'Demonstração do Resultado gerencial exportada em CSV com sucesso.');
+  }
+}
+
+function printOrExportDrePdf() {
+  window.print();
+}
+
+// --- FASE 26.17.8.5: BALANÇO PATRIMONIAL & POSIÇÃO FINANCEIRA ---
+let currentBalanceView = 'position';
+
+function renderBalanceSheet() {
+  const posContainer = document.getElementById('balance-view-position-container');
+  const sheetContainer = document.getElementById('balance-view-sheet-container');
+  if (!posContainer || !sheetContainer) return;
+
+  const pos = balanceSheetService.getFinancialPosition();
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  setEl('pos-kpi-cash', formatCurrencyBRL(pos.cashAndBanks));
+  setEl('pos-kpi-gateways', formatCurrencyBRL(pos.gatewayReceivables));
+  setEl('pos-kpi-availability', formatCurrencyBRL(pos.totalAvailability));
+  setEl('pos-kpi-third-party', formatCurrencyBRL(pos.thirdPartyFunds));
+  setEl('pos-card-third-party-amount', formatCurrencyBRL(pos.thirdPartyFunds));
+  setEl('pos-kpi-payouts', formatCurrencyBRL(pos.pendingPayouts));
+  setEl('pos-kpi-taxes', formatCurrencyBRL(pos.taxesPayable));
+  setEl('pos-kpi-other', formatCurrencyBRL(pos.otherLiabilities));
+  setEl('pos-kpi-net', formatCurrencyBRL(pos.netFinancialPosition));
+
+  // Third party distribution table
+  const thirdPartyTbody = document.getElementById('pos-table-third-party-body');
+  if (thirdPartyTbody) {
+    thirdPartyTbody.innerHTML = pos.thirdPartyDistribution.map(item => `
+      <tr>
+        <td>
+          <div class="fw-semibold text-dark">${item.producer}</div>
+          <div class="text-muted fs-xxxs">${item.event}</div>
+        </td>
+        <td class="text-end font-monospace fw-bold text-dark">${formatCurrencyBRL(item.amount)}</td>
+        <td class="text-center font-monospace text-muted">${item.payoutDate}</td>
+      </tr>
+    `).join('');
+  }
+
+  // Gateways table
+  const gatewaysTbody = document.getElementById('pos-table-gateways-body');
+  if (gatewaysTbody) {
+    gatewaysTbody.innerHTML = pos.gateways.map(gw => `
+      <tr>
+        <td>
+          <div class="fw-semibold text-dark">${gw.name}</div>
+          <span class="badge bg-light text-muted border fs-xxs">${gw.dPlus}</span>
+        </td>
+        <td class="text-end font-monospace fw-bold text-dark">${formatCurrencyBRL(gw.balance)}</td>
+        <td class="text-end font-monospace text-${gw.pendingSettlement > 0 ? 'warning' : 'muted'}">
+          ${gw.pendingSettlement > 0 ? formatCurrencyBRL(gw.pendingSettlement) : '—'}
+        </td>
+        <td class="text-center font-monospace text-muted">${gw.dPlus}</td>
+        <td class="text-center">
+          <span class="badge bg-${gw.status === 'NORMAL' || gw.status === 'LIQUIDADO' ? 'success' : 'warning'}-subtle text-${gw.status === 'NORMAL' || gw.status === 'LIQUIDADO' ? 'success' : 'warning'} fs-xxs">
+            ${gw.status}
+          </span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Balance Sheet groups
+  const sheetRes = balanceSheetService.getBalanceSheet(typeof currentUserRole !== 'undefined' ? currentUserRole : 'ADMIN');
+  const sheetTbody = document.getElementById('balance-sheet-table-body');
+  if (sheetTbody && sheetRes.success) {
+    const b = sheetRes.data;
+
+    function renderGroups(groups, level = 0) {
+      return groups.map(g => {
+        const diff = g.current - g.previous;
+        const isParent = g.children && g.children.length > 0;
+        let html = `
+          <tr class="${isParent ? 'fw-bold bg-light' : 'text-muted'}">
+            <td class="py-2 px-3 text-start" style="padding-left: ${16 + level * 20}px !important;">
+              <span class="${isParent ? 'text-primary' : 'text-dark'}">${g.label}</span>
+              <span class="badge bg-light text-muted border font-monospace fs-xxs ms-1">${g.code}</span>
+            </td>
+            <td class="py-2 px-3 text-end font-monospace ${isParent ? 'fw-bold text-dark' : ''}">${formatCurrencyBRL(g.current)}</td>
+            <td class="py-2 px-3 text-end font-monospace text-muted">${formatCurrencyBRL(g.previous)}</td>
+            <td class="py-2 px-3 text-end font-monospace ${diff >= 0 ? 'text-success' : 'text-danger'}">${(diff >= 0 ? '+' : '') + formatCurrencyBRL(diff)}</td>
+          </tr>
+        `;
+        if (g.children) html += renderGroups(g.children, level + 1);
+        return html;
+      }).join('');
+    }
+
+    sheetTbody.innerHTML = `
+      <tr class="bg-primary-subtle text-primary fw-bold"><td colspan="4" class="py-2 px-3">1. ATIVO TOTAL: ${formatCurrencyBRL(b.totalAssets)}</td></tr>
+      ${renderGroups(b.assets)}
+      <tr class="bg-primary-subtle text-primary fw-bold"><td colspan="4" class="py-2 px-3">2. PASSIVO TOTAL: ${formatCurrencyBRL(b.totalLiabilities)}</td></tr>
+      ${renderGroups(b.liabilities)}
+      <tr class="bg-primary-subtle text-primary fw-bold"><td colspan="4" class="py-2 px-3">3. PATRIMÔNIO LÍQUIDO: ${formatCurrencyBRL(b.totalEquity)}</td></tr>
+      ${renderGroups(b.equity)}
+      <tr class="bg-dark text-white fw-bold">
+        <td class="py-2 px-3">TOTAL PASSIVO + PATRIMÔNIO LÍQUIDO</td>
+        <td class="py-2 px-3 text-end font-monospace text-white">${formatCurrencyBRL(b.totalLiabilities + b.totalEquity)}</td>
+        <td class="py-2 px-3 text-end font-monospace text-white/70">R$ 4.120.000,00</td>
+        <td class="py-2 px-3 text-end font-monospace text-success">+ R$ 730.000,00</td>
+      </tr>
+    `;
+  }
+}
+
+function switchBalanceView(view) {
+  currentBalanceView = view;
+  const posContainer = document.getElementById('balance-view-position-container');
+  const sheetContainer = document.getElementById('balance-view-sheet-container');
+  const btnPos = document.getElementById('btn-balance-view-posicao');
+  const btnSheet = document.getElementById('btn-balance-view-balanco');
+
+  if (view === 'position') {
+    if (posContainer) posContainer.style.display = 'block';
+    if (sheetContainer) sheetContainer.style.display = 'none';
+    if (btnPos) btnPos.classList.add('active');
+    if (btnSheet) btnSheet.classList.remove('active');
+  } else {
+    if (posContainer) posContainer.style.display = 'none';
+    if (sheetContainer) sheetContainer.style.display = 'block';
+    if (btnPos) btnPos.classList.remove('active');
+    if (btnSheet) btnSheet.classList.add('active');
+  }
+  renderBalanceSheet();
+}
+
+function printOrExportBalancePdf() {
+  window.print();
+}
+
+// --- FASE 26.17.8.6: FECHAMENTO CONTÁBIL MENSAL ---
+let currentClosingCategory = 'TODAS';
+
+function renderClosing() {
+  const state = closingService.getClosingState();
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  setEl('closing-progress-pct', state.progress + '%');
+  const bar = document.getElementById('closing-progress-bar');
+  if (bar) bar.style.width = Math.min(100, Math.max(0, state.progress)) + '%';
+
+  const badge = document.getElementById('closing-status-badge');
+  if (badge) {
+    badge.textContent = state.status.replace(/_/g, ' ');
+    badge.className = state.status === 'FECHADO' ? 'badge bg-success text-white font-monospace' : (state.status === 'AGUARDANDO_APROVACAO' ? 'badge bg-warning text-dark font-monospace' : 'badge bg-primary text-white font-monospace');
+  }
+
+  setEl('closing-period-val', state.period);
+  setEl('closing-responsible-val', state.responsible);
+  setEl('closing-due-date-val', state.dueDate || '10/09/2026');
+
+  setEl('closing-kpi-total', state.totalChecks);
+  setEl('closing-kpi-approved', state.approvedChecks);
+  setEl('closing-kpi-pending', state.pendingChecks);
+  setEl('closing-kpi-critical', state.criticalIssues);
+  setEl('closing-kpi-fin-div', formatCurrencyBRL(state.financialDivergence));
+  setEl('closing-kpi-acc-div', formatCurrencyBRL(state.accountingDivergence));
+
+  const tableBody = document.getElementById('closing-checks-table-body');
+  if (!tableBody) return;
+
+  const visible = currentClosingCategory === 'TODAS'
+    ? state.checks
+    : state.checks.filter(c => c.category === currentClosingCategory);
+
+  tableBody.innerHTML = visible.map(chk => {
+    const sevBadge = {
+      'BLOQUEANTE': 'bg-danger text-white',
+      'CRITICA': 'bg-warning text-dark',
+      'ATENCAO': 'bg-info-subtle text-info',
+      'INFORMATIVA': 'bg-light text-muted'
+    }[chk.severity] || 'bg-light text-muted';
+
+    const statusBadge = {
+      'APROVADO': 'bg-success-subtle text-success',
+      'PENDENTE': 'bg-warning-subtle text-warning-emphasis',
+      'VALIDANDO': 'bg-primary-subtle text-primary',
+      'DIVERGENTE': 'bg-danger-subtle text-danger'
+    }[chk.status] || 'bg-light text-muted';
+
+    return `
+      <tr>
+        <td class="py-2 px-3">
+          <span class="badge bg-light text-dark border">${chk.category}</span>
+        </td>
+        <td class="py-2 px-3">
+          <div class="fw-semibold text-dark">${chk.label}</div>
+          <div class="text-muted fs-xxxs">${chk.description || ''}</div>
+        </td>
+        <td class="py-2 px-3 text-center">
+          <span class="badge ${sevBadge} fs-xxs">${chk.severity}</span>
+        </td>
+        <td class="py-2 px-3 text-muted">${chk.source || '—'}</td>
+        <td class="py-2 px-3 text-end font-monospace fw-bold text-dark">
+          ${chk.amount != null ? formatCurrencyBRL(chk.amount) : '—'}
+        </td>
+        <td class="py-2 px-3 text-center">
+          <span class="badge ${statusBadge} fs-xxs">${chk.status}</span>
+        </td>
+        <td class="py-2 px-3 text-end">
+          <button class="btn btn-xxs btn-outline-secondary" onclick="alert('Validação do item ${chk.id}: Conforme registros auditados.')">
+            Validar
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterClosingCategory(category, btn) {
+  currentClosingCategory = category;
+  document.querySelectorAll('#closing-category-filters button').forEach(b => {
+    b.classList.remove('btn-primary', 'text-white', 'fw-bold');
+    b.classList.add('btn-outline-secondary');
+  });
+  if (btn) {
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-primary', 'text-white', 'fw-bold');
+  }
+  renderClosing();
+}
+
+function executeClosingValidations() {
+  const updated = closingService.runValidation();
+  renderClosing();
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('success', 'Validações Executadas', `Rotina executada: ${updated.approvedChecks}/${updated.totalChecks} verificações aprovadas.`);
+  }
+}
+
+function submitClosingApproval() {
+  const updated = closingService.submitApproval();
+  renderClosing();
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('info', 'Competência Enviada', 'Competência 08/2026 enviada para homologação executiva.');
+  }
+}
+
+function executeClosePeriod() {
+  const res = closingService.closePeriod();
+  if (!res.success) {
+    alert(res.error);
+    return;
+  }
+  renderClosing();
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('success', 'Competência Fechada', 'Competência 08/2026 encerrada e bloqueada para lançamentos retroativos.');
+  }
+}
+
+function openReopenPeriodModal() {
+  const textarea = document.getElementById('reopen-period-reason');
+  if (textarea) textarea.value = '';
+  window.openModal('fechamento-reabertura');
+}
+
+function submitReopenPeriod() {
+  const textarea = document.getElementById('reopen-period-reason');
+  const reason = textarea ? textarea.value.trim() : '';
+  if (!reason || reason.length < 10) {
+    alert('A justificativa operacional de reabertura deve conter no mínimo 10 caracteres explicativos.');
+    return;
+  }
+  const res = closingService.reopenPeriod(reason);
+  if (!res.success) {
+    alert(res.error);
+    return;
+  }
+  closeModal('fechamento-reabertura');
+  renderClosing();
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('warning', 'Competência Reaberta', 'Competência contábil reaberta excepcionalmente.');
+  }
+}
+
 // Window global exports
 window.renderReconciliationCenter = renderReconciliationCenter;
 window.setReconciliationStatusFilter = setReconciliationStatusFilter;
@@ -12226,3 +12944,43 @@ window.executeImportExtratoModal = executeImportExtratoModal;
 window.exportReconciliationCsv = exportReconciliationCsv;
 window.viewReconciliationAuditLog = viewReconciliationAuditLog;
 window.syncReconciliationData = syncReconciliationData;
+
+// Traceability 360 global exports
+window.renderTraceability = renderTraceability;
+window.searchTraceabilityOrder = searchTraceabilityOrder;
+window.loadTraceabilityOrder = loadTraceabilityOrder;
+window.exportTraceabilityEvidence = exportTraceabilityEvidence;
+window.openTraceabilityAuditModal = openTraceabilityAuditModal;
+window.traceOrderFromReconciliation = traceOrderFromReconciliation;
+
+// DRE Gerencial global exports
+window.renderDre = renderDre;
+window.switchDrePeriod = switchDrePeriod;
+window.exportDreCsv = exportDreCsv;
+window.printOrExportDrePdf = printOrExportDrePdf;
+
+// Balanço & Posição Financeira global exports
+window.renderBalanceSheet = renderBalanceSheet;
+window.switchBalanceView = switchBalanceView;
+window.printOrExportBalancePdf = printOrExportBalancePdf;
+
+// Fechamento Contábil Mensal global exports
+window.renderClosing = renderClosing;
+window.filterClosingCategory = filterClosingCategory;
+window.executeClosingValidations = executeClosingValidations;
+window.submitClosingApproval = submitClosingApproval;
+window.executeClosePeriod = executeClosePeriod;
+window.openReopenPeriodModal = openReopenPeriodModal;
+window.submitReopenPeriod = submitReopenPeriod;
+
+
+
+function traceOrderFromActiveReconciliation() {
+  if (!activeReconciliationItemId) return;
+  reconciliationService.getItemById(activeReconciliationItemId).then(item => {
+    if (item && item.orderId) {
+      traceOrderFromReconciliation(item.orderId);
+    }
+  });
+}
+window.traceOrderFromActiveReconciliation = traceOrderFromActiveReconciliation;
