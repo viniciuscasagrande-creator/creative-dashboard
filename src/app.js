@@ -550,6 +550,8 @@ function openView(viewName) {
     if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
   } else if (resolvedName === 'marketing-abandoned-cart') {
     if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
+  } else if (resolvedName === 'accounting-disk') {
+    if (typeof switchAccountingTab === 'function') switchAccountingTab(null, typeof currentAccountingTab !== 'undefined' ? currentAccountingTab : 'dashboard');
   }
 
   // Redimensionamento global de gráficos para garantir adaptação perfeita no container
@@ -6477,45 +6479,62 @@ if (document.readyState === 'loading') {
 
 
 
-/* --- ACCOUNTING CATEGORY MAP & EXECUTIVE NAVIGATION --- */
+/* --- ACCOUNTING CATEGORY MAP & 5 EXECUTIVE GROUPS (SECTION 11) --- */
 const ACCOUNTING_CATEGORY_MAP = {
+  // 1. VISÃO GERAL
   'dashboard': 'visao-geral',
+  'inteligencia-contabil': 'visao-geral',
+  'simulador': 'visao-geral',
+
+  // 2. CONTABILIDADE
+  'plano-contas': 'contabilidade',
+  'diario': 'contabilidade',
+  'razao': 'contabilidade',
+  'lancamentos': 'contabilidade',
+  'custos': 'contabilidade',
+  'cont-hist': 'contabilidade',
+  'relatorios-diario': 'contabilidade',
+  'relatorios-razao': 'contabilidade',
+
+  // 3. CONCILIAÇÃO
+  'conciliacao': 'conciliacao',
+  'repasses-extratos': 'conciliacao',
+  'receber': 'conciliacao',
+  'pagar': 'conciliacao',
+  'repasses': 'conciliacao',
+  'repasses-pix': 'conciliacao',
+  'repasses-ted': 'conciliacao',
+  'repasses-hist': 'conciliacao',
+  'caixa': 'conciliacao',
+  'fin-bancos': 'conciliacao',
+  'fin-movs': 'conciliacao',
+
+  // 4. DEMONSTRAÇÕES
   'demonstracoes': 'demonstracoes',
-  'plano-contas': 'demonstracoes',
-  'diario': 'demonstracoes',
-  'razao': 'demonstracoes',
-  'lancamentos': 'demonstracoes',
-  'custos': 'demonstracoes',
-  'relatorios-diario': 'demonstracoes',
-  'relatorios-razao': 'demonstracoes',
-  'impostos': 'fiscal',
-  'nfe': 'fiscal',
-  'retencoes': 'fiscal',
-  'declaracoes': 'fiscal',
-  'sped': 'fiscal',
-  'calendario-fiscal': 'fiscal',
-  'conciliacao': 'repasses',
-  'repasses': 'repasses',
-  'receber': 'repasses',
-  'pagar': 'repasses',
-  'movimentacoes': 'repasses',
-  'extratos': 'repasses',
-  'solicitacoes-payout': 'repasses',
-  'regras-split': 'repasses',
-  'simulador': 'simulador',
-  'config-empresas': 'configuracoes',
-  'config-plano': 'configuracoes',
-  'config-users': 'configuracoes',
-  'config-perms': 'configuracoes',
-  'config-integracoes': 'configuracoes',
-  'config-automacoes': 'configuracoes',
-  'auditoria': 'configuracoes',
-  'api': 'configuracoes'
+  'relatorios-dre': 'demonstracoes',
+  'relatorios-balanco': 'demonstracoes',
+  'relatorios-fluxo': 'demonstracoes',
+  'relatorios-balancete': 'demonstracoes',
+
+  // 5. FISCAL & CONTROLE
+  'impostos': 'fiscal-controle',
+  'auditoria': 'fiscal-controle',
+  'cont-fechamento': 'fiscal-controle',
+  'fiscal-nfse': 'fiscal-controle',
+  'fiscal-nfe': 'fiscal-controle',
+  'fiscal-sped': 'fiscal-controle',
+  'fiscal-obrigacoes': 'fiscal-controle',
+  'config-empresas': 'fiscal-controle',
+  'config-plano': 'fiscal-controle',
+  'config-users': 'fiscal-controle',
+  'config-perms': 'fiscal-controle',
+  'config-integracoes': 'fiscal-controle',
+  'config-automacoes': 'fiscal-controle'
 };
 
 function switchAccountingCategory(category, defaultTab) {
-  // Update category navigation pills
-  const catButtons = document.querySelectorAll('#accounting-category-nav .nav-link');
+  // Update category pillar buttons and legacy pills
+  const catButtons = document.querySelectorAll('#accounting-category-nav .accounting-pillar-btn, #accounting-category-nav .nav-link');
   catButtons.forEach(btn => {
     if (btn.getAttribute('data-category') === category) {
       btn.classList.add('active');
@@ -6549,12 +6568,20 @@ function switchAccountingCategory(category, defaultTab) {
 /* --- switchAccountingTab --- */
 function switchAccountingTab(e, tabName) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  currentAccountingTab = tabName;
 
-  const category = ACCOUNTING_CATEGORY_MAP[tabName] || 'visao-geral';
+  // Special behavior: if clicking "inteligencia-contabil", show dashboard & smooth-scroll to AI panel
+  let actualTabToDisplay = tabName;
+  let scrollToIntelligence = false;
+  if (tabName === 'inteligencia-contabil') {
+    actualTabToDisplay = 'dashboard';
+    scrollToIntelligence = true;
+  }
 
-  // 1. Sync category header nav pills
-  const catButtons = document.querySelectorAll('#accounting-category-nav .nav-link');
+  currentAccountingTab = actualTabToDisplay;
+  const category = ACCOUNTING_CATEGORY_MAP[tabName] || ACCOUNTING_CATEGORY_MAP[actualTabToDisplay] || 'visao-geral';
+
+  // 1. Sync category pillar buttons & pills
+  const catButtons = document.querySelectorAll('#accounting-category-nav .accounting-pillar-btn, #accounting-category-nav .nav-link');
   catButtons.forEach(btn => {
     if (btn.getAttribute('data-category') === category) {
       btn.classList.add('active');
@@ -6575,9 +6602,9 @@ function switchAccountingTab(e, tabName) {
     }
   });
 
-  // 3. Highlight the active subnav chip
+  // 3. Highlight the active subnav button
   document.querySelectorAll('.accounting-subnav-group button[data-tab]').forEach(btn => {
-    if (btn.getAttribute('data-tab') === tabName) {
+    if (btn.getAttribute('data-tab') === tabName || btn.getAttribute('data-tab') === actualTabToDisplay) {
       btn.classList.remove('btn-outline-secondary', 'btn-light');
       btn.classList.add('btn-primary', 'text-white', 'shadow-xs');
     } else {
@@ -6586,16 +6613,26 @@ function switchAccountingTab(e, tabName) {
     }
   });
 
-  // 4. Sync legacy sidebar pills if still referenced
+  // 4. Sync legacy navigation links
   const legacyLinks = document.querySelectorAll('#accounting-nav-pills .nav-link');
   legacyLinks.forEach(link => {
     const oc = link.getAttribute('onclick') || '';
-    if (oc.includes(`'${tabName}'`) || oc.includes(`"${tabName}"`)) {
+    if (oc.includes(`'${actualTabToDisplay}'`) || oc.includes(`"${actualTabToDisplay}"`)) {
       link.classList.add('active');
     } else {
       link.classList.remove('active');
     }
   });
+
+  // Smooth scroll to intelligence if requested
+  if (scrollToIntelligence) {
+    setTimeout(() => {
+      const intelEl = document.getElementById('acc-intelligence-alerts-container') || document.querySelector('[id*="intelligence"]');
+      if (intelEl) {
+        intelEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+  }
 
   // 5. Switch visible accounting-pane
   document.querySelectorAll('.accounting-pane').forEach(pane => {
