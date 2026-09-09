@@ -10,6 +10,8 @@ import { closingService } from './services/closingService.js';
 import { accountingDashboardService } from './services/accountingDashboardService.js';
 import { auditComplianceService } from './services/auditComplianceService.js';
 import { accountingIntelligenceService } from './services/accountingIntelligenceService.js';
+import { initFinancialEventTransfersView } from './controllers/financialEventTransfersController.js';
+import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
 // Global state for events
@@ -330,6 +332,7 @@ function initApp() {
   if (typeof initWizardController === 'function') initWizardController();
   if (typeof initCouponModule === 'function') initCouponModule();
   if (typeof initMarketingConfigModule === 'function') initMarketingConfigModule();
+  if (typeof initLocalBalanceStore === 'function') initLocalBalanceStore(EVENTS_DATA);
 
   // Store defaults for merging
   const EVENTS_DATA_DEFAULTS = [...EVENTS_DATA];
@@ -420,6 +423,9 @@ function openView(viewName) {
     'automacao': 'marketing-automation',
     'financeiro': 'financial-dashboard',
     'saldo': 'financial-balance',
+    'gestao-saldos': 'financial-event-transfers',
+    'financial-transfers': 'financial-event-transfers',
+    'financial-event-transfers': 'financial-event-transfers',
     'contabilidade': 'accounting-disk',
     'relatorios': 'reports-sales',
     'configuracoes': 'settings-profile'
@@ -483,6 +489,7 @@ function openView(viewName) {
     'events-page': { title: 'Página do Evento', sub: 'Link público de vendas e QR Code de divulgação.' },
     'global-consult-ticket': { title: 'Consulta de Ingressos', sub: 'Busca unificada por pedido, código, CPF ou comprador.' },
     'financial-dashboard': { title: 'Painel Financeiro', sub: 'Resumo financeiro, conciliação e fluxo de caixa.' },
+    'financial-event-transfers': { title: 'Gestão de Saldos & Transferência entre Eventos', sub: 'Painel consolidado, saldos disponíveis reais por evento e transferência atômica.' },
     'financial-balance': { title: 'Saldo Consolidado', sub: 'Saldos disponíveis, repasses e fechamento financeiro.' },
     'financial-repass': { title: 'Solicitações de Repasse', sub: 'Gestão e histórico de transferências a produtores.' },
     'financial-advance': { title: 'Antecipações', sub: 'Simulação e contratação de antecipação de recebíveis.' },
@@ -560,6 +567,8 @@ function openView(viewName) {
     if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
   } else if (resolvedName === 'accounting-disk') {
     if (typeof switchAccountingTab === 'function') switchAccountingTab(null, typeof currentAccountingTab !== 'undefined' ? currentAccountingTab : 'dashboard');
+  } else if (resolvedName === 'financial-event-transfers') {
+    if (typeof initFinancialEventTransfersView === 'function') initFinancialEventTransfersView();
   }
 
   // Redimensionamento global de gráficos para garantir adaptação perfeita no container
