@@ -6575,6 +6575,15 @@ function switchAccountingCategory(category, defaultTab) {
 function switchAccountingTab(e, tabName) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
+  // Ensure view-accounting-disk is visible if hidden
+  const viewSec = document.getElementById('view-accounting-disk');
+  if (viewSec && viewSec.style.display === 'none') {
+    document.querySelectorAll('.page-section').forEach(section => {
+      section.style.display = 'none';
+    });
+    viewSec.style.display = 'block';
+  }
+
   // Special behavior: if clicking "inteligencia-contabil", show dashboard & smooth-scroll to AI panel
   let actualTabToDisplay = tabName;
   let scrollToIntelligence = false;
@@ -6586,7 +6595,49 @@ function switchAccountingTab(e, tabName) {
   currentAccountingTab = actualTabToDisplay;
   const category = ACCOUNTING_CATEGORY_MAP[tabName] || ACCOUNTING_CATEGORY_MAP[actualTabToDisplay] || 'visao-geral';
 
-  // 1. Sync category pillar buttons & pills
+  // 1. Update Breadcrumb Label & Subpane Back Button
+  const breadcrumbLabel = document.getElementById('acc-breadcrumb-current-label');
+  const backBtnContainer = document.getElementById('acc-subpane-back-btn-container');
+  const tabTitles = {
+    'dashboard': 'Visão Geral',
+    'inteligencia-contabil': 'Inteligência Contábil',
+    'conciliacao': 'Centro de Conciliação',
+    'lancamentos': 'Rastreabilidade 360º',
+    'relatorios-dre': 'DRE Gerencial',
+    'relatorios-balanco': 'Balanço Patrimonial',
+    'cont-fechamento': 'Fechamento Mensal',
+    'plano-contas': 'Plano de Contas',
+    'diario': 'Livro Diário',
+    'razao': 'Livro Razão',
+    'custos': 'Centros de Custos',
+    'receber': 'Contas a Receber',
+    'pagar': 'Contas a Pagar',
+    'caixa': 'Fluxo de Caixa',
+    'repasses': 'Repasses a Produtores',
+    'impostos': 'Gestão Fiscal & Tributos',
+    'demonstracoes': 'Demonstrações Contábeis',
+    'auditoria': 'Auditoria Contábil',
+    'simulador': 'Simulador de Ciclo'
+  };
+
+  if (breadcrumbLabel) {
+    breadcrumbLabel.textContent = tabTitles[tabName] || tabTitles[actualTabToDisplay] || 'Visão Geral';
+  }
+  if (backBtnContainer) {
+    backBtnContainer.style.display = (actualTabToDisplay === 'dashboard') ? 'none' : 'block';
+  }
+
+  // 2. Sync Sidebar Menu Active State
+  document.querySelectorAll('.nav-group-sub .submenu-link[data-view="accounting-disk"]').forEach(link => {
+    const oc = link.getAttribute('onclick') || '';
+    if (oc.includes(`'${tabName}'`) || oc.includes(`"${tabName}"`) || (tabName === 'dashboard' && oc.includes("'dashboard'"))) {
+      link.classList.add('active', 'text-primary', 'fw-bold');
+    } else {
+      link.classList.remove('active', 'text-primary', 'fw-bold');
+    }
+  });
+
+  // 3. Sync category pillar buttons & pills (fallback for safety)
   const catButtons = document.querySelectorAll('#accounting-category-nav .accounting-pillar-btn, #accounting-category-nav .nav-link');
   catButtons.forEach(btn => {
     if (btn.getAttribute('data-category') === category) {
@@ -6596,7 +6647,7 @@ function switchAccountingTab(e, tabName) {
     }
   });
 
-  // 2. Sync contextual subnav groups
+  // 4. Sync contextual subnav groups (fallback for safety)
   const subnavGroups = document.querySelectorAll('.accounting-subnav-group');
   subnavGroups.forEach(grp => {
     if (grp.id === `subnav-group-${category}`) {
@@ -6608,7 +6659,7 @@ function switchAccountingTab(e, tabName) {
     }
   });
 
-  // 3. Highlight the active subnav button
+  // 5. Highlight the active subnav button
   document.querySelectorAll('.accounting-subnav-group button[data-tab]').forEach(btn => {
     if (btn.getAttribute('data-tab') === tabName || btn.getAttribute('data-tab') === actualTabToDisplay) {
       btn.classList.remove('btn-outline-secondary', 'btn-light');
@@ -6619,7 +6670,7 @@ function switchAccountingTab(e, tabName) {
     }
   });
 
-  // 4. Sync legacy navigation links
+  // 6. Sync legacy navigation links
   const legacyLinks = document.querySelectorAll('#accounting-nav-pills .nav-link');
   legacyLinks.forEach(link => {
     const oc = link.getAttribute('onclick') || '';
@@ -6630,68 +6681,68 @@ function switchAccountingTab(e, tabName) {
     }
   });
 
-  // Smooth scroll to intelligence if requested
+  // 7. Smooth scroll to intelligence if requested
   if (scrollToIntelligence) {
     setTimeout(() => {
-      const intelEl = document.getElementById('acc-intelligence-alerts-container') || document.querySelector('[id*="intelligence"]');
+      const intelEl = document.getElementById('acc-intelligence-alerts-container') || document.querySelector('[id*="intelligence"]') || document.getElementById('acc-intelligence-card');
       if (intelEl) {
         intelEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 120);
   }
 
-  // 5. Switch visible accounting-pane
+  // 8. Switch visible accounting-pane
   document.querySelectorAll('.accounting-pane').forEach(pane => {
     pane.style.display = 'none';
   });
-  const activePane = document.getElementById(`accpane-${tabName}`);
+  const activePane = document.getElementById(`accpane-${actualTabToDisplay}`);
   if (activePane) {
     activePane.style.display = 'block';
   }
 
-  // 6. Invoke pane render functions
-  if (tabName === 'dashboard') {
+  // 9. Invoke pane render functions
+  if (actualTabToDisplay === 'dashboard') {
     renderAccountingDashboard();
-  } else if (tabName === 'simulador') {
+  } else if (actualTabToDisplay === 'simulador') {
     const simIngressos = document.getElementById('sim-res-rec-ingressos');
     if (!simIngressos || simIngressos.textContent === 'R$ 0,00' || simIngressos.textContent === '-') {
       if (typeof runAccountingSimulation === 'function') runAccountingSimulation();
     }
-  } else if (tabName === 'plano-contas') {
+  } else if (actualTabToDisplay === 'plano-contas') {
     renderPlanoContas();
-  } else if (tabName === 'diario') {
+  } else if (actualTabToDisplay === 'diario') {
     renderDiario();
-  } else if (tabName === 'razao') {
+  } else if (actualTabToDisplay === 'razao') {
     renderRazao();
-  } else if (tabName === 'lancamentos') {
+  } else if (actualTabToDisplay === 'lancamentos') {
     renderLancamentos();
     if (typeof renderTraceability === 'function') renderTraceability();
-  } else if (tabName === 'custos') {
+  } else if (actualTabToDisplay === 'custos') {
     renderCustos();
-  } else if (tabName === 'relatorios-dre') {
+  } else if (actualTabToDisplay === 'relatorios-dre') {
     if (typeof renderDre === 'function') renderDre();
-  } else if (tabName === 'relatorios-balanco') {
+  } else if (actualTabToDisplay === 'relatorios-balanco') {
     if (typeof renderBalanceSheet === 'function') renderBalanceSheet();
-  } else if (tabName === 'cont-fechamento') {
+  } else if (actualTabToDisplay === 'cont-fechamento') {
     if (typeof renderClosing === 'function') renderClosing();
     renderCustos();
-  } else if (tabName === 'conciliacao') {
+  } else if (actualTabToDisplay === 'conciliacao') {
     renderConciliacao();
-  } else if (tabName === 'receber') {
+  } else if (actualTabToDisplay === 'receber') {
     renderContasReceber();
-  } else if (tabName === 'pagar') {
+  } else if (actualTabToDisplay === 'pagar') {
     renderContasPagar();
-  } else if (tabName === 'repasses') {
+  } else if (actualTabToDisplay === 'repasses') {
     renderRepasses();
-  } else if (tabName === 'impostos') {
+  } else if (actualTabToDisplay === 'impostos') {
     if (typeof renderImpostos === 'function') renderImpostos();
-  } else if (tabName === 'nfe') {
+  } else if (actualTabToDisplay === 'nfe') {
     if (typeof renderNfe === 'function') renderNfe();
-  } else if (tabName === 'auditoria') {
+  } else if (actualTabToDisplay === 'auditoria') {
     if (typeof renderAuditoria === 'function') renderAuditoria();
   }
 
-  if (tabName === 'demonstracoes') {
+  if (actualTabToDisplay === 'demonstracoes') {
     const isExp = currentAccountingMode === 'expert';
     const divider = document.getElementById('acc-demo-actions-divider');
     const expertActions = document.getElementById('acc-demo-expert-actions');
@@ -6700,7 +6751,7 @@ function switchAccountingTab(e, tabName) {
   }
 
   if (typeof logAudit === 'function') {
-    logAudit('Navegação Contábil', 'Mudar Aba', `Acessou aba ${tabName} (Pilar: ${category})`);
+    logAudit('Navegação Contábil', 'Mudar Aba', `Acessou aba ${actualTabToDisplay} (Pilar: ${category})`);
   }
 }
 

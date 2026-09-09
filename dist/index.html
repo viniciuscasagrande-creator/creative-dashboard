@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-BAjIa18_.js"></script>
+      <script type="module" crossorigin src="./assets/index-C_VtJFL8.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
     </head>
 <body>
@@ -10660,217 +10660,26 @@ Como podemos te ajudar hoje?
 
                     <!-- VIEW: CONTABILIDADE DISK -->
                     <section id="view-accounting-disk" class="page-section"  style="display:none;">
-                        <!-- Section Header with Mode Selector Segment -->
-                        <div class="card card-body shadow-sm d-flex flex-column flex-sm-row justify-content-between align-items-center py-2 mb-3" style="border-radius: 6px; border-left: 4px solid #f38d4f;">
-                            <div class="mb-2 mb-sm-0">
-                                <h5 class="fw-bold mb-0 text-dark">Contabilidade Disk</h5>
-                                <span class="fs-xs text-muted">Controle Contábil e Conciliação Financeira Integrada</span>
-                            </div>
-                            <!-- Actions & Mode Selector segment controllers -->
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <button type="button" class="btn btn-outline-primary btn-xs fw-bold" id="btn-sync-accounting-data" onclick="window.syncAccountingData()"><i class="ph-arrows-clockwise me-1"></i> Dados</button>
-                                <button type="button" class="btn btn-outline-primary btn-xs fw-bold" id="btn-export-accounting-pdf" onclick="window.exportAccountingPDF()"><i class="ph-file-pdf me-1"></i> PDF</button>
-                                <div class="vr mx-1 opacity-20"></div>
-                                <span class="fs-xxs fw-bold text-muted text-uppercase">Modo do Módulo:</span>
-                                <div class="btn-group" role="group" aria-label="Modo de Contabilidade">
-                                    <button type="button" class="btn btn-outline-primary btn-xs fw-bold active" id="btn-mode-standard" onclick="window.switchAccountingMode('standard')">Standard</button>
-                                    <button type="button" class="btn btn-outline-primary btn-xs fw-bold" id="btn-mode-advanced" onclick="window.switchAccountingMode('advanced')">Advanced</button>
-                                    <button type="button" class="btn btn-outline-primary btn-xs fw-bold" id="btn-mode-expert" onclick="window.switchAccountingMode('expert')">Expert</button>
-                                </div>
+                        <!-- Breadcrumb Oficial do Design ChatGPT Image -->
+                        <div class="mb-3 d-flex align-items-center justify-content-between">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb fs-xs text-muted mb-0">
+                                    <li class="breadcrumb-item"><a href="#" class="text-muted text-decoration-none" onclick="window.switchAccountingTab(event, 'dashboard'); return false;">Contabilidade</a></li>
+                                    <li class="breadcrumb-item active text-dark fw-semibold" id="acc-breadcrumb-current-label">Vis&atilde;o Geral</li>
+                                </ol>
+                            </nav>
+                            <!-- Retorno rápido ao Dashboard Executivo quando navegando em sub-módulos -->
+                            <div id="acc-subpane-back-btn-container" style="display: none;">
+                                <button type="button" class="btn btn-xs btn-outline-primary fw-semibold d-flex align-items-center gap-1" onclick="window.switchAccountingTab(event, 'dashboard')">
+                                    <i class="ph-arrow-left"></i> Voltar ao Dashboard Geral
+                                </button>
                             </div>
                         </div>
 
-                        <!-- 5-Group Executive Navigation Bar for Contabilidade Disk (Section 11) -->
-                        <div class="card shadow-sm border mb-3 bg-white accounting-nav-card" style="border-radius: 10px; overflow: hidden;">
-                            <!-- Top Segmented Bar: 5 Executive Groups -->
-                            <div class="p-2.5 border-bottom bg-light bg-opacity-40">
-                                <div class="accounting-pillars-grid" id="accounting-category-nav" role="tablist">
-                                    <!-- 1. VISÃO GERAL -->
-                                    <button type="button" class="accounting-pillar-btn active" data-category="visao-geral" onclick="window.switchAccountingCategory('visao-geral', 'dashboard')">
-                                        <div class="accounting-pillar-icon-box bg-primary bg-opacity-10 text-primary">
-                                            <i class="ph-chart-pie-slice fs-5"></i>
-                                        </div>
-                                        <div class="accounting-pillar-content">
-                                            <span class="accounting-pillar-title">VISÃO GERAL</span>
-                                            <span class="accounting-pillar-sub text-muted">Dashboard &amp; IA</span>
-                                        </div>
-                                        <span class="accounting-pillar-badge badge bg-primary bg-opacity-10 text-primary">3 visões</span>
-                                    </button>
+                        <!-- Fallback oculto para compatibilidade de seletores de script -->
+                        <div class="d-none" id="accounting-category-nav"></div>
+                        <div class="d-none" id="accounting-nav-pills"></div>
 
-                                    <!-- 2. CONTABILIDADE -->
-                                    <button type="button" class="accounting-pillar-btn" data-category="contabilidade" onclick="window.switchAccountingCategory('contabilidade', 'plano-contas')">
-                                        <div class="accounting-pillar-icon-box" style="background-color: rgba(99, 102, 241, 0.12); color: #6366f1;">
-                                            <i class="ph-book-open fs-5"></i>
-                                        </div>
-                                        <div class="accounting-pillar-content">
-                                            <span class="accounting-pillar-title">CONTABILIDADE</span>
-                                            <span class="accounting-pillar-sub text-muted">Plano, Diário &amp; Razão</span>
-                                        </div>
-                                        <span class="accounting-pillar-badge badge bg-secondary bg-opacity-10 text-dark">5 livros</span>
-                                    </button>
-
-                                    <!-- 3. CONCILIAÇÃO -->
-                                    <button type="button" class="accounting-pillar-btn" data-category="conciliacao" onclick="window.switchAccountingCategory('conciliacao', 'conciliacao')">
-                                        <div class="accounting-pillar-icon-box bg-success bg-opacity-10 text-success">
-                                            <i class="ph-arrows-left-right fs-5"></i>
-                                        </div>
-                                        <div class="accounting-pillar-content">
-                                            <span class="accounting-pillar-title">CONCILIAÇÃO</span>
-                                            <span class="accounting-pillar-sub text-muted">Bancos, Gateways &amp; Splits</span>
-                                        </div>
-                                        <span class="accounting-pillar-badge badge bg-success bg-opacity-10 text-success">4 visões</span>
-                                    </button>
-
-                                    <!-- 4. DEMONSTRAÇÕES -->
-                                    <button type="button" class="accounting-pillar-btn" data-category="demonstracoes" onclick="window.switchAccountingCategory('demonstracoes', 'relatorios-dre')">
-                                        <div class="accounting-pillar-icon-box bg-info bg-opacity-10 text-info">
-                                            <i class="ph-file-text fs-5"></i>
-                                        </div>
-                                        <div class="accounting-pillar-content">
-                                            <span class="accounting-pillar-title">DEMONSTRAÇÕES</span>
-                                            <span class="accounting-pillar-sub text-muted">DRE, Balanço &amp; Fluxo</span>
-                                        </div>
-                                        <span class="accounting-pillar-badge badge bg-info bg-opacity-10 text-info">3 relatórios</span>
-                                    </button>
-
-                                    <!-- 5. FISCAL & CONTROLE -->
-                                    <button type="button" class="accounting-pillar-btn" data-category="fiscal-controle" onclick="window.switchAccountingCategory('fiscal-controle', 'impostos')">
-                                        <div class="accounting-pillar-icon-box bg-danger bg-opacity-10 text-danger">
-                                            <i class="ph-shield-check fs-5"></i>
-                                        </div>
-                                        <div class="accounting-pillar-content">
-                                            <span class="accounting-pillar-title">FISCAL &amp; CONTROLE</span>
-                                            <span class="accounting-pillar-sub text-muted">Impostos, Auditoria &amp; Fech.</span>
-                                        </div>
-                                        <span class="accounting-pillar-badge badge bg-danger bg-opacity-10 text-danger">3 módulos</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Contextual Sub-Nav Bar (ALWAYS VISIBLE & PROPORTIONAL) -->
-                            <div id="accounting-subnav-container" class="py-2 px-3 bg-white border-top">
-                                <!-- Group 1: VISÃO GERAL -->
-                                <div class="accounting-subnav-group d-flex flex-wrap align-items-center gap-2" id="subnav-group-visao-geral">
-                                    <span class="fs-xxs fw-bold text-muted text-uppercase me-1"><i class="ph-chart-pie-slice me-1 text-primary"></i> Visão Geral:</span>
-                                    <button type="button" class="btn btn-xs btn-primary text-white fw-semibold" data-tab="dashboard" onclick="window.switchAccountingTab(event, 'dashboard')">
-                                        <i class="ph-presentation-chart me-1"></i> Dashboard Executivo
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="inteligencia-contabil" onclick="window.switchAccountingTab(event, 'inteligencia-contabil')">
-                                        <i class="ph-brain me-1 text-warning"></i> Inteligência Contábil
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="simulador" onclick="window.switchAccountingTab(event, 'simulador')">
-                                        <i class="ph-cpu me-1 text-primary"></i> Simulador de Ciclo (TVI &amp; Gateway)
-                                    </button>
-                                </div>
-
-                                <!-- Group 2: CONTABILIDADE -->
-                                <div class="accounting-subnav-group d-none flex-wrap align-items-center gap-2" id="subnav-group-contabilidade">
-                                    <span class="fs-xxs fw-bold text-muted text-uppercase me-1"><i class="ph-book-open me-1 text-indigo"></i> Contabilidade:</span>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="plano-contas" onclick="window.switchAccountingTab(event, 'plano-contas')">
-                                        <i class="ph-list-bullets me-1 text-primary"></i> Plano de Contas
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="diario" onclick="window.switchAccountingTab(event, 'diario')">
-                                        <i class="ph-notebook me-1 text-primary"></i> Livro Diário
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="razao" onclick="window.switchAccountingTab(event, 'razao')">
-                                        <i class="ph-book me-1 text-primary"></i> Livro Razão
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="lancamentos" onclick="window.switchAccountingTab(event, 'lancamentos')">
-                                        <i class="ph-pencil me-1 text-primary"></i> Lançamentos
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="custos" onclick="window.switchAccountingTab(event, 'custos')">
-                                        <i class="ph-chart-pie-slice me-1 text-primary"></i> Centros de Custos
-                                    </button>
-                                </div>
-
-                                <!-- Group 3: CONCILIAÇÃO -->
-                                <div class="accounting-subnav-group d-none flex-wrap align-items-center gap-2" id="subnav-group-conciliacao">
-                                    <span class="fs-xxs fw-bold text-muted text-uppercase me-1"><i class="ph-arrows-left-right me-1 text-success"></i> Conciliação:</span>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="conciliacao" onclick="window.switchAccountingTab(event, 'conciliacao')">
-                                        <i class="ph-bank me-1 text-success"></i> Bancária &amp; OFX
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="repasses-extratos" onclick="window.switchAccountingTab(event, 'repasses-extratos')">
-                                        <i class="ph-credit-card me-1 text-primary"></i> Gateways &amp; Adquirentes
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="receber" onclick="window.switchAccountingTab(event, 'receber')">
-                                        <i class="ph-arrows-left-right me-1 text-primary"></i> Vendas × Recebimentos
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="repasses" onclick="window.switchAccountingTab(event, 'repasses')">
-                                        <i class="ph-hand-coins me-1 text-warning"></i> Repasses a Produtores
-                                    </button>
-                                </div>
-
-                                <!-- Group 4: DEMONSTRAÇÕES -->
-                                <div class="accounting-subnav-group d-none flex-wrap align-items-center gap-2" id="subnav-group-demonstracoes">
-                                    <span class="fs-xxs fw-bold text-muted text-uppercase me-1"><i class="ph-file-text me-1 text-info"></i> Demonstrações:</span>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="relatorios-dre" onclick="window.switchAccountingTab(event, 'relatorios-dre')">
-                                        <i class="ph-presentation me-1 text-primary"></i> DRE Gerencial
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="relatorios-balanco" onclick="window.switchAccountingTab(event, 'relatorios-balanco')">
-                                        <i class="ph-activity me-1 text-primary"></i> Balanço Patrimonial
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="relatorios-fluxo" onclick="window.switchAccountingTab(event, 'relatorios-fluxo')">
-                                        <i class="ph-chart-line-up me-1 text-primary"></i> Fluxo Contábil
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="relatorios-balancete" onclick="window.switchAccountingTab(event, 'relatorios-balancete')">
-                                        <i class="ph-file-text me-1 text-secondary"></i> Balancete
-                                    </button>
-                                </div>
-
-                                <!-- Group 5: FISCAL & CONTROLE -->
-                                <div class="accounting-subnav-group d-none flex-wrap align-items-center gap-2" id="subnav-group-fiscal-controle">
-                                    <span class="fs-xxs fw-bold text-muted text-uppercase me-1"><i class="ph-shield-check me-1 text-danger"></i> Fiscal &amp; Controle:</span>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="impostos" onclick="window.switchAccountingTab(event, 'impostos')">
-                                        <i class="ph-scales me-1 text-danger"></i> Impostos
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="auditoria" onclick="window.switchAccountingTab(event, 'auditoria')">
-                                        <i class="ph-shield-check me-1 text-primary"></i> Auditoria &amp; Logs
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="cont-fechamento" onclick="window.switchAccountingTab(event, 'cont-fechamento')">
-                                        <i class="ph-lock me-1 text-warning"></i> Fechamento Contábil
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold" data-tab="fiscal-sped" onclick="window.switchAccountingTab(event, 'fiscal-sped')">
-                                        <i class="ph-hard-drive me-1 text-secondary"></i> SPED Contábil ECD/ECF
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Fallback hidden list for legacy script compatibility with #accounting-nav-pills -->
-                            <div class="d-none" id="accounting-nav-pills" role="tablist">
-                                <a class="nav-link active" href="#" onclick="window.switchAccountingTab(event, 'dashboard')">Dashboard</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'plano-contas')">Plano de Contas</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'diario')">Livro Diário</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'razao')">Livro Razão</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'lancamentos')">Lançamentos</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'custos')">Centro de Custos</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'cont-hist')">Histórico</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'auditoria')">Auditoria</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'cont-fechamento')">Fechamento</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'impostos')">Impostos</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-nfse')">NFS-e</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-nfe')">NF-e</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-sped')">SPED</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'fiscal-obrigacoes')">Obrigações</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses')">Produtores</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-extratos')">Extratos</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-pix')">PIX</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-ted')">TED</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'repasses-hist')">Histórico</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-dre')">DRE</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-balanco')">Balanço</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-fluxo')">Fluxo Caixa</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-balancete')">Balancete</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-diario')">Livro Diário</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'relatorios-razao')">Livro Razão</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'demonstracoes')">Exportações</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-empresas')">Empresas</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-plano')">Plano Contábil</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-users')">Usuários</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-perms')">Permissões</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-integracoes')">Integrações</a>
-                                <a class="nav-link" href="#" onclick="window.switchAccountingTab(event, 'config-automacoes')">Automações</a>
-                            </div>
-                        </div>
                         <!-- All Accounting Panes Container (Full Width, Spacious) -->
                         <div class="accounting-content-container">
                             <!-- TAB PANE: Dashboard -->
