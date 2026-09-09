@@ -2400,3 +2400,55 @@ div:has(> canvas),
     flex: 0 0 auto;
   }
 }
+
+
+/* ==========================================================================
+   CONTABILIDADE ENTERPRISE (FASE 26.17.8.1) — BREAKDOWNS & MODALS
+   ========================================================================== */
+
+.accounting-breakdown-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.accounting-breakdown-list .d-flex {
+  transition: background-color 0.15s ease;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 4px;
+}
+
+.accounting-breakdown-list .d-flex:hover {
+  background-color: #f8fafc;
+}
+
+/* Modal Overlay Styling for Enterprise Modals */
+#modal-rastreabilidade-transacao .modal-content,
+#modal-divergencias-contabeis .modal-content {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Micro-badges for accounting entries */
+.badge-dc-debit {
+  background-color: #3b82f6;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.badge-dc-credit {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-weight: 700;
+}

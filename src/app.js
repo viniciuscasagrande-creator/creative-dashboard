@@ -6998,65 +6998,558 @@ function updateInteligenciaCard(e){let t=document.getElementById(`acc-intelligen
 /* --- syncAccountingData --- */
 function syncAccountingData(){let e=document.getElementById(`btn-sync-accounting-data`),t=e.innerHTML;e.disabled=!0,e.innerHTML=`<i class="ph-spinner spinner me-1"></i> Sincronizando...`,setTimeout(()=>{e.innerHTML=`<i class="ph-spinner spinner me-1"></i> Processando...`,setTimeout(()=>{e.innerHTML=`<i class="ph-check-circle me-1"></i> Concluído`,e.classList.remove(`btn-outline-primary`),e.classList.add(`btn-success`);let n=new Date().toISOString().split(`T`)[0];ACC_LANCAMENTOS.unshift({id:Date.now(),date:n,desc:`Sincronização Automática - Vendas Balbúrdia (Yii DB)`,debit:`1.1.04 - Contas a Receber (Adquirentes)`,credit:`4.1.01 - Receita Venda Ingressos`,value:5200,eventId:1653,costCenter:`Eventos`}),ACC_LANCAMENTOS.unshift({id:Date.now()+1,date:n,desc:`Sincronização Automática - Taxa Gateway Stone`,debit:`5.1.01 - Despesa Gateway de Pagamento`,credit:`1.1.04 - Contas a Receber (Adquirentes)`,value:130,eventId:1653,costCenter:`Financeiro`}),renderAccountingDashboard(),window.renderDiario&&window.renderDiario(),window.renderRazao&&window.renderRazao(),logAudit(`Sincronização`,`Vendas & Gateway`,`Sincronização forçada efetuada com sucesso.`),addSystemNotification(`success`,`Sincronização Concluída`,`Todos os indicadores do painel contábil foram atualizados.`),setTimeout(()=>{e.disabled=!1,e.innerHTML=t,e.classList.remove(`btn-success`),e.classList.add(`btn-outline-primary`)},2e3)},1500)},1500)}
 
+
+/* ==========================================================================
+   CONTABILIDADE ENTERPRISE (FASE 26.17.8.1) — CONTROLLERS & DATA ADAPTER
+   ========================================================================== */
+
+let currentAccountingPeriod = '30d';
+let currentAnalyticsView = 'geral';
+let currentProducerFilter = 'todos';
+let currentGatewayFilter = 'todos';
+
+const brlFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+const ENTERPRISE_ACCOUNTING_DATASETS = {
+  '30d': {
+    period: { start: '2026-06-01', end: '2026-06-30', label: 'Últimos 30 dias' },
+    grossTransactionValue: 1842500.00,
+    thirdPartyFunds: {
+      total: 1513200.00,
+      awaitingSettlement: 380000.00,
+      availableForPayout: 615000.00,
+      scheduledPayout: 310000.00,
+      blockedPayout: 42000.00,
+      reconciling: 124000.00,
+      divergent: 42200.00,
+    },
+    diskRevenue: {
+      total: 229300.00,
+      convenienceFee: 178500.00,
+      commission: 26300.00,
+      services: 18500.00,
+      other: 6000.00,
+    },
+    financialCosts: {
+      gatewayFees: 54820.00,
+      acquiringFees: 32100.00,
+      antifraud: 11200.00,
+      anticipation: 8520.00,
+      other: 3000.00,
+    },
+    taxes: {
+      provisioned: 28440.00,
+      paid: 22100.00,
+    },
+    payouts: {
+      pending: 414700.00,
+      paid: 1098500.00,
+    },
+    netRevenue: 146040.00,
+    operatingResult: 118900.00,
+    reconciliation: {
+      rate: 98.73,
+      divergentItems: 27,
+      divergentAmount: 34210.00,
+    }
+  },
+  '7d': {
+    period: { start: '2026-06-24', end: '2026-06-30', label: 'Últimos 7 dias' },
+    grossTransactionValue: 462100.00,
+    thirdPartyFunds: {
+      total: 379400.00,
+      awaitingSettlement: 98000.00,
+      availableForPayout: 162000.00,
+      scheduledPayout: 85000.00,
+      blockedPayout: 9400.00,
+      reconciling: 18000.00,
+      divergent: 7000.00,
+    },
+    diskRevenue: {
+      total: 58200.00,
+      convenienceFee: 45600.00,
+      commission: 6800.00,
+      services: 4300.00,
+      other: 1500.00,
+    },
+    financialCosts: {
+      gatewayFees: 13900.00,
+      acquiringFees: 8200.00,
+      antifraud: 2800.00,
+      anticipation: 2100.00,
+      other: 800.00,
+    },
+    taxes: {
+      provisioned: 7150.00,
+      paid: 5400.00,
+    },
+    payouts: {
+      pending: 105000.00,
+      paid: 274400.00,
+    },
+    netRevenue: 37150.00,
+    operatingResult: 30400.00,
+    reconciliation: {
+      rate: 99.12,
+      divergentItems: 6,
+      divergentAmount: 7000.00,
+    }
+  },
+  'hoje': {
+    period: { start: '2026-06-30', end: '2026-06-30', label: 'Hoje' },
+    grossTransactionValue: 64981.90,
+    thirdPartyFunds: {
+      total: 53360.00,
+      awaitingSettlement: 14200.00,
+      availableForPayout: 23500.00,
+      scheduledPayout: 12000.00,
+      blockedPayout: 1200.00,
+      reconciling: 1800.00,
+      divergent: 660.00,
+    },
+    diskRevenue: {
+      total: 8190.00,
+      convenienceFee: 6450.00,
+      commission: 950.00,
+      services: 610.00,
+      other: 180.00,
+    },
+    financialCosts: {
+      gatewayFees: 1950.00,
+      acquiringFees: 1150.00,
+      antifraud: 390.00,
+      anticipation: 290.00,
+      other: 120.00,
+    },
+    taxes: {
+      provisioned: 1010.00,
+      paid: 0.00,
+    },
+    payouts: {
+      pending: 15400.00,
+      paid: 37960.00,
+    },
+    netRevenue: 5230.00,
+    operatingResult: 4350.00,
+    reconciliation: {
+      rate: 99.45,
+      divergentItems: 2,
+      divergentAmount: 660.00,
+    }
+  },
+  'mes': {
+    period: { start: '2026-06-01', end: '2026-06-30', label: 'Mês Atual (Junho/2026)' },
+    grossTransactionValue: 1842500.00,
+    thirdPartyFunds: {
+      total: 1513200.00,
+      awaitingSettlement: 380000.00,
+      availableForPayout: 615000.00,
+      scheduledPayout: 310000.00,
+      blockedPayout: 42000.00,
+      reconciling: 124000.00,
+      divergent: 42200.00,
+    },
+    diskRevenue: {
+      total: 229300.00,
+      convenienceFee: 178500.00,
+      commission: 26300.00,
+      services: 18500.00,
+      other: 6000.00,
+    },
+    financialCosts: {
+      gatewayFees: 54820.00,
+      acquiringFees: 32100.00,
+      antifraud: 11200.00,
+      anticipation: 8520.00,
+      other: 3000.00,
+    },
+    taxes: {
+      provisioned: 28440.00,
+      paid: 22100.00,
+    },
+    payouts: {
+      pending: 414700.00,
+      paid: 1098500.00,
+    },
+    netRevenue: 146040.00,
+    operatingResult: 118900.00,
+    reconciliation: {
+      rate: 98.73,
+      divergentItems: 27,
+      divergentAmount: 34210.00,
+    }
+  },
+  'ano': {
+    period: { start: '2026-01-01', end: '2026-12-31', label: 'Ano de 2026 (YTD)' },
+    grossTransactionValue: 11240000.00,
+    thirdPartyFunds: {
+      total: 9230000.00,
+      awaitingSettlement: 1250000.00,
+      availableForPayout: 3820000.00,
+      scheduledPayout: 3200000.00,
+      blockedPayout: 180000.00,
+      reconciling: 640000.00,
+      divergent: 140000.00,
+    },
+    diskRevenue: {
+      total: 1398000.00,
+      convenienceFee: 1088000.00,
+      commission: 160500.00,
+      services: 112500.00,
+      other: 37000.00,
+    },
+    financialCosts: {
+      gatewayFees: 334500.00,
+      acquiringFees: 196000.00,
+      antifraud: 68500.00,
+      anticipation: 52000.00,
+      other: 18000.00,
+    },
+    taxes: {
+      provisioned: 173500.00,
+      paid: 142000.00,
+    },
+    payouts: {
+      pending: 1250000.00,
+      paid: 7980000.00,
+    },
+    netRevenue: 890000.00,
+    operatingResult: 724000.00,
+    reconciliation: {
+      rate: 98.88,
+      divergentItems: 42,
+      divergentAmount: 140000.00,
+    }
+  }
+};
+
+function setAccountingFilter(period, btn) {
+  currentAccountingPeriod = period;
+  if (btn && btn.parentElement) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  applyAccountingFilters();
+}
+
+function applyAccountingFilters() {
+  const producerSelect = document.getElementById('acc-filter-producer');
+  const gatewaySelect = document.getElementById('acc-filter-gateway');
+  currentProducerFilter = producerSelect ? producerSelect.value : 'todos';
+  currentGatewayFilter = gatewaySelect ? gatewaySelect.value : 'todos';
+
+  const base = ENTERPRISE_ACCOUNTING_DATASETS[currentAccountingPeriod] || ENTERPRISE_ACCOUNTING_DATASETS['30d'];
+  const d = JSON.parse(JSON.stringify(base));
+
+  // Ajuste por produtor
+  if (currentProducerFilter !== 'todos') {
+    const factor = currentProducerFilter === 'prod-1' ? 0.45 : currentProducerFilter === 'prod-2' ? 0.35 : 0.20;
+    d.grossTransactionValue *= factor;
+    d.thirdPartyFunds.total *= factor;
+    d.thirdPartyFunds.awaitingSettlement *= factor;
+    d.thirdPartyFunds.availableForPayout *= factor;
+    d.thirdPartyFunds.scheduledPayout *= factor;
+    d.thirdPartyFunds.blockedPayout *= factor;
+    d.thirdPartyFunds.reconciling *= factor;
+    d.thirdPartyFunds.divergent *= factor;
+    d.diskRevenue.total *= factor;
+    d.diskRevenue.convenienceFee *= factor;
+    d.diskRevenue.commission *= factor;
+    d.diskRevenue.services *= factor;
+    d.financialCosts.gatewayFees *= factor;
+    d.taxes.provisioned *= factor;
+    d.payouts.pending *= factor;
+    d.payouts.paid *= factor;
+    d.netRevenue *= factor;
+    d.operatingResult *= factor;
+    d.reconciliation.divergentAmount *= factor;
+    d.reconciliation.divergentItems = Math.max(1, Math.round(d.reconciliation.divergentItems * factor));
+  }
+
+  // 1. Atualiza os 8 Cards do Resumo Executivo
+  const elGmv = document.getElementById('acc-card-gmv');
+  const elTerc = document.getElementById('acc-card-terceiros');
+  const elDisk = document.getElementById('acc-card-receita-disk');
+  const elGw = document.getElementById('acc-card-gateway');
+  const elTrib = document.getElementById('acc-card-tributos');
+  const elRep = document.getElementById('acc-card-repasses');
+  const elLiq = document.getElementById('acc-card-receita-liquida');
+  const elOp = document.getElementById('acc-card-resultado-operacional');
+
+  if (elGmv) elGmv.textContent = brlFormatter.format(d.grossTransactionValue);
+  if (elTerc) elTerc.textContent = brlFormatter.format(d.thirdPartyFunds.total);
+  if (elDisk) elDisk.textContent = brlFormatter.format(d.diskRevenue.total);
+  if (elGw) elGw.textContent = brlFormatter.format(d.financialCosts.gatewayFees);
+  if (elTrib) elTrib.textContent = brlFormatter.format(d.taxes.provisioned);
+  if (elRep) elRep.textContent = brlFormatter.format(d.payouts.paid);
+  if (elLiq) elLiq.textContent = brlFormatter.format(d.netRevenue);
+  if (elOp) elOp.textContent = brlFormatter.format(d.operatingResult);
+
+  // 2. Atualiza Linhas de Recursos de Terceiros
+  const setElText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = typeof val === 'number' ? brlFormatter.format(val) : val;
+  };
+
+  setElText('acc-terc-aguardando', d.thirdPartyFunds.awaitingSettlement);
+  setElText('acc-terc-disponivel', d.thirdPartyFunds.availableForPayout);
+  setElText('acc-terc-programado', d.thirdPartyFunds.scheduledPayout);
+  setElText('acc-terc-bloqueado', d.thirdPartyFunds.blockedPayout);
+  setElText('acc-terc-conciliando', d.thirdPartyFunds.reconciling);
+  setElText('acc-terc-divergente', d.thirdPartyFunds.divergent);
+  setElText('acc-terc-total', d.thirdPartyFunds.total);
+
+  // 3. Atualiza Linhas de Receita Própria DiskIngressos
+  setElText('acc-disk-taxas', d.diskRevenue.convenienceFee);
+  setElText('acc-disk-comissao', d.diskRevenue.commission);
+  setElText('acc-disk-servicos', d.diskRevenue.services);
+  setElText('acc-disk-outras', d.diskRevenue.other);
+  setElText('acc-disk-deducoes', '-' + brlFormatter.format(d.financialCosts.gatewayFees + d.taxes.provisioned));
+  setElText('acc-disk-liquida', d.netRevenue);
+  setElText('acc-disk-total', d.diskRevenue.total);
+
+  // 4. Centro de Conciliação e Divergências
+  const elReconcilRate = document.getElementById('acc-reconcil-rate');
+  const elReconcilBar = document.getElementById('acc-reconcil-progress-bar');
+  const elDivergCount = document.getElementById('acc-diverg-count');
+  const elDivergAmount = document.getElementById('acc-diverg-amount');
+
+  if (elReconcilRate) elReconcilRate.textContent = d.reconciliation.rate.toFixed(2) + '%';
+  if (elReconcilBar) {
+    elReconcilBar.style.width = Math.min(100, Math.max(0, d.reconciliation.rate)) + '%';
+    elReconcilBar.setAttribute('aria-valuenow', d.reconciliation.rate);
+  }
+  if (elDivergCount) elDivergCount.textContent = d.reconciliation.divergentItems + ' pedidos';
+  if (elDivergAmount) elDivergAmount.textContent = brlFormatter.format(d.reconciliation.divergentAmount);
+
+  // 5. DRE Gerencial Sintética
+  setElText('acc-dre-rec-propria', d.diskRevenue.total);
+  setElText('acc-dre-impostos', '-' + brlFormatter.format(d.taxes.provisioned));
+  setElText('acc-dre-gateway', '-' + brlFormatter.format(d.financialCosts.gatewayFees));
+  setElText('acc-dre-rec-liquida', d.netRevenue);
+  setElText('acc-dre-resultado-final', d.operatingResult);
+  const margemPct = ((d.operatingResult / d.diskRevenue.total) * 100).toFixed(1) + '%';
+  const elMargem = document.getElementById('acc-dre-margem-pct');
+  if (elMargem) elMargem.textContent = margemPct;
+
+  // 6. Atualiza o Gráfico Analítico
+  renderAnalyticsChart(currentAnalyticsView, currentAccountingPeriod, d);
+
+  // 7. Atualiza a Tabela de Eventos com Auditoria e Rastreabilidade
+  renderAccountingEventsTable(d);
+}
+
+function switchAnalyticsView(view, btn) {
+  currentAnalyticsView = view;
+  if (btn && btn.parentElement) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  applyAccountingFilters();
+}
+
+function renderAnalyticsChart(view, period, currentData) {
+  const container = document.getElementById('acc-chart-bars-container');
+  if (!container) return;
+
+  const data = currentData || ENTERPRISE_ACCOUNTING_DATASETS[period] || ENTERPRISE_ACCOUNTING_DATASETS['30d'];
+
+  if (view === 'eventos') {
+    const eventos = [
+      { label: 'Festival Inverno', gmv: 340000, disk: 42500, pct: 95 },
+      { label: 'Show Rock CWB', gmv: 285000, disk: 35600, pct: 82 },
+      { label: 'Teatro Guaíra', gmv: 190000, disk: 23750, pct: 60 },
+      { label: 'Stand Up Comedy', gmv: 145000, disk: 18125, pct: 45 },
+      { label: 'Expotrade Feira', gmv: 98000, disk: 12250, pct: 32 }
+    ];
+    container.innerHTML = eventos.map(ev => `
+      <div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end px-1" style="min-width: 45px;" title="${ev.label} | GMV: ${brlFormatter.format(ev.gmv)} | Rec. Disk: ${brlFormatter.format(ev.disk)}">
+        <span class="fs-xxs fw-bold font-monospace text-success mb-1" style="font-size: 9px;">${brlFormatter.format(ev.disk)}</span>
+        <div class="w-100 rounded-top chart-bar-custom" style="height: ${ev.pct}%; background: linear-gradient(180deg, #10b981 0%, #047857 100%);"></div>
+        <span class="fs-xxs text-muted mt-1 text-truncate text-center" style="font-size: 9.5px; max-width: 80px;">${ev.label}</span>
+      </div>
+    `).join('');
+  } else if (view === 'produtores') {
+    const produtores = [
+      { label: 'Opus Entretenimento', repasse: 680000, disk: 95000, pct: 95 },
+      { label: 'Move Concerts', repasse: 520000, disk: 72000, pct: 75 },
+      { label: 'T4F Time For Fun', repasse: 310000, disk: 43000, pct: 48 },
+      { label: 'Outros Produtores', repasse: 153200, disk: 19300, pct: 28 }
+    ];
+    container.innerHTML = produtores.map(p => `
+      <div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end px-1" style="min-width: 55px;" title="${p.label} | Repasse Produtor: ${brlFormatter.format(p.repasse)} | Rec. Disk: ${brlFormatter.format(p.disk)}">
+        <span class="fs-xxs fw-bold font-monospace text-primary mb-1" style="font-size: 9px;">${brlFormatter.format(p.disk)}</span>
+        <div class="w-100 rounded-top chart-bar-custom" style="height: ${p.pct}%; background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);"></div>
+        <span class="fs-xxs text-muted mt-1 text-truncate text-center" style="font-size: 9.5px; max-width: 90px;">${p.label}</span>
+      </div>
+    `).join('');
+  } else if (view === 'gateways') {
+    const gateways = [
+      { label: 'Stone CC', vol: 1120000, taxa: 31920, pct: 92 },
+      { label: 'Itaú PIX', vol: 540000, taxa: 5346, pct: 45 },
+      { label: 'Cielo Débito', vol: 142500, taxa: 2850, pct: 22 },
+      { label: 'Pagar.me', vol: 40000, taxa: 1140, pct: 12 }
+    ];
+    container.innerHTML = gateways.map(gw => `
+      <div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end px-1" style="min-width: 50px;" title="${gw.label} | Volume: ${brlFormatter.format(gw.vol)} | Taxa: ${brlFormatter.format(gw.taxa)}">
+        <span class="fs-xxs fw-bold font-monospace text-warning mb-1" style="font-size: 9px;">${brlFormatter.format(gw.taxa)}</span>
+        <div class="w-100 rounded-top chart-bar-custom" style="height: ${gw.pct}%; background: linear-gradient(180deg, #f59e0b 0%, #b45309 100%);"></div>
+        <span class="fs-xxs text-muted mt-1 text-truncate text-center" style="font-size: 9.5px; max-width: 80px;">${gw.label}</span>
+      </div>
+    `).join('');
+  } else {
+    // Visão Geral (Comparativo de Pilares)
+    const items = [
+      { label: 'GMV Transacionado', val: data.grossTransactionValue, pct: 100, color: '#3b82f6' },
+      { label: 'Valores Terceiros (Repasse)', val: data.thirdPartyFunds.total, pct: 82, color: '#ef4444' },
+      { label: 'Receita Própria Disk', val: data.diskRevenue.total, pct: 42, color: '#10b981' },
+      { label: 'Taxas Gateway (MDR)', val: data.financialCosts.gatewayFees, pct: 22, color: '#f59e0b' },
+      { label: 'Tributos (DAS/ISS)', val: data.taxes.provisioned, pct: 16, color: '#8b5cf6' },
+      { label: 'Resultado Operacional', val: data.operatingResult, pct: 32, color: '#06b6d4' }
+    ];
+    container.innerHTML = items.map(item => `
+      <div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end px-1" style="min-width: 48px;" title="${item.label}: ${brlFormatter.format(item.val)}">
+        <span class="fs-xxs fw-bold font-monospace mb-1" style="font-size: 9px; color: ${item.color}">${brlFormatter.format(item.val)}</span>
+        <div class="w-100 rounded-top chart-bar-custom" style="height: ${item.pct}%; background: ${item.color};"></div>
+        <span class="fs-xxs text-muted mt-1 text-truncate text-center" style="font-size: 9.5px; max-width: 75px;">${item.label}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function renderAccountingEventsTable(currentData) {
+  const tbody = document.getElementById('acc-dashboard-events-tbody');
+  if (!tbody) return;
+
+  const mockEvents = [
+    { id: 1653, name: 'Festival de Inverno 2026', producer: 'Opus Entretenimento', gmv: 340000, disk: 42500, gw: 9690, das: 5270, repasse: 282540, lucro: 27540, status: 'conciliado', statusLabel: 'Conciliado' },
+    { id: 1677, name: 'Show de Rock Curitiba', producer: 'Move Concerts', gmv: 285000, disk: 35600, gw: 8122, das: 4414, repasse: 236864, lucro: 23064, status: 'divergencia', statusLabel: 'Divergência (R$ 3.421)' },
+    { id: 1545, name: 'Teatro Guaíra - Orquestra', producer: 'T4F Entretenimento', gmv: 190000, disk: 23750, gw: 5415, das: 2945, repasse: 157890, lucro: 15390, status: 'conciliado', statusLabel: 'Conciliado' },
+    { id: 1489, name: 'Stand Up Comedy VIP', producer: 'Opus Entretenimento', gmv: 145000, disk: 18125, gw: 4132, das: 2247, repasse: 120496, lucro: 11746, status: 'pendente', statusLabel: 'Pendente D+1' },
+    { id: 1390, name: 'Expotrade Feira de Negócios', producer: 'Move Concerts', gmv: 98000, disk: 12250, gw: 2793, das: 1519, repasse: 81438, lucro: 7938, status: 'conciliado', statusLabel: 'Conciliado' }
+  ];
+
+  tbody.innerHTML = mockEvents.map(ev => {
+    const badgeClass = ev.status === 'conciliado' 
+      ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-20'
+      : ev.status === 'divergencia'
+      ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20'
+      : 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20';
+
+    const iconStatus = ev.status === 'conciliado' ? 'ph-check-circle' : ev.status === 'divergencia' ? 'ph-warning-circle' : 'ph-clock';
+
+    return `
+      <tr>
+        <td>
+          <span class="badge bg-light text-dark font-monospace me-1">EV-${ev.id}</span>
+          <strong class="text-dark">${ev.name}</strong>
+        </td>
+        <td><span class="fs-xs text-muted-dark">${ev.producer}</span></td>
+        <td class="text-end fw-bold font-monospace text-dark">${brlFormatter.format(ev.gmv)}</td>
+        <td class="text-end fw-bold font-monospace text-success">${brlFormatter.format(ev.disk)}</td>
+        <td class="text-end font-monospace text-danger">${brlFormatter.format(ev.gw)}</td>
+        <td class="text-end font-monospace text-muted">${brlFormatter.format(ev.das)}</td>
+        <td class="text-end fw-bold font-monospace text-info">${brlFormatter.format(ev.repasse)}</td>
+        <td class="text-end fw-bold font-monospace text-primary">${brlFormatter.format(ev.lucro)}</td>
+        <td class="text-center">
+          <span class="badge ${badgeClass} font-monospace fs-xxs">
+            <i class="${iconStatus} me-1"></i> ${ev.statusLabel}
+          </span>
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-xxs btn-outline-primary fw-bold" onclick="window.openTransactionAuditModal(${ev.id})" title="Ver Razão Contábil do Pedido">
+            <i class="ph-tree-structure me-1"></i> Rastrear
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openTransactionAuditModal(eventId) {
+  const events = {
+    1653: { name: 'Festival de Inverno 2026', producer: 'Opus Entretenimento', order: '#123456', buyer: 'Mariana S. Albuquerque' },
+    1677: { name: 'Show de Rock Curitiba', producer: 'Move Concerts', order: '#15289', buyer: 'Carlos Eduardo Mendes' },
+    1545: { name: 'Teatro Guaíra - Orquestra', producer: 'T4F Entretenimento', order: '#14980', buyer: 'Fernanda Lima Rocha' },
+  };
+
+  const ev = events[eventId] || events[1653];
+
+  const elTitle = document.getElementById('modal-rastreio-title');
+  const elCliente = document.getElementById('modal-rastreio-cliente');
+  const elEvento = document.getElementById('modal-rastreio-evento');
+
+  if (elTitle) elTitle.textContent = `Razão Contábil por Transação — Pedido ${ev.order}`;
+  if (elCliente) elCliente.textContent = ev.buyer;
+  if (elEvento) elEvento.textContent = `${ev.name} (${ev.producer})`;
+
+  if (typeof openModal === 'function') {
+    openModal('rastreabilidade-transacao');
+  }
+}
+
+function openDivergenciasModal() {
+  if (typeof openModal === 'function') {
+    openModal('divergencias-contabeis');
+  }
+}
+
+function conciliarLoteAutomatico() {
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('info', 'Conciliação Automática', 'Processando 27 registros divergentes com API Stone e Extrato Itaú...');
+  }
+  setTimeout(() => {
+    const elRate = document.getElementById('acc-reconcil-rate');
+    const elBar = document.getElementById('acc-reconcil-progress-bar');
+    const elCount = document.getElementById('acc-diverg-count');
+    const elAmount = document.getElementById('acc-diverg-amount');
+
+    if (elRate) elRate.textContent = '99,82%';
+    if (elBar) elBar.style.width = '99.82%';
+    if (elCount) elCount.textContent = '4 pedidos';
+    if (elAmount) elAmount.textContent = 'R$ 4.120,00';
+
+    if (typeof addSystemNotification === 'function') {
+      addSystemNotification('success', 'Conciliação Concluída', '23 divergências sanadas automaticamente. Restam 4 para análise manual.');
+    }
+  }, 700);
+}
+
+function ajustarDivergencia(pedidoId) {
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('success', 'Ajuste de Divergência', `Pedido #${pedidoId} conciliado manualmente com sucesso via contrapartida contábil.`);
+  }
+}
+
+function concluirEtapaFechamento() {
+  const elPct = document.getElementById('acc-closing-pct');
+  if (elPct) elPct.textContent = '90% Concluído';
+  if (typeof addSystemNotification === 'function') {
+    addSystemNotification('success', 'Fechamento Contábil', 'Etapa 4 (Repasses a Produtores) homologada e encerrada com sucesso.');
+  }
+}
+
+function exportarExtratoEventos() {
+  let csv = 'ID Evento,Nome do Evento,Produtor,GMV Transacionado,Receita Disk,Custo Gateway,Tributos DAS,Repasse Produtor,Resultado Liquido,Status\n';
+  csv += '1653,"Festival de Inverno 2026","Opus Entretenimento",340000,42500,9690,5270,282540,27540,"Conciliado"\n';
+  csv += '1677,"Show de Rock Curitiba","Move Concerts",285000,35600,8122,4414,236864,23064,"Divergencia"\n';
+  csv += '1545,"Teatro Guaira - Orquestra","T4F Entretenimento",190000,23750,5415,2945,157890,15390,"Conciliado"\n';
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'Apuracao_Eventos_Contabilidade_Disk_2026.csv');
+  link.click();
+}
+
+
 /* --- renderAccountingDashboard --- */
 function renderAccountingDashboard() {
-  let e = 0, t = 0, n = 0;
-  if (typeof ACC_LANCAMENTOS !== 'undefined') {
-    ACC_LANCAMENTOS.forEach(r => {
-      if (r.credit === '4.1.01 - Receita Venda Ingressos') e += r.value;
-      if (r.debit === '5.1.01 - Despesa Gateway de Pagamento' || r.debit === '5.1.01 - Despesa Gateway') t += r.value;
-      if (r.debit === '2.1.02 - Produtores a Pagar (Repasses)') n += r.value;
-    });
-  }
-  let r = e - t;
-  let i = document.getElementById('acc-kpi-receita-bruta');
-  let a = document.getElementById('acc-kpi-receita-liquida');
-  let o = document.getElementById('acc-kpi-taxas');
-  let s = document.getElementById('acc-kpi-repasses');
-  let kImpostos = document.getElementById('acc-kpi-impostos');
-  let kConciliar = document.getElementById('acc-kpi-conciliar');
-
-  if (i) i.textContent = `R$ ${e.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-  if (a) a.textContent = `R$ ${r.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-  if (o) o.textContent = `R$ ${t.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-  if (s) s.textContent = `R$ ${n.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-
-  // Simples Nacional DAS (~6.5% s/ comissão/markup líquida)
-  let valImpostos = Math.max(0, (r - n) * 0.065);
-  if (kImpostos) {
-    kImpostos.textContent = `R$ ${valImpostos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-  }
-
-  // Pendências de Conciliação
-  let countPend = (typeof ACC_CONCILIACAO_PENDENTES !== 'undefined' && Array.isArray(ACC_CONCILIACAO_PENDENTES)) ? ACC_CONCILIACAO_PENDENTES.length : 3;
-  if (kConciliar) {
-    kConciliar.textContent = `${countPend} pendentes`;
-  }
-
-  // Events Table
-  let c = document.getElementById('acc-dashboard-events-tbody');
-  if (c && typeof EVENTS_DATA !== 'undefined' && typeof TICKETS_DATA !== 'undefined') {
-    c.innerHTML = EVENTS_DATA.map(e => {
-      let t = TICKETS_DATA.filter(t => t.eventId === e.id || t.eventId === e.id.toString());
-      let n = t.length;
-      let r = 0;
-      t.forEach(ev => { let price = parseFloat(ev.price) || 0; r += price; });
-      if (r === 0) r = (e.id === 1653 ? 18500 : e.id === 1677 ? 24200 : e.id === 1545 ? 12900 : 2500);
-      let i = r * 0.08;
-      let a = r - i;
-      return `
-        <tr>
-          <td><span class="badge bg-light text-dark font-monospace">${e.id}</span></td>
-          <td><strong>${e.name}</strong></td>
-          <td><i class="ph-map-pin me-1 opacity-70"></i> ${e.location}</td>
-          <td class="text-center font-monospace">${n || 12}</td>
-          <td class="text-end fw-bold font-monospace text-dark">R$ ${r.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-          <td class="text-end text-danger font-monospace">R$ ${i.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-          <td class="text-end text-success fw-bold font-monospace">R$ ${a.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-        </tr>
-      `;
-    }).join('');
-  }
+  applyAccountingFilters();
 }
 
 /* --- renderPlanoContas --- */
@@ -7448,6 +7941,16 @@ window.initAgendaGeneralModule = initAgendaGeneralModule;
 // Bind all accounting functions to window
 window.switchAccountingTab = switchAccountingTab;
 window.switchAccountingCategory = switchAccountingCategory;
+window.setAccountingFilter = setAccountingFilter;
+window.applyAccountingFilters = applyAccountingFilters;
+window.switchAnalyticsView = switchAnalyticsView;
+window.openTransactionAuditModal = openTransactionAuditModal;
+window.openDivergenciasModal = openDivergenciasModal;
+window.conciliarLoteAutomatico = conciliarLoteAutomatico;
+window.ajustarDivergencia = ajustarDivergencia;
+window.concluirEtapaFechamento = concluirEtapaFechamento;
+window.exportarExtratoEventos = exportarExtratoEventos;
+
 window.updateChartRange = updateChartRange;
 window.exportAccountingPDF = exportAccountingPDF;
 window.runApiConsoleRequest = runApiConsoleRequest;
