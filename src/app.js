@@ -11,6 +11,7 @@ import { accountingDashboardService } from './services/accountingDashboardServic
 import { auditComplianceService } from './services/auditComplianceService.js';
 import { accountingIntelligenceService } from './services/accountingIntelligenceService.js';
 import { initFinancialEventTransfersView } from './controllers/financialEventTransfersController.js';
+import { initProcureToPayView, switchP2PTab } from './controllers/procureToPayController.js';
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
@@ -426,6 +427,20 @@ function openView(viewName) {
     'gestao-saldos': 'financial-event-transfers',
     'financial-transfers': 'financial-event-transfers',
     'financial-event-transfers': 'financial-event-transfers',
+    'procure-to-pay': 'procure-to-pay',
+    'approvals-inbox': 'procure-to-pay',
+    'purchases-requests': 'procure-to-pay',
+    'purchases-quotations': 'procure-to-pay',
+    'purchases-orders': 'procure-to-pay',
+    'purchases-receipts': 'procure-to-pay',
+    'suppliers-registry': 'procure-to-pay',
+    'suppliers-360': 'procure-to-pay',
+    'suppliers-documents': 'procure-to-pay',
+    'contracts-management': 'procure-to-pay',
+    'contracts-installments': 'procure-to-pay',
+    'contracts-expirations': 'procure-to-pay',
+    'management-costcenters': 'procure-to-pay',
+    'management-budgets': 'procure-to-pay',
     'contabilidade': 'accounting-disk',
     'relatorios': 'reports-sales',
     'configuracoes': 'settings-profile'
@@ -569,6 +584,15 @@ function openView(viewName) {
     if (typeof switchAccountingTab === 'function') switchAccountingTab(null, typeof currentAccountingTab !== 'undefined' ? currentAccountingTab : 'dashboard');
   } else if (resolvedName === 'financial-event-transfers') {
     if (typeof initFinancialEventTransfersView === 'function') initFinancialEventTransfersView();
+  } else if (resolvedName === 'procure-to-pay') {
+    let p2pTab = 'approvals';
+    if (viewName.includes('supplier')) p2pTab = 'suppliers';
+    else if (viewName.includes('receipt') || viewName.includes('match')) p2pTab = 'matching';
+    else if (viewName.includes('purchase')) p2pTab = 'purchases';
+    else if (viewName.includes('contract')) p2pTab = 'contracts';
+    else if (viewName.includes('budget') || viewName.includes('costcenter') || viewName.includes('management')) p2pTab = 'budgets';
+    else if (viewName.includes('approval')) p2pTab = 'approvals';
+    if (typeof initProcureToPayView === 'function') initProcureToPayView(p2pTab);
   }
 
   // Redimensionamento global de gráficos para garantir adaptação perfeita no container

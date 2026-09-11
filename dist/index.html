@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-Bxks5Yw3.js"></script>
+      <script type="module" crossorigin src="./assets/index-C0700Kgq.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
     </head>
 <body>
@@ -213,13 +213,53 @@
                             <a href="#" class="nav-link" title="Menu Financeiro">
                                 <i class="ph-wallet"></i>
                                 <span>Financeiro</span>
-                                <span class="badge bg-success align-self-center rounded-pill ms-auto">19</span>
+                                <span class="badge bg-success align-self-center rounded-pill ms-auto">24</span>
                             </a>
                             <ul class="nav-group-sub collapse">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard" onclick="if(window.switchActiveView) { window.switchActiveView('financial-dashboard'); event.preventDefault(); }"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-event-transfers" onclick="if(window.switchActiveView) { window.switchActiveView('financial-event-transfers'); event.preventDefault(); }"><i class="ph-arrows-left-right me-2"></i> Gestão de Saldos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance" onclick="if(window.switchActiveView) { window.switchActiveView('financial-balance'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Conta Financeira</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass" onclick="if(window.switchActiveView) { window.switchActiveView('financial-repass'); event.preventDefault(); }"><i class="ph-arrow-up-right me-2"></i> Contas a Receber</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses" onclick="if(window.switchActiveView) { window.switchActiveView('financial-expenses'); event.preventDefault(); }"><i class="ph-trend-down me-2"></i> Contas a Pagar</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance" onclick="if(window.switchActiveView) { window.switchActiveView('cashflow-performance'); event.preventDefault(); }"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
+
+                                <!-- Central de Aprovações Unificada -->
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link submenu-link text-warning fw-bold" data-view="approvals-inbox" onclick="if(window.switchActiveView) { window.switchActiveView('approvals-inbox'); event.preventDefault(); }">
+                                        <i class="ph-check-circle me-2 text-warning"></i> Central de Aprovações
+                                        <span class="badge bg-danger rounded-pill ms-auto" id="p2p-header-pending-count" style="display:none;">0</span>
+                                    </a>
+                                </li>
+
+                                <!-- COMPRAS (Procure-to-Pay) -->
+                                <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Compras & Procure-to-Pay</li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-requests" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-requests'); event.preventDefault(); }"><i class="ph-file-plus me-2"></i> Solicitações de Compra</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-quotations" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-quotations'); event.preventDefault(); }"><i class="ph-scales me-2"></i> Cotações & Propostas</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-orders" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-orders'); event.preventDefault(); }"><i class="ph-receipt me-2"></i> Pedidos de Compra</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-receipts" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-receipts'); event.preventDefault(); }"><i class="ph-package me-2"></i> Recebimentos (3-Way)</a></li>
+
+                                <!-- FORNECEDORES -->
+                                <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Fornecedores</li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-registry" onclick="if(window.switchActiveView) { window.switchActiveView('suppliers-registry'); event.preventDefault(); }"><i class="ph-buildings me-2"></i> Cadastro Fornecedores</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-360" onclick="if(window.switchActiveView) { window.switchActiveView('suppliers-360'); event.preventDefault(); }"><i class="ph-arrows-out-card me-2"></i> Fornecedor 360°</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-documents" onclick="if(window.switchActiveView) { window.switchActiveView('suppliers-documents'); event.preventDefault(); }"><i class="ph-files me-2"></i> Documentos & CNDs</a></li>
+
+                                <!-- CONTRATOS -->
+                                <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Contratos</li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-management" onclick="if(window.switchActiveView) { window.switchActiveView('contracts-management'); event.preventDefault(); }"><i class="ph-scroll me-2"></i> Central de Contratos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-installments" onclick="if(window.switchActiveView) { window.switchActiveView('contracts-installments'); event.preventDefault(); }"><i class="ph-calendar-blank me-2"></i> Parcelas Contratuais</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-expirations" onclick="if(window.switchActiveView) { window.switchActiveView('contracts-expirations'); event.preventDefault(); }"><i class="ph-clock-countdown me-2"></i> Vencimentos (30 dias)</a></li>
+
+                                <!-- GESTÃO & CENTRO DE CUSTOS -->
+                                <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Gestão Orçamentária</li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-costcenters" onclick="if(window.switchActiveView) { window.switchActiveView('management-costcenters'); event.preventDefault(); }"><i class="ph-flag me-2"></i> Centro de Custos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-budgets" onclick="if(window.switchActiveView) { window.switchActiveView('management-budgets'); event.preventDefault(); }"><i class="ph-target me-2"></i> Orçamentos por Evento</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre" onclick="if(window.switchActiveView) { window.switchActiveView('cashflow-dre'); event.preventDefault(); }"><i class="ph-presentation-chart me-2"></i> DRE do Evento</a></li>
+
+                                <!-- MENUS CLÁSSICOS PRESERVADOS -->
+                                <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Operações Financeiras</li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics" onclick="if(window.switchActiveView) { window.switchActiveView('financial-analytics'); event.preventDefault(); }"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-statement" onclick="if(window.switchActiveView) { window.switchActiveView('financial-statement'); event.preventDefault(); }"><i class="ph-receipt me-2"></i> Extrato</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses" onclick="if(window.switchActiveView) { window.switchActiveView('financial-expenses'); event.preventDefault(); }"><i class="ph-trend-down me-2"></i> Despesas</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-accounts" onclick="if(window.switchActiveView) { window.switchActiveView('financial-accounts'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Contas Bancárias</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-bordero" onclick="if(window.switchActiveView) { window.switchActiveView('financial-bordero'); event.preventDefault(); }"><i class="ph-signature me-2"></i> Borderô</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-pdv" onclick="if(window.switchActiveView) { window.switchActiveView('financial-pdv'); event.preventDefault(); }"><i class="ph-storefront me-2"></i> Pontos de Venda (PDV)</a></li>
@@ -2839,6 +2879,518 @@
 
 
                     <!-- VIEW: Financeiro - Solicitações de Repasse -->
+                    <!-- ========================================================================= -->
+                    <!-- FASE 26.17.9.4.5: PROCURE-TO-PAY (COMPRAS + FORNECEDORES + CONTRATOS)   -->
+                    <!-- ========================================================================= -->
+                    <section id="view-procure-to-pay" class="page-section" style="display:none;">
+                        <!-- Top Action Bar -->
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Procure-to-Pay &amp; Gestão de Compras</h5>
+                                <div class="text-muted fs-xs">Financeiro &bull; Fornecedor 360°, Cotações, Pedidos de Compra, Contratos e Alçadas de Aprovação</div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center w-100 w-md-auto">
+                                <div class="d-flex align-items-center gap-1">
+                                    <label for="p2p-producer-select" class="fs-xs fw-bold text-muted mb-0 text-uppercase d-none d-sm-inline">Produtor:</label>
+                                    <select id="p2p-producer-select" class="form-select form-select-sm fw-bold border-secondary" style="min-width: 220px;" onchange="window.changeP2PProducer(this.value)">
+                                        <option value="prod-1">DiskIngressos Eventos Ltda</option>
+                                        <option value="prod-2">CWB Brasil Entretenimento</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-outline-light text-dark border fw-bold d-flex align-items-center gap-1" onclick="window.initProcureToPayView()" style="height: 36px; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                                    <i class="ph-arrows-clockwise"></i> Atualizar
+                                </button>
+                                <button class="btn btn-outline-primary fw-bold d-flex align-items-center gap-1" onclick="window.switchP2PTab('contracts'); window.openNewContractModal();" style="height: 36px; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                                    <i class="ph-scroll"></i> Novo Contrato
+                                </button>
+                                <button class="btn btn-success fw-bold d-flex align-items-center gap-1" onclick="window.switchP2PTab('purchases'); window.openNewPurchaseRequestModal ? window.openNewPurchaseRequestModal() : alert('Abra a aba de solicitações');" style="height: 36px; padding: 6px 14px; border-radius: 6px; font-size: 13px; background-color: #00a65a; border-color: #008d4c;">
+                                    <i class="ph-plus-circle"></i> Nova Solicitação
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Banner de Governança e Regra Maker/Checker (Fase 26.17.9.4.5) -->
+                        <div class="card shadow-sm mb-3 border-0" style="background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%); border-left: 5px solid #0f172a !important;">
+                            <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="rounded-circle bg-white shadow-sm p-2 text-dark d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                        <i class="ph-shield-check fs-4 text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-sm d-flex align-items-center gap-2">
+                                            Governança Corporativa de Compras &bull; SafeSaff Procure-to-Pay
+                                            <span class="badge bg-primary text-white fs-xs">Enterprise Flow</span>
+                                        </div>
+                                        <div class="text-secondary fs-xs mt-1">
+                                            Segregação estrita de funções: <strong>Maker / Checker ativo</strong> (solicitante não aprova a própria compra).
+                                            Comprometimento orçamentário registrado antes do faturamento e validação tríplice <strong>3-Way Match (Pedido × Medição × NF)</strong> obrigatória antes da liberação do Contas a Pagar.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-white text-success border px-3 py-2 fs-xs fw-bold shadow-sm">
+                                        <i class="ph-check-circle me-1"></i> Controle Orçamentário Ativo
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pills de Navegação Procure-to-Pay -->
+                        <div class="card shadow-sm border-0 mb-3">
+                            <div class="card-body p-2 d-flex flex-wrap gap-1 bg-light rounded">
+                                <button class="btn btn-sm btn-white border fw-bold text-dark active" id="p2p-tab-btn-approvals" onclick="window.switchP2PTab('approvals')">
+                                    <i class="ph-check-circle text-warning me-1"></i> Central de Aprovações
+                                </button>
+                                <button class="btn btn-sm btn-white border fw-bold text-dark" id="p2p-tab-btn-suppliers" onclick="window.switchP2PTab('suppliers')">
+                                    <i class="ph-buildings text-primary me-1"></i> Fornecedores 360°
+                                </button>
+                                <button class="btn btn-sm btn-white border fw-bold text-dark" id="p2p-tab-btn-purchases" onclick="window.switchP2PTab('purchases')">
+                                    <i class="ph-shopping-cart text-info me-1"></i> Compras &amp; Pedidos
+                                </button>
+                                <button class="btn btn-sm btn-white border fw-bold text-dark" id="p2p-tab-btn-contracts" onclick="window.switchP2PTab('contracts')">
+                                    <i class="ph-scroll text-indigo me-1"></i> Contratos &amp; Rateio (100%)
+                                </button>
+                                <button class="btn btn-sm btn-white border fw-bold text-dark" id="p2p-tab-btn-matching" onclick="window.switchP2PTab('matching')">
+                                    <i class="ph-scales text-success me-1"></i> 3-Way Match (Conferência)
+                                </button>
+                                <button class="btn btn-sm btn-white border fw-bold text-dark" id="p2p-tab-btn-budgets" onclick="window.switchP2PTab('budgets')">
+                                    <i class="ph-target text-danger me-1"></i> Centros de Custo &amp; Orçamentos
+                                </button>
+                                <button class="btn btn-sm btn-white border fw-bold text-dark" id="p2p-tab-btn-audit" onclick="window.switchP2PTab('audit')">
+                                    <i class="ph-list-bullets text-secondary me-1"></i> Alertas &amp; Auditoria
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. PANE: CENTRAL DE APROVAÇÕES -->
+                        <div id="p2p-pane-approvals" class="p2p-pane">
+                            <!-- 4 Cards Métricas Rápidas -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #f59e0b !important;">
+                                        <div class="fs-xs fw-bold text-uppercase text-muted">Pendentes Comigo</div>
+                                        <h3 class="fw-bold mb-0 mt-2 text-warning" id="p2p-kpi-pending-approvals">0</h3>
+                                        <span class="fs-xs text-muted">Aguardando sua alçada</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #ef4444 !important;">
+                                        <div class="fs-xs fw-bold text-uppercase text-muted">Urgentes / Críticas</div>
+                                        <h3 class="fw-bold mb-0 mt-2 text-danger" id="p2p-kpi-urgent-approvals">0</h3>
+                                        <span class="fs-xs text-muted">Risco operacional de evento</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #8b5cf6 !important;">
+                                        <div class="fs-xs fw-bold text-uppercase text-muted">Estouro Orçamentário</div>
+                                        <h3 class="fw-bold mb-0 mt-2 text-purple" id="p2p-kpi-overbudget-approvals">0</h3>
+                                        <span class="fs-xs text-muted">Exigem alçada extraordinária</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #3b82f6 !important;">
+                                        <div class="fs-xs fw-bold text-uppercase text-muted">Contratos em Aprovação</div>
+                                        <h3 class="fw-bold mb-0 mt-2 text-primary" id="p2p-kpi-contracts-approvals">0</h3>
+                                        <span class="fs-xs text-muted">Minutas e aditivos</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabela de Aprovações -->
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-tray me-2 text-primary"></i>Fila de Aprovação Unificada</h6>
+                                    <span class="fs-xs text-muted">Governança por alçadas dinâmicas</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Identificador</th>
+                                                <th>Tipo</th>
+                                                <th>Evento / Centro de Custo</th>
+                                                <th>Fornecedor / Solicitante</th>
+                                                <th>Valor / Orçamento</th>
+                                                <th>Prioridade</th>
+                                                <th>Nível Exigido / Justificativa</th>
+                                                <th class="text-end">Ações de Alçada</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-approvals-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. PANE: FORNECEDORES & FORNECEDOR 360° -->
+                        <div id="p2p-pane-suppliers" class="p2p-pane" style="display:none;">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-buildings me-2 text-primary"></i>Central de Fornecedores Homologados</h6>
+                                        <span class="fs-xs text-muted">Cadastro corporativo compartilhado com conformidade fiscal e visão 360°</span>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Fornecedor / Razão Social</th>
+                                                <th>Categoria</th>
+                                                <th>Contatos</th>
+                                                <th>Dados Financeiros (PIX / Banco)</th>
+                                                <th>Desempenho</th>
+                                                <th>Situação</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-suppliers-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. PANE: COMPRAS & PEDIDOS -->
+                        <div id="p2p-pane-purchases" class="p2p-pane" style="display:none;">
+                            <!-- Solicitações -->
+                            <div class="card shadow-sm border-0 mb-3">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-file-text me-2 text-primary"></i>Solicitações de Compra</h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Evento / Centro de Custo</th>
+                                                <th>Descrição / Solicitante</th>
+                                                <th>Estimativa</th>
+                                                <th>Necessário Até</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-requests-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Pedidos de Compra -->
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-receipt me-2 text-success"></i>Pedidos de Compra Emitidos (Comprometimento Orçamentário)</h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Nº Pedido</th>
+                                                <th>Evento / Centro de Custo</th>
+                                                <th>Fornecedor</th>
+                                                <th>Valor Total</th>
+                                                <th>Comprometimento</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-orders-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. PANE: CONTRATOS & RATEIO -->
+                        <div id="p2p-pane-contracts" class="p2p-pane" style="display:none;">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0"><i class="ph-scroll me-2 text-indigo"></i>Central de Contratos com Rateio Multi-Evento (100%)</h6>
+                                        <div class="fs-xs text-muted">Integração automatizada de parcelas contratuais diretamente no Contas a Pagar</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary fw-bold" onclick="window.openNewContractModal()">
+                                        <i class="ph-plus-circle me-1"></i> Novo Contrato
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Contrato / Objeto</th>
+                                                <th>Fornecedor</th>
+                                                <th>Valor Total / Parcelamento</th>
+                                                <th>Rateio entre Eventos (100%)</th>
+                                                <th>Vigência</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-contracts-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. PANE: 3-WAY MATCH -->
+                        <div id="p2p-pane-matching" class="p2p-pane" style="display:none;">
+                            <div class="card shadow-sm border-0 mb-3">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-scales me-2 text-success"></i>Conferência Tríplice 3-Way Match (Pedido × Medição × NF)</h6>
+                                    <div class="fs-xs text-muted">Garante que nenhuma fatura com discrepância de preço, quantidade ou CNPJ seja encaminhada para liquidação</div>
+                                </div>
+                                <div class="card-body p-3" id="p2p-matching-list">
+                                    <!-- Renderizado dinamicamente -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. PANE: CENTROS DE CUSTO & ORÇAMENTOS -->
+                        <div id="p2p-pane-budgets" class="p2p-pane" style="display:none;">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-target me-2 text-danger"></i>Controle Orçamentário por Centro de Custo</h6>
+                                    <div class="fs-xs text-muted">Orçado &bull; Realizado &bull; Comprometido &bull; Disponível</div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Evento</th>
+                                                <th>Centro de Custo</th>
+                                                <th>Orçado (Planejado)</th>
+                                                <th>Realizado (Pago)</th>
+                                                <th>Comprometido (Pedidos)</th>
+                                                <th>Disponível Real</th>
+                                                <th>Consumo %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-budgets-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. PANE: ALERTAS & AUDITORIA -->
+                        <div id="p2p-pane-audit" class="p2p-pane" style="display:none;">
+                            <!-- Alertas -->
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-dark mb-2"><i class="ph-bell-ringing me-1 text-warning"></i>Alertas Operacionais Proativos</h6>
+                                <div id="p2p-alerts-container">
+                                    <!-- Preenchido via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Trilha de Auditoria -->
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="ph-shield-check me-2 text-primary"></i>Trilha de Auditoria Imutável Append-Only</h6>
+                                    <div class="fs-xs text-muted">Rastreabilidade completa de todas as requisições, decisões e conferências com correlationId</div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 fs-sm">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>CorrelationId</th>
+                                                <th>Data/Hora</th>
+                                                <th>Responsável</th>
+                                                <th>Entidade</th>
+                                                <th>Ação</th>
+                                                <th>Resumo da Operação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="p2p-audit-table-body">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MODAL: FORNECEDOR 360° -->
+                    <div class="modal fade" id="modal-supplier-360" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded bg-primary text-white p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                            <i class="ph-buildings fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-dark mb-0" id="s360-trade-name">Fornecedor 360°</h5>
+                                            <div class="text-muted fs-xs" id="s360-legal-name">Razão Social Completa</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <!-- 4 Cards Métricas do Fornecedor -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded bg-light text-center">
+                                                <div class="fs-xs text-muted fw-bold text-uppercase">Total Contratado</div>
+                                                <div class="fw-bold fs-sm text-dark mt-1" id="s360-metric-contracted">R$ 0,00</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded bg-light text-center">
+                                                <div class="fs-xs text-muted fw-bold text-uppercase">Total Pago</div>
+                                                <div class="fw-bold fs-sm text-success mt-1" id="s360-metric-paid">R$ 0,00</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded bg-light text-center">
+                                                <div class="fs-xs text-muted fw-bold text-uppercase">Saldo Pendente</div>
+                                                <div class="fw-bold fs-sm text-warning mt-1" id="s360-metric-pending">R$ 0,00</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded bg-light text-center">
+                                                <div class="fs-xs text-muted fw-bold text-uppercase">Avaliação Média</div>
+                                                <div class="fw-bold fs-sm text-primary mt-1" id="s360-metric-rating">5.0 / 5.0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Detalhes em Linhas -->
+                                    <div class="row g-3 fs-sm mb-3">
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-white h-100">
+                                                <div class="fw-bold text-uppercase fs-xs text-muted mb-2">Dados Cadastrais &amp; Contato</div>
+                                                <div class="mb-1"><strong>CNPJ/CPF:</strong> <span class="font-monospace" id="s360-tax-id"></span></div>
+                                                <div class="mb-1"><strong>Categoria Primária:</strong> <span id="s360-category"></span></div>
+                                                <div class="mb-1"><strong>Situação:</strong> <span id="s360-status"></span></div>
+                                                <div><strong>Contato:</strong> <span id="s360-contact"></span></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border rounded p-3 bg-white h-100">
+                                                <div class="fw-bold text-uppercase fs-xs text-muted mb-2">Dados Financeiros &amp; Bancários</div>
+                                                <div class="mb-1"><strong>Chave PIX:</strong> <span class="font-monospace text-primary fw-bold" id="s360-pix"></span></div>
+                                                <div class="mb-1"><strong>Dados Bancários:</strong> <span id="s360-bank"></span></div>
+                                                <div class="fs-xs text-muted mt-2">Validação automática de titularidade de conta integrada ao CPF/CNPJ da receita federal.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Documentos e Certidões -->
+                                    <div class="border rounded p-3 bg-white">
+                                        <div class="fw-bold text-uppercase fs-xs text-muted mb-2">Conformidade Regulatória (Certidões &amp; CNDs)</div>
+                                        <ul class="list-group list-group-flush" id="s360-docs-list">
+                                            <!-- Preenchido via JS -->
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top py-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL: NOVO CONTRATO COM RATEIO MULTI-EVENTO -->
+                    <div class="modal fade" id="modal-new-contract" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-3">
+                                    <h5 class="modal-title fw-bold text-dark mb-0">Novo Contrato com Rateio Multi-Evento</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase">Fornecedor Homologado</label>
+                                        <select id="contract-supplier-select" class="form-select fw-semibold border-secondary">
+                                            <!-- Preenchido via JS -->
+                                        </select>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase">Valor Total do Contrato</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">R$</span>
+                                                <input type="number" step="0.01" id="contract-total-amount" class="form-control fw-bold text-dark" value="30000.00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase">Nº de Parcelas</label>
+                                            <input type="number" id="contract-installments" class="form-control" value="3">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase">Objeto do Contrato</label>
+                                        <input type="text" id="contract-object" class="form-control" value="Prestação de serviços contínuos de iluminação e som">
+                                    </div>
+                                    <!-- Validador de Rateio Multi-Evento -->
+                                    <div class="border rounded p-3 bg-light mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fs-xs fw-bold text-uppercase text-dark">Rateio entre Eventos:</span>
+                                            <span class="badge bg-success text-white">Soma Obrigatória = 100.00%</span>
+                                        </div>
+                                        <div class="fs-xs text-muted mb-2">
+                                            • Evento #3368 (Música e Natureza): <strong>50.00%</strong> (R$ 15.000,00)<br>
+                                            • Evento #3195 (Knife Show Curitiba): <strong>30.00%</strong> (R$ 9.000,00)<br>
+                                            • Evento #3178 (Feijoada e Costela): <strong>20.00%</strong> (R$ 6.000,00)
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-primary" style="width: 50%;"></div>
+                                            <div class="progress-bar bg-info" style="width: 30%;"></div>
+                                            <div class="progress-bar bg-success" style="width: 20%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top py-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="window.saveNewContractAction()">Formalizar Contrato</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL: CONFERÊNCIA 3-WAY MATCH -->
+                    <div class="modal fade" id="modal-threeway-match" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-3">
+                                    <h5 class="modal-title fw-bold text-dark mb-0">Conferência Tríplice (3-Way Match)</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <input type="hidden" id="match-po-id">
+                                    <div class="p-3 border rounded bg-light mb-3 fs-sm">
+                                        <div class="mb-1"><strong>Fornecedor do Pedido:</strong> <span id="match-po-supplier"></span></div>
+                                        <div><strong>Valor Emitido no Pedido:</strong> <span class="fw-bold text-primary" id="match-po-amount"></span></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase">Nº da Nota Fiscal / Documento Recebido</label>
+                                        <input type="text" id="match-inv-number" class="form-control" value="NF-89210">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase">Valor Apontado na Nota Fiscal (R$)</label>
+                                        <input type="number" step="0.01" id="match-inv-amount" class="form-control fw-bold text-dark">
+                                    </div>
+                                    <div class="alert alert-info border-0 py-2 fs-xs mb-0">
+                                        <i class="ph-info me-1"></i> O motor compara automaticamente CNPJ, valores e quantidades físicas recebidas. Se houver discrepância, a conta a pagar permanece bloqueada.
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top py-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-sm btn-success fw-bold" onclick="window.executeThreeWayMatchAction()">Executar Conferência</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <section id="view-financial-repass" class="page-section"  style="display:none;">
                         <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-0" style="border-radius: 6px;">
                             <h5 class="fw-bold mb-0">Financeiro</h5>
