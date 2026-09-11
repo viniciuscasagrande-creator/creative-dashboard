@@ -56,16 +56,16 @@ global.HTMLElement = dom.window.HTMLElement;
 // ============================================================================
 console.log('1. Estrutura e Atributos Semânticos no index.html:');
 
-it('Verifica se todos os 9 grupos de menu possuem data-menu-group explícito', () => {
+it('Verifica se os grupos principais de menu possuem data-menu-group explícito', () => {
   const groups = Array.from(document.querySelectorAll('#main-sidebar-nav .nav-item-submenu'))
     .map(el => el.getAttribute('data-menu-group'));
   
   const expectedGroups = [
     'dashboard', 'eventos', 'marketing', 'financeiro',
-    'contabilidade', 'fluxo-caixa', 'receitas', 'despesas', 'configuracoes'
+    'contabilidade', 'configuracoes'
   ];
 
-  assert.strictEqual(groups.length, 9, `Esperado 9 grupos, encontrados ${groups.length}`);
+  assert.strictEqual(groups.length, 6, `Esperado 6 grupos, encontrados ${groups.length}`);
   expectedGroups.forEach(eg => {
     assert.ok(groups.includes(eg), `Grupo esperado "${eg}" não encontrado no DOM`);
   });
@@ -98,9 +98,9 @@ it('Verifica se todos os 12 itens de Contabilidade possuem data-tab e data-menu-
   });
 });
 
-it('Verifica se todos os 9 cabeçalhos de grupos possuem aria-expanded="false" e aria-controls', () => {
+it('Verifica se todos os cabeçalhos de grupos principais possuem aria-expanded="false" e aria-controls', () => {
   const triggers = document.querySelectorAll('#main-sidebar-nav .nav-item-submenu > .nav-link');
-  assert.strictEqual(triggers.length, 9);
+  assert.strictEqual(triggers.length, 6);
   triggers.forEach(tr => {
     assert.strictEqual(tr.getAttribute('aria-expanded'), 'false', `Trigger "${tr.textContent.trim()}" deve iniciar aria-expanded="false"`);
     assert.ok(tr.getAttribute('aria-controls'), `Trigger "${tr.textContent.trim()}" deve possuir aria-controls`);
@@ -260,7 +260,7 @@ it('MenuStateManager não remove classes active de botões, abas ou elementos fo
 console.log('\n6. Funções de Abertura e Fechamento Programático:');
 
 it('openGroup e closeGroup manipulam classes e aria-expanded de forma consistente', () => {
-  const group = document.querySelector('#main-sidebar-nav [data-menu-group="fluxo-caixa"]');
+  const group = document.querySelector('#main-sidebar-nav [data-menu-group="financeiro"]');
   const trigger = group.querySelector(':scope > .nav-link');
   const submenu = group.querySelector(':scope > .nav-group-sub');
 

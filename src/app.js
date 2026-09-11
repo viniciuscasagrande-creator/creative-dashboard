@@ -10,7 +10,7 @@ import { closingService } from './services/closingService.js';
 import { accountingDashboardService } from './services/accountingDashboardService.js';
 import { auditComplianceService } from './services/auditComplianceService.js';
 import { accountingIntelligenceService } from './services/accountingIntelligenceService.js';
-import { initFinancialEventTransfersView } from './controllers/financialEventTransfersController.js';
+import { initFinancialEventTransfersView, switchTransferTab } from './controllers/financialEventTransfersController.js';
 import { initProcureToPayView, switchP2PTab } from './controllers/procureToPayController.js';
 import { initTreasuryView, switchTreasuryTab } from './controllers/treasuryController.js';
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
@@ -322,6 +322,42 @@ function initApp() {
   
   // Inicialização da Sidebar Mobile e Backdrop
   initMobileSidebar();
+
+  // FASE 28.15.3 — Registrar hooks de view para inicialização e sub-abas
+  if (typeof AppRouter !== 'undefined' && typeof AppRouter.registerHook === 'function') {
+    AppRouter.registerHook('procure-to-pay', (route) => {
+      const targetTab = route.tab || 'approvals';
+      if (typeof switchP2PTab === 'function') {
+        switchP2PTab(targetTab);
+      } else if (typeof initProcureToPayView === 'function') {
+        initProcureToPayView(targetTab);
+      }
+    });
+
+    AppRouter.registerHook('treasury', (route) => {
+      const targetTab = route.tab || 'dashboard';
+      if (typeof switchTreasuryTab === 'function') {
+        switchTreasuryTab(targetTab);
+      } else if (typeof initTreasuryView === 'function') {
+        initTreasuryView();
+      }
+    });
+
+    AppRouter.registerHook('financial-event-transfers', (route) => {
+      const targetTab = route.tab || 'balances';
+      if (typeof switchTransferTab === 'function') {
+        switchTransferTab(targetTab);
+      } else if (typeof initFinancialEventTransfersView === 'function') {
+        initFinancialEventTransfersView();
+      }
+    });
+
+    AppRouter.registerHook('accounting-disk', (route) => {
+      if (typeof switchAccountingTab === 'function') {
+        switchAccountingTab(route.tab || 'dashboard');
+      }
+    });
+  }
 
   // Navegação unificada pelo AppRouter Central
   if (typeof AppRouter !== 'undefined' && typeof AppRouter.init === 'function') {

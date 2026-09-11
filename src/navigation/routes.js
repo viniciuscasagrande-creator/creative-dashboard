@@ -98,109 +98,357 @@ export const ROUTES = {
     sub: 'Busca unificada por pedido, código, CPF ou comprador.'
   },
 
-  // Financeiro
+  // Financeiro — Domínio 1: Visão Geral
   '/financeiro/dashboard': {
     path: '/financeiro/dashboard',
     view: 'financial-dashboard',
     module: 'financeiro',
-    menuKey: 'financial-dashboard',
+    menuKey: 'fin-dashboard',
     title: 'Painel Financeiro',
     sub: 'Resumo financeiro, conciliação e fluxo de caixa.'
+  },
+  '/financeiro/inteligencia': {
+    path: '/financeiro/inteligencia',
+    view: 'financial-analytics',
+    module: 'financeiro',
+    menuKey: 'fin-intelligence',
+    title: 'Inteligência Financeira',
+    sub: 'Análise preditiva, lucratividade e insights de vendas.'
+  },
+  '/financeiro/indicadores': {
+    path: '/financeiro/indicadores',
+    view: 'dashboard-indicators',
+    module: 'financeiro',
+    menuKey: 'fin-indicators',
+    title: 'Indicadores de Performance',
+    sub: 'Metas e indicadores consolidados de bilheteria.'
+  },
+
+  // Financeiro — Domínio 2: Tesouraria
+  '/financeiro/saldo': {
+    path: '/financeiro/saldo',
+    view: 'financial-balance',
+    module: 'financeiro',
+    menuKey: 'fin-balance',
+    title: 'Conta Financeira',
+    sub: 'Saldo disponível, bloqueado e visão bancária.'
   },
   '/financeiro/gestao-saldos': {
     path: '/financeiro/gestao-saldos',
     view: 'financial-event-transfers',
     module: 'financeiro',
-    menuKey: 'financial-event-transfers',
+    tab: 'balances',
+    menuKey: 'fin-balances',
     title: 'Gestão de Saldos & Transferência entre Eventos',
     sub: 'Painel consolidado, saldos disponíveis reais por evento e transferência atômica.'
+  },
+  '/financeiro/transferencias': {
+    path: '/financeiro/transferencias',
+    view: 'financial-event-transfers',
+    module: 'financeiro',
+    tab: 'transfer',
+    menuKey: 'fin-event-transfers',
+    title: 'Transferência entre Eventos',
+    sub: 'Transferência atômica e remanejamento de saldo entre eventos.'
+  },
+  '/financeiro/contas-bancarias': {
+    path: '/financeiro/contas-bancarias',
+    view: 'financial-accounts',
+    module: 'financeiro',
+    menuKey: 'fin-bank-accounts',
+    title: 'Contas Bancárias',
+    sub: 'Contas cadastradas para repasses e conciliação.'
+  },
+  '/financeiro/pix': {
+    path: '/financeiro/pix',
+    view: 'treasury',
+    module: 'financeiro',
+    tab: 'pix',
+    menuKey: 'fin-treasury-pix',
+    title: 'Pagamentos PIX',
+    sub: 'Emissão e conciliação instantânea de pagamentos PIX.'
+  },
+  '/financeiro/cnab': {
+    path: '/financeiro/cnab',
+    view: 'treasury',
+    module: 'financeiro',
+    tab: 'batches',
+    menuKey: 'fin-treasury-cnab',
+    title: 'Remessa e Retorno CNAB',
+    sub: 'Geração e leitura de arquivos CNAB 240/400.'
+  },
+  '/financeiro/pagamentos-lote': {
+    path: '/financeiro/pagamentos-lote',
+    view: 'treasury',
+    module: 'financeiro',
+    tab: 'batches',
+    menuKey: 'fin-treasury-batches',
+    title: 'Pagamentos em Lote',
+    sub: 'Processamento e liquidação de pagamentos bancários em lote.'
+  },
+  '/financeiro/tesouraria': {
+    path: '/financeiro/tesouraria',
+    view: 'treasury',
+    module: 'financeiro',
+    menuKey: 'fin-treasury-batches',
+    title: 'Tesouraria Operacional & Bancos',
+    sub: 'Gestão de contas, pagamentos PIX, remessa e retorno bancário CNAB 240.'
+  },
+
+  // Financeiro — Domínio 3: Contas
+  '/financeiro/repasses': {
+    path: '/financeiro/repasses',
+    view: 'financial-repass',
+    module: 'financeiro',
+    menuKey: 'fin-receivables',
+    title: 'Contas a Receber',
+    sub: 'Controle de recebíveis, previsões de entrada e histórico.'
+  },
+  '/financeiro/despesas': {
+    path: '/financeiro/despesas',
+    view: 'financial-expenses',
+    module: 'financeiro',
+    menuKey: 'fin-payables',
+    title: 'Contas a Pagar',
+    sub: 'Contas pendentes, pagas e agendadas.'
+  },
+  '/financeiro/antecipacoes': {
+    path: '/financeiro/antecipacoes',
+    view: 'financial-advance',
+    module: 'financeiro',
+    menuKey: 'fin-advances',
+    title: 'Antecipações',
+    sub: 'Solicitações de antecipação de recebíveis.'
+  },
+  '/financeiro/repasses-produtor': {
+    path: '/financeiro/repasses-produtor',
+    view: 'financial-repass',
+    module: 'financeiro',
+    tab: 'payouts',
+    menuKey: 'fin-payouts',
+    title: 'Repasses a Produtores',
+    sub: 'Controle de liquidação e repasses a produtores.'
   },
   '/financeiro/agenda': {
     path: '/financeiro/agenda',
     view: 'financial-event-transfers',
     module: 'financeiro',
     tab: 'schedule',
-    menuKey: 'financial-event-transfers',
+    menuKey: 'fin-schedule',
     title: 'Agenda Financeira & Lotes',
     sub: 'Agendamentos de repasses, lotes homologados e liquidação bancária.'
   },
-  '/financeiro/tesouraria': {
-    path: '/financeiro/tesouraria',
-    view: 'treasury',
+
+  // Financeiro — Domínio 4: Compras
+  '/financeiro/aprovacoes': {
+    path: '/financeiro/aprovacoes',
+    view: 'procure-to-pay',
     module: 'financeiro',
-    menuKey: 'treasury',
-    title: 'Tesouraria Operacional & Bancos',
-    sub: 'Gestão de contas, pagamentos PIX, remessa e retorno bancário CNAB 240.'
+    tab: 'approvals',
+    menuKey: 'fin-approvals',
+    title: 'Central de Aprovações',
+    sub: 'Workflow de aprovação multinível de despesas e pedidos.'
   },
-  '/financeiro/saldo': {
-    path: '/financeiro/saldo',
-    view: 'financial-balance',
+  '/financeiro/compras': {
+    path: '/financeiro/compras',
+    view: 'procure-to-pay',
     module: 'financeiro',
-    title: 'Conta Financeira',
-    sub: 'Saldo disponível, bloqueado e visão bancária.'
+    tab: 'approvals',
+    menuKey: 'fin-approvals',
+    title: 'Procure-to-Pay & Compras',
+    sub: 'Fornecedor 360°, cotações, pedidos, contratos e centro de custos.'
   },
-  '/financeiro/repasses': {
-    path: '/financeiro/repasses',
-    view: 'financial-repass',
+  '/financeiro/compras/solicitacoes': {
+    path: '/financeiro/compras/solicitacoes',
+    view: 'procure-to-pay',
     module: 'financeiro',
-    title: 'Contas a Receber & Repasses',
-    sub: 'Repasses a produtores, histórico e controle de depósitos.'
+    tab: 'purchases',
+    menuKey: 'fin-purchases-requests',
+    title: 'Solicitações de Compra',
+    sub: 'Requisição e workflow de compras internas.'
   },
-  '/financeiro/antecipacoes': {
-    path: '/financeiro/antecipacoes',
-    view: 'financial-advance',
+  '/financeiro/compras/cotacoes': {
+    path: '/financeiro/compras/cotacoes',
+    view: 'procure-to-pay',
     module: 'financeiro',
-    title: 'Antecipações',
-    sub: 'Solicitações de antecipação de recebíveis.'
+    tab: 'purchases',
+    menuKey: 'fin-purchases-quotations',
+    title: 'Cotações e Propostas',
+    sub: 'Mapa comparativo de cotações e propostas comerciais.'
   },
-  '/financeiro/despesas': {
-    path: '/financeiro/despesas',
-    view: 'financial-expenses',
+  '/financeiro/compras/pedidos': {
+    path: '/financeiro/compras/pedidos',
+    view: 'procure-to-pay',
     module: 'financeiro',
-    title: 'Contas a Pagar',
-    sub: 'Contas pendentes, pagas e agendadas.'
+    tab: 'purchases',
+    menuKey: 'fin-purchases-orders',
+    title: 'Pedidos de Compra',
+    sub: 'Emissão e acompanhamento de pedidos de compra.'
+  },
+  '/financeiro/compras/recebimentos': {
+    path: '/financeiro/compras/recebimentos',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'matching',
+    menuKey: 'fin-purchases-receipts',
+    title: 'Recebimentos Físico/Fiscal',
+    sub: '3-way matching, conferência de XML de NF-e e entrada física.'
+  },
+
+  // Financeiro — Domínio 5: Fornecedores
+  '/financeiro/fornecedores': {
+    path: '/financeiro/fornecedores',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'suppliers',
+    menuKey: 'fin-suppliers-registry',
+    title: 'Cadastro de Fornecedores',
+    sub: 'Base cadastral e homologação de parceiros e fornecedores.'
+  },
+  '/financeiro/fornecedores/360': {
+    path: '/financeiro/fornecedores/360',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'suppliers',
+    menuKey: 'fin-suppliers-360',
+    title: 'Fornecedor 360°',
+    sub: 'Visão unificada, histórico financeiro, compras e conformidade.'
+  },
+  '/financeiro/fornecedores/documentos': {
+    path: '/financeiro/fornecedores/documentos',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'suppliers',
+    menuKey: 'fin-suppliers-docs',
+    title: 'Documentos de Fornecedores',
+    sub: 'Repositório de contratos, propostas e comprovantes.'
+  },
+  '/financeiro/fornecedores/cnd': {
+    path: '/financeiro/fornecedores/cnd',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'suppliers',
+    menuKey: 'fin-suppliers-cnd',
+    title: 'Certidões Negativas de Débitos',
+    sub: 'Monitoramento de regularidade fiscal e trabalhista (CNDs).'
+  },
+
+  // Financeiro — Domínio 6: Contratos
+  '/financeiro/contratos': {
+    path: '/financeiro/contratos',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'contracts',
+    menuKey: 'fin-contracts',
+    title: 'Central de Contratos',
+    sub: 'Gestão de vigência, reajustes e cláusulas contratuais.'
+  },
+  '/financeiro/contratos/parcelas': {
+    path: '/financeiro/contratos/parcelas',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'contracts',
+    menuKey: 'fin-contracts-installments',
+    title: 'Parcelas Contratuais',
+    sub: 'Cronograma financeiro e parcelamento de contratos.'
+  },
+  '/financeiro/contratos/vencimentos': {
+    path: '/financeiro/contratos/vencimentos',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'contracts',
+    menuKey: 'fin-contracts-expirations',
+    title: 'Vencimentos Contratuais',
+    sub: 'Alertas preventivos de renovação e rescisão de contratos.'
+  },
+
+  // Financeiro — Domínio 7: Controladoria
+  '/financeiro/centros-de-custos': {
+    path: '/financeiro/centros-de-custos',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'budgets',
+    menuKey: 'fin-costcenters',
+    title: 'Centros de Custos',
+    sub: 'Rateio gerencial por centro de custo e área.'
+  },
+  '/financeiro/orcamentos': {
+    path: '/financeiro/orcamentos',
+    view: 'procure-to-pay',
+    module: 'financeiro',
+    tab: 'budgets',
+    menuKey: 'fin-budgets',
+    title: 'Orçamentos e Budgets',
+    sub: 'Controle de tetos orçamentários e desvio orçado vs realizado.'
   },
   '/financeiro/fluxo-caixa': {
     path: '/financeiro/fluxo-caixa',
     view: 'cashflow-performance',
     module: 'financeiro',
-    menuKey: 'fin-cashflow-performance',
+    menuKey: 'fin-cashflow',
     title: 'Fluxo de Caixa Financeiro',
     sub: 'Projeção e controle consolidado de entradas e saídas.'
+  },
+  '/financeiro/fluxo-caixa/evolucao': {
+    path: '/financeiro/fluxo-caixa/evolucao',
+    view: 'cashflow-flow',
+    module: 'financeiro',
+    menuKey: 'fin-cashflow-flow',
+    title: 'Projeção de Caixa',
+    sub: 'Evolução diária de saldos projetados e realizados.'
   },
   '/financeiro/dre-evento': {
     path: '/financeiro/dre-evento',
     view: 'cashflow-dre',
     module: 'financeiro',
-    menuKey: 'fin-cashflow-dre',
+    menuKey: 'fin-dre',
     title: 'DRE do Evento',
     sub: 'Demonstrativo de resultado gerencial por evento.'
   },
-  '/financeiro/extrato': {
-    path: '/financeiro/extrato',
-    view: 'financial-statement',
+
+  // Financeiro — Domínio 8: Conciliação
+  '/financeiro/conciliacao/bancaria': {
+    path: '/financeiro/conciliacao/bancaria',
+    view: 'treasury',
     module: 'financeiro',
-    title: 'Extrato Detalhado',
-    sub: 'Extrato consolidado de movimentações financeiras.'
+    tab: 'reconciliation',
+    menuKey: 'fin-reconciliation-bank',
+    title: 'Conciliação Bancária',
+    sub: 'Conferência automática de extratos bancários e conciliação OFX/CNAB.'
   },
-  '/financeiro/contas-bancarias': {
-    path: '/financeiro/contas-bancarias',
-    view: 'financial-accounts',
+  '/financeiro/gateways': {
+    path: '/financeiro/gateways',
+    view: 'financial-operators',
     module: 'financeiro',
-    title: 'Contas Bancárias',
-    sub: 'Contas cadastradas para repasses e conciliação.'
+    menuKey: 'fin-gateways',
+    title: 'Gateways e Adquirentes',
+    sub: 'Taxas, prazos de liquidação e conciliação de adquirentes.'
   },
-  '/financeiro/bordero': {
-    path: '/financeiro/bordero',
-    view: 'financial-bordero',
+  '/financeiro/conciliacao/repasses': {
+    path: '/financeiro/conciliacao/repasses',
+    view: 'financial-repass',
     module: 'financeiro',
-    title: 'Borderô Financeiro',
-    sub: 'Borderô detalhado por evento e fechamento.'
+    tab: 'reconciliation',
+    menuKey: 'fin-reconcile-payouts',
+    title: 'Conciliação de Repasses',
+    sub: 'Auditoria e conferência de repasses efetuados.'
   },
+  '/financeiro/conciliacao/retorno': {
+    path: '/financeiro/conciliacao/retorno',
+    view: 'treasury',
+    module: 'financeiro',
+    tab: 'batches',
+    menuKey: 'fin-cnab-return',
+    title: 'Retorno Bancário',
+    sub: 'Processamento e conciliação de arquivos retorno bancários.'
+  },
+
+  // Financeiro — Domínio 9: Operação
   '/financeiro/pdv': {
     path: '/financeiro/pdv',
     view: 'financial-pdv',
     module: 'financeiro',
+    menuKey: 'fin-pdv',
     title: 'Pontos de Venda (PDV)',
     sub: 'Fechamento de caixa e conciliação de PDV físico.'
   },
@@ -208,6 +456,7 @@ export const ROUTES = {
     path: '/financeiro/metodos-pagamento',
     view: 'financial-paymethods',
     module: 'financeiro',
+    menuKey: 'fin-paymethods',
     title: 'Métodos de Pagamento',
     sub: 'Configurações de taxas por meio de pagamento.'
   },
@@ -215,6 +464,7 @@ export const ROUTES = {
     path: '/financeiro/pagamentos-customizados',
     view: 'financial-custompay',
     module: 'financeiro',
+    menuKey: 'fin-custompay',
     title: 'Pagamentos Customizados',
     sub: 'Condições especiais, permutas e cortesias.'
   },
@@ -222,37 +472,51 @@ export const ROUTES = {
     path: '/financeiro/negociacoes',
     view: 'financial-negotiations',
     module: 'financeiro',
+    menuKey: 'fin-negotiations',
     title: 'Negociações Financeiras',
     sub: 'Acordos comerciais, prazos e taxas especiais.'
-  },
-  '/financeiro/estornos': {
-    path: '/financeiro/estornos',
-    view: 'financial-refunds',
-    module: 'financeiro',
-    title: 'Devoluções e Estornos',
-    sub: 'Gestão de cancelamentos, estornos e chargebacks.'
   },
   '/financeiro/operadoras': {
     path: '/financeiro/operadoras',
     view: 'financial-operators',
     module: 'financeiro',
+    menuKey: 'fin-operators',
     title: 'Operadoras de Cartão',
     sub: 'Gateways, adquirentes e conciliação de recebíveis.'
   },
-  '/financeiro/inteligencia': {
-    path: '/financeiro/inteligencia',
-    view: 'financial-analytics',
+  '/financeiro/estornos': {
+    path: '/financeiro/estornos',
+    view: 'financial-refunds',
     module: 'financeiro',
-    title: 'Inteligência Financeira',
-    sub: 'Análise preditiva, lucratividade e insights de vendas.'
+    menuKey: 'fin-refunds',
+    title: 'Devoluções e Estornos',
+    sub: 'Gestão de cancelamentos, estornos e chargebacks.'
   },
-  '/financeiro/compras': {
-    path: '/financeiro/compras',
-    view: 'procure-to-pay',
+
+  // Financeiro — Domínio 10: Relatórios
+  '/financeiro/extrato': {
+    path: '/financeiro/extrato',
+    view: 'financial-statement',
     module: 'financeiro',
-    tab: 'approvals',
-    title: 'Procure-to-Pay & Compras',
-    sub: 'Fornecedor 360°, cotações, pedidos, contratos e centro de custos.'
+    menuKey: 'fin-statement',
+    title: 'Extrato Financeiro',
+    sub: 'Extrato consolidado de movimentações financeiras.'
+  },
+  '/financeiro/bordero': {
+    path: '/financeiro/bordero',
+    view: 'financial-bordero',
+    module: 'financeiro',
+    menuKey: 'fin-bordero',
+    title: 'Borderô Financeiro',
+    sub: 'Borderô detalhado por evento e fechamento.'
+  },
+  '/financeiro/relatorios/vendas': {
+    path: '/financeiro/relatorios/vendas',
+    view: 'reports-sales',
+    module: 'financeiro',
+    menuKey: 'fin-reports-sales',
+    title: 'Relatório Consolidado de Vendas',
+    sub: 'Relatórios analíticos e consolidados de faturamento e vendas.'
   },
 
   // Contabilidade (12 subitens com menuKey dedicado)
@@ -452,7 +716,8 @@ export const ROUTES = {
   '/receitas/descricao': {
     path: '/receitas/descricao',
     view: 'revenues-desc',
-    module: 'receitas',
+    module: 'financeiro',
+    menuKey: 'fin-revenues-desc',
     title: 'Receitas por Descrição',
     sub: 'Detalhamento analítico por item de venda.'
   },
@@ -473,14 +738,16 @@ export const ROUTES = {
   '/receitas/categoria': {
     path: '/receitas/categoria',
     view: 'revenues-category',
-    module: 'receitas',
+    module: 'financeiro',
+    menuKey: 'fin-revenues-cat',
     title: 'Receitas por Categoria',
     sub: 'Agrupamentos e setores do evento.'
   },
   '/receitas/evento': {
     path: '/receitas/evento',
     view: 'revenues-event',
-    module: 'receitas',
+    module: 'financeiro',
+    menuKey: 'fin-revenues-event',
     title: 'Receitas por Evento',
     sub: 'Desempenho comparativo por evento.'
   },
@@ -517,14 +784,16 @@ export const ROUTES = {
   '/despesas/categoria': {
     path: '/despesas/categoria',
     view: 'expenses-category',
-    module: 'despesas',
+    module: 'financeiro',
+    menuKey: 'fin-expenses-cat',
     title: 'Despesas por Categoria',
     sub: 'Categorização analítica de despesas.'
   },
   '/despesas/evento': {
     path: '/despesas/evento',
     view: 'expenses-event',
-    module: 'despesas',
+    module: 'financeiro',
+    menuKey: 'fin-expenses-event',
     title: 'Despesas por Evento',
     sub: 'Custos diretos por produção.'
   },
@@ -673,6 +942,28 @@ export const LEGACY_ROUTE_ALIASES = {
   'cnab': '/financeiro/tesouraria',
   'pix': '/financeiro/tesouraria',
 
+  'gateways': '/financeiro/gateways',
+  'fin-gateways': '/financeiro/gateways',
+  'financial-gateways': '/financeiro/gateways',
+  'financial-indicators': '/financeiro/indicadores',
+  'financial-pix': '/financeiro/pix',
+  'financial-cnab': '/financeiro/cnab',
+  'financial-batches': '/financeiro/pagamentos-lote',
+  'financial-transfers': '/financeiro/transferencias',
+  'transferencias': '/financeiro/transferencias',
+  'repasses-produtor': '/financeiro/repasses-produtor',
+  'aprovacoes': '/financeiro/aprovacoes',
+  'fornecedores': '/financeiro/fornecedores',
+  'fornecedores-360': '/financeiro/fornecedores/360',
+  'contratos': '/financeiro/contratos',
+  'centros-de-custos': '/financeiro/centros-de-custos',
+  'orcamentos': '/financeiro/orcamentos',
+  'dre-evento': '/financeiro/dre-evento',
+  'conciliacao-bancaria': '/financeiro/conciliacao/bancaria',
+  'conciliacao-repasses': '/financeiro/conciliacao/repasses',
+  'conciliacao-retorno': '/financeiro/conciliacao/retorno',
+  'relatorios-vendas': '/financeiro/relatorios/vendas',
+
   // Compras & P2P
   'procure-to-pay': '/financeiro/compras',
   'approvals-inbox': '/financeiro/compras',
@@ -693,11 +984,15 @@ export const LEGACY_ROUTE_ALIASES = {
   'contabilidade': '/contabilidade/dashboard',
   'accounting-disk': '/contabilidade/dashboard',
 
-  // Fluxo de Caixa
-  'cashflow-performance': '/fluxo-caixa/performance',
+  // Fluxo de Caixa (Consolidado em Financeiro > Controladoria)
+  'fluxo-caixa': '/financeiro/fluxo-caixa',
+  'fluxo-caixa/performance': '/financeiro/fluxo-caixa',
+  'fluxo-caixa/evolucao': '/financeiro/fluxo-caixa/evolucao',
+  'fluxo-caixa/dre': '/financeiro/dre-evento',
+  'cashflow-performance': '/financeiro/fluxo-caixa',
   'cashflow-statement': '/fluxo-caixa/extrato',
-  'cashflow-flow': '/fluxo-caixa/evolucao',
-  'cashflow-dre': '/fluxo-caixa/dre',
+  'cashflow-flow': '/financeiro/fluxo-caixa/evolucao',
+  'cashflow-dre': '/financeiro/dre-evento',
 
   // Receitas
   'revenues-desc': '/receitas/descricao',
