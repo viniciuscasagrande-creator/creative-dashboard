@@ -80,6 +80,18 @@ export const eventBalanceGateway = {
   getCashForecast: (params = {}) => request('/api/finance/cash-forecast', { params }),
   getEventCashForecast: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}`, { params: { horizonDays } }),
   getEventCashForecastTimeline: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}/timeline`, { params: { horizonDays } }),
-  getEventCoverageSuggestions: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}/coverage-suggestions`, { params: { horizonDays } })
+  getEventCoverageSuggestions: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}/coverage-suggestions`, { params: { horizonDays } }),
+  // Fase 26.17.9.5.6 — Motor de Regras e Prioridades Financeiras
+  evaluateRules: (payload) => request('/api/finance/rules/evaluate', { method: 'POST', body: payload }),
+  simulateRules: (payload) => request('/api/finance/rules/simulate', { method: 'POST', body: payload }),
+  getPolicies: (params = {}) => request('/api/finance/rules/policies', { params }),
+  createPolicy: (payload) => request('/api/finance/rules/policies', { method: 'POST', body: payload }),
+  updatePolicy: (id, payload) => request(`/api/finance/rules/policies/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }),
+  getPriorities: () => request('/api/finance/rules/priorities'),
+  getReserves: () => request('/api/finance/rules/reserves'),
+  getExceptions: () => request('/api/finance/rules/exceptions'),
+  createException: (payload) => request('/api/finance/rules/exceptions', { method: 'POST', body: payload }),
+  getRulesAuditLog: () => request('/api/finance/rules/audit-log')
 };
+
 

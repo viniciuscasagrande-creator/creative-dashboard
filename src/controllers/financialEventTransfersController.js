@@ -6,6 +6,7 @@
 import { eventBalanceService, OFFICIAL_PRODUCERS } from '../services/eventBalanceService.js';
 import { balanceTransferService } from '../services/balanceTransferService.js';
 import { cashForecastService } from '../services/cashForecastService.js';
+import { financialRulesEngine } from '../services/financialRulesService.js';
 
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -508,7 +509,7 @@ export function changeTransferProducer(prodId) {
 
 export function switchTransferTab(tab) {
   currentTab = tab;
-  ['dashboard', 'events', 'approvals', 'history', 'audit', 'forecast'].forEach(t => {
+  ['dashboard', 'events', 'approvals', 'history', 'audit', 'forecast', 'rules'].forEach(t => {
     const link = document.getElementById(`ft-tab-link-${t}`);
     const pane = document.getElementById(`ft-pane-${t}`);
     if (link) link.classList.toggle('active', t === tab);
@@ -516,6 +517,9 @@ export function switchTransferTab(tab) {
   });
   if (tab === 'forecast') {
     refreshForecastData();
+  }
+  if (tab === 'rules') {
+    refreshRulesData();
   }
 }
 
@@ -1506,6 +1510,484 @@ export function applySimulatedTransferToModal() {
   openBalanceTransferModal(sourceId, targetId, amount, 'Cobertura simulada de fluxo de caixa projetado');
 }
 
+/**
+ * Fase 26.17.9.5.6 — Controlador do Motor de Regras de Repasse e Prioridades Financeiras
+ */
+let currentRulesSubTab = 'policies';
+
+export function switchRulesSubTab(subTab) {
+  currentRulesSubTab = subTab;
+  const subtabs = ['policies', 'priorities', 'reserves', 'blocks', 'limits', 'exceptions', 'simulator', 'audit'];
+  subtabs.forEach(st => {
+    const btn = document.getElementById(`ft-rul-btn-subtab-${st}`);
+    const pane = document.getElementById(`ft-rul-pane-${st}`);
+    if (btn) btn.classList.toggle('active', st === subTab);
+    if (pane) pane.style.display = st === subTab ? 'block' : 'none';
+  });
+}
+
+export async function refreshRulesData() {
+  try {
+    const policies = financialRulesEngine.getPolicies();
+    const priorities = financialRulesEngine.getPriorities();
+    const exceptions = financialRulesEngine.getExceptions();
+    const auditLogs = financialRulesEngine.getAuditLog();
+
+    // KPIs
+    const elPolCount = document.getElementById('ft-rul-kpi-policies-count');
+    const elBadge = document.getElementById('ft-rules-count-badge');
+    const elMinRes = document.getElementById('ft-rul-kpi-min-reserve');
+    const elMaxWithout = document.getElementById('ft-rul-kpi-max-without-app');
+    const elTwoLevel = document.getElementById('ft-rul-kpi-two-level-app');
+    const elWindow = document.getElementById('ft-rul-kpi-window-status');
+    const elWindowSub = document.getElementById('ft-rul-kpi-window-sub');
+    const elExcCount = document.getElementById('ft-rul-kpi-exceptions-count');
+
+    if (elPolCount) elPolCount.textContent = String(policies.filter(p => p.active).length);
+    if (elBadge) elBadge.textContent = String(policies.filter(p => p.active).length);
+
+    const globalPol = policies.find(p => p.scope === 'GLOBAL') || policies[0];
+    if (globalPol) {
+      if (elMinRes) elMinRes.textContent = `${globalPol.minReservePercent}% / ${formatBRL(globalPol.minReserveFixed)}`;
+      if (elMaxWithout) elMaxWithout.textContent = formatBRL(globalPol.maxWithoutApproval);
+      if (elTwoLevel) elTwoLevel.textContent = `Acima de ${formatBRL(globalPol.twoLevelApprovalThreshold)}`;
+      if (elWindow) {
+        elWindow.textContent = `${String(globalPol.operationalWindow.startHour).padStart(2, '0')}h - ${String(globalPol.operationalWindow.endHour).padStart(2, '0')}h`;
+      }
+      if (elWindowSub) {
+        const now = new Date();
+        const d = now.getDay();
+        const h = now.getHours();
+        const isOpen = globalPol.operationalWindow.daysOfWeek.includes(d) && h >= globalPol.operationalWindow.startHour && h < globalPol.operationalWindow.endHour;
+        elWindowSub.textContent = isOpen ? 'Janela Aberta (Operando)' : 'Janela Fechada (HOLD)';
+        elWindowSub.className = `fs-xs ${isOpen ? 'text-success' : 'text-danger'}`;
+      }
+    }
+
+    const activeExceptions = exceptions.filter(e => e.status === 'ACTIVE');
+    if (elExcCount) elExcCount.textContent = String(activeExceptions.length);
+
+    // Render Sub-panes
+    renderRulesPoliciesTable(policies);
+    renderRulesPriorities(priorities);
+    renderRulesBlocksMatrix(policies);
+    renderRulesExceptionsTable(exceptions);
+    renderRulesAuditTable(auditLogs);
+    updateRulesSimEvents(currentProducerId);
+  } catch (err) {
+    console.error('[FinancialRules] Erro ao carregar dados:', err);
+  }
+}
+
+function renderRulesPoliciesTable(policies) {
+  const tbody = document.getElementById('ft-rul-policies-tbody');
+  if (!tbody) return;
+
+  if (!policies || policies.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Nenhuma política configurada.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = policies.map(p => {
+    const scopeBadge = p.scope === 'GLOBAL'
+      ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xs">GLOBAL</span>'
+      : p.scope === 'PRODUCER'
+      ? `<span class="badge bg-warning-subtle text-dark border border-warning-subtle fs-xs">PRODUTOR (#${p.targetId})</span>`
+      : `<span class="badge text-white fs-xs" style="background-color: #7c3aed;">EVENTO (#${p.targetId})</span>`;
+
+    const reserveDesc = p.reserveRule === 'GREATER_OF'
+      ? `Maior entre ${p.minReservePercent}% e ${formatBRL(p.minReserveFixed)}`
+      : p.reserveRule === 'PERCENT'
+      ? `${p.minReservePercent}% do saldo liquidado`
+      : formatBRL(p.minReserveFixed);
+
+    const windowDesc = p.operationalWindow?.enabled
+      ? `${p.operationalWindow.startHour}h-${p.operationalWindow.endHour}h (Seg-Sex)`
+      : '<span class="text-muted">24/7 (Sem restrição)</span>';
+
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark">${p.name}</div>
+          <div class="fs-xs text-muted font-monospace">${p.id}</div>
+        </td>
+        <td>${scopeBadge}</td>
+        <td class="text-center"><span class="badge bg-light text-dark border">P-${p.priority}</span></td>
+        <td>
+          <div class="fw-semibold text-dark">${reserveDesc}</div>
+          <div class="fs-xs text-muted">Máx liberável: ${p.maxReleasePercent}%</div>
+        </td>
+        <td class="text-end fw-bold text-success">${formatBRL(p.maxWithoutApproval)}</td>
+        <td class="text-end fw-bold text-warning">${formatBRL(p.twoLevelApprovalThreshold)}</td>
+        <td class="text-center fs-xs">${windowDesc}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderRulesPriorities(priorities) {
+  const container = document.getElementById('ft-rul-priorities-container');
+  if (!container) return;
+
+  const categoryBadges = {
+    BLOCK: { label: 'Bloqueio Estrito', class: 'bg-danger text-white' },
+    RESERVE: { label: 'Reserva Cautelar', class: 'bg-primary text-white' },
+    FEE: { label: 'Tarifa / MDR', class: 'bg-warning text-dark' },
+    PAYOUT: { label: 'Repasse Aprovado', class: 'bg-success text-white' },
+    TRANSFER: { label: 'Transferência Interna', class: 'bg-info text-white' },
+    EXPENSE: { label: 'Despesa Crítica', class: 'bg-secondary text-white' },
+    FREE: { label: 'Saldo Livre', class: 'text-white', style: 'background-color: #7c3aed;' }
+  };
+
+  container.innerHTML = priorities.map(p => {
+    const badge = categoryBadges[p.category] || { label: p.category, class: 'bg-light text-dark' };
+    return `
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card h-100 border p-2 mb-0 shadow-none bg-light d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="badge bg-dark text-white fw-bold fs-xs">PRIORIDADE ${p.order}</span>
+              <span class="badge ${badge.class} fs-xs" ${badge.style ? `style="${badge.style}"` : ''}>${badge.label}</span>
+            </div>
+            <div class="fw-bold text-dark fs-xs mt-1">${p.name}</div>
+            <p class="fs-xs text-muted mb-0 mt-1">${p.description}</p>
+          </div>
+          <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center fs-xs text-muted">
+            <span>Código: <code>${p.code}</code></span>
+            ${p.mandatory ? '<span class="text-danger fw-bold"><i class="ph-asterisk"></i> Mandatório</span>' : '<span class="text-success"><i class="ph-check"></i> Alocável</span>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRulesBlocksMatrix(policies) {
+  const container = document.getElementById('ft-rul-blocks-matrix-container');
+  if (!container) return;
+
+  const blocks = [
+    {
+      title: 'Divergência Contábil Ativa',
+      rule: 'DIVERGENCIA_CONTABIL',
+      decision: 'BLOCK',
+      desc: 'Bloqueio estrito se o evento tiver saldo liquidado desbalanceado (diferença entre Saldo Base e Disponível + Comprometido + Bloqueado).',
+      icon: 'ph-warning-octagon text-danger'
+    },
+    {
+      title: 'Janela Operacional Bancária',
+      rule: 'JANELA_OPERACIONAL',
+      decision: 'HOLD',
+      desc: 'Retenção temporária fora do horário comercial bancário (08h às 18h em dias úteis). A operação é retida e liberada na abertura da janela.',
+      icon: 'ph-clock text-warning'
+    },
+    {
+      title: 'Conciliação Bancária Pendente',
+      rule: 'CONCILIACAO_PENDENTE',
+      decision: 'HOLD',
+      desc: 'Aguardando batimento e confirmação do lote de recebíveis do adquirente antes de liberar transferências e repasses.',
+      icon: 'ph-git-diff text-info'
+    },
+    {
+      title: 'Chargeback Crítico em Disputa',
+      rule: 'CHARGEBACK_CRITICO',
+      decision: 'BLOCK',
+      desc: 'Trava de segurança caso existam contestações ou chargebacks não cobertos pelo fundo garantidor.',
+      icon: 'ph-shield-warning text-danger'
+    },
+    {
+      title: 'Bloqueio de Compliance / Documentos',
+      rule: 'COMPLIANCE_PENDENTE',
+      decision: 'BLOCK',
+      desc: 'Trava jurídica ou regulatória aplicada pela Controladoria até saneamento cadastral e societário.',
+      icon: 'ph-scales text-danger'
+    },
+    {
+      title: 'Inconsistência de Titularidade (RN01)',
+      rule: 'PRODUTOR_DIVERGENTE',
+      decision: 'BLOCK',
+      desc: 'Tentativa de transferir recursos entre eventos de produtores com CNPJ/titularidade jurídica diferentes.',
+      icon: 'ph-prohibit text-danger'
+    }
+  ];
+
+  container.innerHTML = blocks.map(b => {
+    const isBlock = b.decision === 'BLOCK';
+    return `
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card h-100 border p-3 shadow-none bg-light">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="${b.icon} fs-4"></i>
+              <h6 class="fw-bold text-dark mb-0 fs-xs">${b.title}</h6>
+            </div>
+            <span class="badge ${isBlock ? 'bg-danger' : 'bg-warning text-dark'} fs-xs">${b.decision}</span>
+          </div>
+          <p class="fs-xs text-muted mb-2">${b.desc}</p>
+          <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center fs-xs">
+            <span class="text-muted">Chave: <code>${b.rule}</code></span>
+            <button class="btn btn-xs btn-outline-secondary" onclick="window.openCreateExceptionModal('${b.rule}')">
+              Exceção
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRulesExceptionsTable(exceptions) {
+  const tbody = document.getElementById('ft-rul-exceptions-tbody');
+  if (!tbody) return;
+
+  if (!exceptions || exceptions.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-3 text-muted">
+          <i class="ph-shield-check fs-3 d-block mb-1 text-success"></i>
+          Nenhuma exceção cadastrada. O motor está operando com 100% de rigor contábil.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = exceptions.map(exc => {
+    const isActive = exc.status === 'ACTIVE' && new Date(exc.validUntil) >= new Date();
+    const statusBadge = isActive
+      ? '<span class="badge bg-success text-white fs-xs">VIGENTE</span>'
+      : '<span class="badge bg-secondary text-white fs-xs">EXPIRADA / REVOGADA</span>';
+
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark">${exc.id}</div>
+          <div class="fs-xs text-muted">${formatDate(exc.createdAt)}</div>
+        </td>
+        <td><span class="badge bg-warning-subtle text-dark border border-warning-subtle fs-xs">${exc.ruleToBypass}</span></td>
+        <td><span class="badge bg-light text-dark border fs-xs">${exc.scope}</span></td>
+        <td class="fs-xs text-dark">${exc.justification}</td>
+        <td>
+          <div class="fw-semibold text-dark fs-xs">${exc.approvedBy}</div>
+          <span class="badge bg-purple-subtle text-purple fs-xs" style="color: #7c3aed;">${exc.actorRole}</span>
+        </td>
+        <td class="fs-xs fw-bold">${new Date(exc.validUntil).toLocaleDateString('pt-BR')}</td>
+        <td class="text-center">
+          ${statusBadge}
+          ${isActive ? `<button class="btn btn-xs btn-outline-danger mt-1" onclick="window.handleRevokeException('${exc.id}')" title="Revogar exceção"><i class="ph-x"></i> Revogar</button>` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderRulesAuditTable(auditLogs) {
+  const tbody = document.getElementById('ft-rul-audit-tbody');
+  if (!tbody) return;
+
+  if (!auditLogs || auditLogs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Nenhum registro de auditoria no motor.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = auditLogs.slice(0, 50).map(log => {
+    const decClass = log.decision === 'ALLOW' ? 'bg-success text-white'
+      : log.decision === 'ALLOW_WITH_APPROVAL' ? 'bg-warning text-dark'
+      : log.decision === 'ALLOW_PARTIAL' ? 'bg-info text-white'
+      : log.decision === 'HOLD' ? 'bg-secondary text-white'
+      : log.decision === 'BLOCK' ? 'bg-danger text-white'
+      : 'bg-light text-dark border';
+
+    return `
+      <tr>
+        <td class="fs-xs text-muted font-monospace">${formatDate(log.timestamp)}</td>
+        <td>
+          <div class="fw-bold text-dark fs-xs">${log.actor}</div>
+          <span class="badge bg-light text-secondary border fs-xs">${log.actorRole}</span>
+        </td>
+        <td><span class="badge bg-dark text-white fs-xs">${log.action}</span></td>
+        <td>${log.decision ? `<span class="badge ${decClass} fs-xs">${log.decision}</span>` : '—'}</td>
+        <td class="fs-xs text-dark">${log.details}</td>
+        <td class="fs-xs font-monospace text-muted">${log.correlationId || '—'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+export function updateRulesSimEvents(producerId) {
+  const sel = document.getElementById('sim-rul-event-select');
+  if (!sel) return;
+
+  const events = cachedEvents.filter(e => e.producerId === producerId);
+  if (events.length === 0) {
+    sel.innerHTML = '<option value="">Nenhum evento localizado</option>';
+    return;
+  }
+
+  sel.innerHTML = events.map(e =>
+    `<option value="${e.eventId}">${e.eventName} (#${e.eventId}) — Disp: ${formatBRL(e.balances.availableBalance)}</option>`
+  ).join('');
+}
+
+export async function runRulesSimulation() {
+  const opType = document.getElementById('sim-rul-operation-type')?.value || 'PAYOUT';
+  const prodId = document.getElementById('sim-rul-producer-select')?.value || currentProducerId;
+  const eventId = document.getElementById('sim-rul-event-select')?.value || null;
+  const amount = Number(document.getElementById('sim-rul-amount-input')?.value || 0);
+
+  const decBadge = document.getElementById('sim-rul-res-decision-badge');
+  const corrId = document.getElementById('sim-rul-res-corr-id');
+  const maxAllowed = document.getElementById('sim-rul-res-max-allowed');
+  const reserve = document.getElementById('sim-rul-res-reserve');
+  const appLevel = document.getElementById('sim-rul-res-approval-level');
+  const alertsCont = document.getElementById('sim-rul-res-alerts-container');
+  const policiesList = document.getElementById('sim-rul-res-policies-list');
+
+  try {
+    const res = await financialRulesEngine.simulateFinancialOperation({
+      operationType: opType,
+      producerId: prodId,
+      eventId: eventId,
+      amount,
+      actor: { name: 'Operador Financeiro PDT', role: 'CONTROLADORIA' }
+    });
+
+    if (corrId) corrId.textContent = res.correlationId;
+    if (maxAllowed) maxAllowed.textContent = formatBRL(res.maxAllowedAmount);
+    if (reserve) reserve.textContent = formatBRL(res.reserveAmount);
+    if (appLevel) {
+      appLevel.textContent = res.approvalLevel === 'NIVEL_2_DIRETORIA' ? 'Nível 2 (Diretoria)'
+        : res.approvalLevel === 'NIVEL_1_FINANCEIRO' ? 'Nível 1 (Controladoria)'
+        : 'Automática (Sem Alçada)';
+    }
+
+    if (decBadge) {
+      const badges = {
+        ALLOW: { label: 'ALLOW — OPERAÇÃO PERMITIDA', class: 'bg-success text-white' },
+        ALLOW_WITH_APPROVAL: { label: 'ALLOW_WITH_APPROVAL — REQUER ALÇADA', class: 'bg-warning text-dark' },
+        ALLOW_PARTIAL: { label: 'ALLOW_PARTIAL — LIBERADO PARCIALMENTE', class: 'bg-info text-white' },
+        HOLD: { label: 'HOLD — OPERAÇÃO RETIDA', class: 'bg-secondary text-white' },
+        BLOCK: { label: 'BLOCK — OPERAÇÃO BLOQUEADA', class: 'bg-danger text-white' }
+      };
+      const b = badges[res.decision] || { label: res.decision, class: 'bg-dark text-white' };
+      decBadge.innerHTML = `<span class="badge ${b.class} px-3 py-2 fs-6 fw-bold shadow-sm">${b.label}</span>`;
+    }
+
+    if (alertsCont) {
+      let alertsHtml = '';
+      if (res.blockedReasons && res.blockedReasons.length > 0) {
+        alertsHtml += res.blockedReasons.map(r => `
+          <div class="alert alert-danger p-2 mb-1 fs-xs d-flex align-items-center gap-2 border-0">
+            <i class="ph-x-circle fs-5"></i>
+            <div><strong>Bloqueio:</strong> ${r}</div>
+          </div>
+        `).join('');
+      }
+      if (res.warnings && res.warnings.length > 0) {
+        alertsHtml += res.warnings.map(w => `
+          <div class="alert alert-warning p-2 mb-1 fs-xs d-flex align-items-center gap-2 border-0">
+            <i class="ph-warning fs-5"></i>
+            <div><strong>Atenção:</strong> ${w}</div>
+          </div>
+        `).join('');
+      }
+      if (!alertsHtml) {
+        alertsHtml = `
+          <div class="alert alert-success p-2 mb-1 fs-xs d-flex align-items-center gap-2 border-0">
+            <i class="ph-check-circle fs-5"></i>
+            <div>Nenhum impedimento ou bloqueio detectado. Operação aderente a todas as políticas financeiras.</div>
+          </div>
+        `;
+      }
+      alertsCont.innerHTML = alertsHtml;
+    }
+
+    if (policiesList && res.appliedPolicies) {
+      policiesList.innerHTML = res.appliedPolicies.map(p => `
+        <li class="d-flex justify-content-between py-1 border-bottom">
+          <span><strong>${p.name}</strong> (${p.id})</span>
+          <span class="badge ${p.result === 'PASS' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-dark'} fs-xs">${p.result}</span>
+        </li>
+      `).join('');
+    }
+
+    // Atualiza auditoria em background
+    const auditLogs = financialRulesEngine.getAuditLog();
+    renderRulesAuditTable(auditLogs);
+  } catch (err) {
+    console.error('[FinancialRulesSim] Erro na simulação:', err);
+    if (decBadge) decBadge.innerHTML = `<span class="badge bg-danger text-white px-3 py-2 fs-6">ERRO NA SIMULAÇÃO: ${err.message}</span>`;
+  }
+}
+
+export function openCreateExceptionModal(rulePreset = null) {
+  const modalEl = document.getElementById('modal-create-financial-exception');
+  if (!modalEl) return;
+
+  const form = document.getElementById('form-create-financial-exception');
+  if (form) form.reset();
+
+  if (rulePreset) {
+    const sel = document.getElementById('exc-input-rule');
+    if (sel) sel.value = rulePreset;
+  }
+
+  // Preenche data de vigência padrão para 7 dias no futuro
+  const dtInput = document.getElementById('exc-input-valid-until');
+  if (dtInput) {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    dtInput.value = d.toISOString().split('T')[0];
+  }
+
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+}
+
+export function handleCreateException(event) {
+  if (event) event.preventDefault();
+
+  const ruleToBypass = document.getElementById('exc-input-rule')?.value;
+  const scope = document.getElementById('exc-input-scope')?.value || 'GLOBAL';
+  const validUntil = document.getElementById('exc-input-valid-until')?.value;
+  const approvedBy = document.getElementById('exc-input-approved-by')?.value;
+  const justification = document.getElementById('exc-input-justification')?.value;
+
+  try {
+    financialRulesEngine.createException({
+      scope,
+      targetId: scope === 'PRODUCER' ? currentProducerId : null,
+      ruleToBypass,
+      justification,
+      approvedBy,
+      actorRole: 'CONTROLADORIA',
+      validUntil: `${validUntil}T23:59:59.000Z`
+    });
+
+    const modalEl = document.getElementById('modal-create-financial-exception');
+    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    refreshRulesData();
+  } catch (err) {
+    alert(`Erro ao criar exceção: ${err.message}`);
+  }
+}
+
+export function handleRevokeException(id) {
+  if (!confirm(`Deseja realmente revogar a exceção "${id}"? As regras voltarão a ser aplicadas estritamente.`)) {
+    return;
+  }
+  try {
+    financialRulesEngine.revokeException(id, { name: 'Controladoria', role: 'CONTROLADORIA' });
+    refreshRulesData();
+  } catch (err) {
+    alert(`Erro ao revogar exceção: ${err.message}`);
+  }
+}
+
 // Registro das funções globais para consumo no DOM inline
 if (typeof window !== 'undefined') {
   window.initFinancialEventTransfersView = initFinancialEventTransfersView;
@@ -1533,5 +2015,13 @@ if (typeof window !== 'undefined') {
   window.openCoverageSimulator = openCoverageSimulator;
   window.updateCoverageSimulation = updateCoverageSimulation;
   window.applySimulatedTransferToModal = applySimulatedTransferToModal;
+  // Fase 26.17.9.5.6 — Motor de Regras
+  window.switchRulesSubTab = switchRulesSubTab;
+  window.refreshRulesData = refreshRulesData;
+  window.runRulesSimulation = runRulesSimulation;
+  window.openCreateExceptionModal = openCreateExceptionModal;
+  window.handleCreateException = handleCreateException;
+  window.handleRevokeException = handleRevokeException;
+  window.updateRulesSimEvents = updateRulesSimEvents;
 }
 

@@ -1514,6 +1514,12 @@
                                                 <span class="badge bg-danger text-white rounded-pill ms-1 d-none" id="ft-forecast-risk-badge">0</span>
                                             </a>
                                         </li>
+                                        <li class="nav-item">
+                                            <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTransferTab('rules'); event.preventDefault();" id="ft-tab-link-rules">
+                                                <i class="ph-sliders-horizontal me-1"></i> Regras de Repasse &amp; Prioridades
+                                                <span class="badge rounded-pill ms-1 text-white" id="ft-rules-count-badge" style="background-color: #7c3aed;">3</span>
+                                            </a>
+                                        </li>
                                     </ul>
                                     <div class="d-flex align-items-center gap-2">
                                         <input type="text" class="form-control form-control-sm" id="ft-events-search" placeholder="Filtrar eventos..." oninput="window.filterTransferEvents(this.value)" style="width: 180px;">
@@ -1990,8 +1996,509 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- PANE 7: Motor Central de Regras de Repasse e Prioridades Financeiras (Fase 26.17.9.5.6) -->
+                            <div class="card-body p-3" id="ft-pane-rules" style="display:none;">
+                                <!-- Top Banner do Motor de Regras -->
+                                <div class="card shadow-sm border-0 mb-3" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-left: 5px solid #7c3aed !important;">
+                                    <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="rounded-circle bg-white shadow-sm p-2 text-purple d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; color: #7c3aed;">
+                                                <i class="ph-cpu fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-sm d-flex align-items-center gap-2">
+                                                    Motor Central de Regras de Repasse e Prioridades Financeiras
+                                                    <span class="badge text-white fs-xs" style="background-color: #7c3aed;">Fase 26.17.9.5.6</span>
+                                                    <span class="badge bg-light text-dark border fs-xs">5 Respostas Formais</span>
+                                                </div>
+                                                <div class="text-secondary fs-xs mt-1">
+                                                    Orquestração central pré-operacional: <code>ALLOW</code>, <code>ALLOW_WITH_APPROVAL</code>, <code>ALLOW_PARTIAL</code>, <code>HOLD</code> e <code>BLOCK</code>. Sem regras hardcoded, com reservas dinâmicas, 9 prioridades auditáveis e simulador interativo.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-white text-dark border px-3 py-2 fs-xs fw-semibold shadow-sm d-flex align-items-center gap-1" id="ft-rules-engine-status-badge">
+                                                <i class="ph-check-circle text-success fs-sm"></i> Motor Operacional Ativo
+                                            </span>
+                                            <button class="btn btn-sm text-white fw-bold d-flex align-items-center gap-1" onclick="window.switchRulesSubTab('simulator')" style="font-size: 12px; background-color: #7c3aed; border-color: #6d28d9;">
+                                                <i class="ph-play-circle"></i> Abrir Simulador
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 6 KPIs Principais do Motor -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Políticas Ativas</span>
+                                            <div class="fs-5 fw-bold text-dark mt-1" id="ft-rul-kpi-policies-count">3</div>
+                                            <span class="fs-xs text-muted">Global / Prod / Ev</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Reserva Mínima</span>
+                                            <div class="fs-5 fw-bold text-primary mt-1" id="ft-rul-kpi-min-reserve">10% / R$ 1.500</div>
+                                            <span class="fs-xs text-muted">Regra: Maior valor</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Teto Sem Aprovação</span>
+                                            <div class="fs-5 fw-bold text-success mt-1" id="ft-rul-kpi-max-without-app">R$ 10.000,00</div>
+                                            <span class="fs-xs text-muted">Liberação direta</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Dupla Aprovação</span>
+                                            <div class="fs-5 fw-bold text-warning mt-1" id="ft-rul-kpi-two-level-app">Acima de R$ 50k</div>
+                                            <span class="fs-xs text-muted">Alçada Diretoria</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Janela Operacional</span>
+                                            <div class="fs-5 fw-bold text-dark mt-1" id="ft-rul-kpi-window-status">08h - 18h</div>
+                                            <span class="fs-xs text-success" id="ft-rul-kpi-window-sub">Dias Úteis (Ativa)</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Exceções Vigentes</span>
+                                            <div class="fs-5 fw-bold text-purple mt-1" id="ft-rul-kpi-exceptions-count" style="color: #7c3aed;">0</div>
+                                            <span class="fs-xs text-muted">Com alçada formal</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card das 8 Sub-abas Administrativas -->
+                                <div class="card border shadow-none mb-3">
+                                    <div class="card-header bg-light border-bottom p-2">
+                                        <ul class="nav nav-pills" id="ft-rules-subtabs" style="gap: 6px;">
+                                            <li class="nav-item">
+                                                <button class="nav-link active py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('policies')" id="ft-rul-btn-subtab-policies">
+                                                    <i class="ph-files me-1"></i> Políticas
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('priorities')" id="ft-rul-btn-subtab-priorities">
+                                                    <i class="ph-list-numbers me-1"></i> Prioridades (9)
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('reserves')" id="ft-rul-btn-subtab-reserves">
+                                                    <i class="ph-vault me-1"></i> Reservas
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('blocks')" id="ft-rul-btn-subtab-blocks">
+                                                    <i class="ph-lock-key me-1"></i> Bloqueios
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('limits')" id="ft-rul-btn-subtab-limits">
+                                                    <i class="ph-shield-star me-1"></i> Alçadas
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('exceptions')" id="ft-rul-btn-subtab-exceptions">
+                                                    <i class="ph-asterisk me-1"></i> Exceções
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold text-purple" onclick="window.switchRulesSubTab('simulator')" id="ft-rul-btn-subtab-simulator" style="font-weight: 700;">
+                                                    <i class="ph-chart-polar me-1"></i> Simulador
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchRulesSubTab('audit')" id="ft-rul-btn-subtab-audit">
+                                                    <i class="ph-clock-counter-clockwise me-1"></i> Auditoria
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <!-- SUB-PANE 1: POLÍTICAS CONFIGURADAS -->
+                                        <div id="ft-rul-pane-policies" class="rul-subpane">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Políticas de Repasse e Limites Financeiros</h6>
+                                                    <span class="fs-xs text-muted">Configurações ativas por escopo hierárquico (Evento &gt; Produtor &gt; Global). Prevalece sempre a condição mais restritiva.</span>
+                                                </div>
+                                                <span class="badge bg-light text-muted border fs-xs">Persistência Central</span>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th style="width: 25%;">Nome da Política</th>
+                                                            <th style="width: 10%;">Escopo</th>
+                                                            <th style="width: 10%;" class="text-center">Precedência</th>
+                                                            <th style="width: 15%;">Reserva Mínima</th>
+                                                            <th style="width: 12%;" class="text-end">Teto Direto</th>
+                                                            <th style="width: 13%;" class="text-end">Dupla Alçada</th>
+                                                            <th style="width: 15%;" class="text-center">Janela Bancária</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="ft-rul-policies-tbody" class="fs-xs">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 2: 9 PRIORIDADES FINANCEIRAS OFICIAIS -->
+                                        <div id="ft-rul-pane-priorities" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Ordem Canônica de Prioridades Financeiras</h6>
+                                                    <span class="fs-xs text-muted">Estrutura oficial de destinação e liquidação de caixa do ecossistema SafeSaff / PDT.</span>
+                                                </div>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle fs-xs">Validado pela Controladoria</span>
+                                            </div>
+                                            <div class="row g-2" id="ft-rul-priorities-container">
+                                                <!-- Renderizado dinamicamente -->
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 3: RESERVAS MÍNIMAS -->
+                                        <div id="ft-rul-pane-reserves" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Cálculo e Composição de Reservas Mínimas</h6>
+                                                    <span class="fs-xs text-muted">Buffer de segurança operacional contra chargebacks, estornos e garantias contratuais.</span>
+                                                </div>
+                                            </div>
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border p-3 shadow-none bg-light">
+                                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                                            <i class="ph-scales text-primary fs-4"></i>
+                                                            <h6 class="fw-bold text-dark mb-0">Regra GREATER_OF</h6>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mb-2">A reserva mínima aplica o <strong>maior valor</strong> entre a Reserva Fixa estipulada em contrato e o Percentual Mínimo sobre o saldo liquidado.</p>
+                                                        <div class="p-2 bg-white rounded border fs-xs font-monospace text-dark">
+                                                            Reserva = Math.max(minReserveFixed, settledBase * minReservePercent)
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border p-3 shadow-none bg-light">
+                                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                                            <i class="ph-shield-warning text-danger fs-4"></i>
+                                                            <h6 class="fw-bold text-dark mb-0">Fundo Garantidor de Chargebacks</h6>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mb-2">Retenção de segurança de 100% de qualquer contestação ou chargeback em aberto, bloqueando saídas até encerramento do litígio com a adquirente.</p>
+                                                        <div class="p-2 bg-white rounded border fs-xs font-monospace text-danger">
+                                                            CapacidadeLíquida = Math.max(0, SaldoDisponível - Reserva)
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border p-3 shadow-none bg-light">
+                                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                                            <i class="ph-percentage text-success fs-4"></i>
+                                                            <h6 class="fw-bold text-dark mb-0">Teto Percentual Liberável</h6>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mb-2">Parâmetro de proteção que limita o repasse máximo a 90% (Global) ou 85%/80% (Específico) do total liquidado acumulado até o término do evento.</p>
+                                                        <div class="p-2 bg-white rounded border fs-xs font-monospace text-success">
+                                                            MaxLiberável = SaldoLiquidado * MaxReleasePercent
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 4: BLOQUEIOS & TRAVAS -->
+                                        <div id="ft-rul-pane-blocks" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Matriz de Travas e Bloqueios Operacionais</h6>
+                                                    <span class="fs-xs text-muted">Condições obrigatórias que forçam decisões <code>BLOCK</code> ou retenções temporárias <code>HOLD</code>.</span>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2" id="ft-rul-blocks-matrix-container">
+                                                <!-- Renderizado dinamicamente -->
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 5: ALÇADAS DE APROVAÇÃO -->
+                                        <div id="ft-rul-pane-limits" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Alçadas e Segregação de Funções (SoD)</h6>
+                                                    <span class="fs-xs text-muted">Níveis hierárquicos de aprovação financeira para repasses, transferências e estornos.</span>
+                                                </div>
+                                            </div>
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border p-3 shadow-none bg-light" style="border-top: 3px solid #10b981 !important;">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <h6 class="fw-bold text-success mb-1">Aprovação Automática</h6>
+                                                            <span class="badge bg-success-subtle text-success fs-xs">Até R$ 10.000,00</span>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mt-2 mb-0">Operações que respeitam todas as políticas, limites e reservas sem exigir intervenção manual. Status: <code>CONCLUIDA</code> imediato.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border p-3 shadow-none bg-light" style="border-top: 3px solid #f59e0b !important;">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <h6 class="fw-bold text-warning mb-1">Alçada Nível 1 — Controladoria</h6>
+                                                            <span class="badge bg-warning-subtle text-dark fs-xs">R$ 10.000 a R$ 50.000</span>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mt-2 mb-0">Requer validação formal de analista ou coordenador de controladoria financeira antes do envio ao gateway bancário.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border p-3 shadow-none bg-light" style="border-top: 3px solid #7c3aed !important;">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <h6 class="fw-bold text-purple mb-1" style="color: #7c3aed;">Alçada Nível 2 — Diretoria</h6>
+                                                            <span class="badge text-white fs-xs" style="background-color: #7c3aed;">Acima de R$ 50.000,00</span>
+                                                        </div>
+                                                        <p class="fs-xs text-muted mt-2 mb-0">Dupla aprovação mandatória com chancela do Diretor Financeiro ou CFO. Segregação rigorosa: solicitante não pode aprovar.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 6: EXCEÇÕES AUDITÁVEIS -->
+                                        <div id="ft-rul-pane-exceptions" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Gestão de Exceções Operacionais Temporárias</h6>
+                                                    <span class="fs-xs text-muted">Contorno excepcional de travas com justificativa formal, vigência pré-fixada e alçada de Diretoria.</span>
+                                                </div>
+                                                <button class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1" onclick="window.openCreateExceptionModal()" style="font-size: 12px;">
+                                                    <i class="ph-plus-circle"></i> Cadastrar Exceção
+                                                </button>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th style="width: 15%;">Código / Data</th>
+                                                            <th style="width: 12%;">Regra Contornada</th>
+                                                            <th style="width: 12%;">Escopo</th>
+                                                            <th style="width: 28%;">Justificativa Formal</th>
+                                                            <th style="width: 15%;">Aprovador</th>
+                                                            <th style="width: 10%;">Validade</th>
+                                                            <th style="width: 8%;" class="text-center">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="ft-rul-exceptions-tbody" class="fs-xs">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 7: SIMULADOR DE REGRAS FINANCEIRAS -->
+                                        <div id="ft-rul-pane-simulator" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                        <i class="ph-chart-polar text-purple" style="color: #7c3aed;"></i> Simulador de Regras Financeiras em Tempo Real
+                                                    </h6>
+                                                    <span class="fs-xs text-muted">Teste antecipado de qualquer operação financeira sem gerar movimentação contábil ou financeira no sistema.</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-3">
+                                                <!-- Form de Simulação -->
+                                                <div class="col-12 col-xl-5">
+                                                    <div class="card border p-3 shadow-none bg-light h-100">
+                                                        <h6 class="fw-bold text-dark mb-3 fs-xs text-uppercase">Parâmetros da Simulação</h6>
+                                                        
+                                                        <div class="mb-2">
+                                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Tipo de Operação</label>
+                                                            <select id="sim-rul-operation-type" class="form-select form-select-sm fw-bold">
+                                                                <option value="PAYOUT">Repasse ao Produtor (PAYOUT)</option>
+                                                                <option value="EVENT_TRANSFER" selected>Transferência entre Eventos (EVENT_TRANSFER)</option>
+                                                                <option value="ADVANCE">Antecipação de Recebíveis (ADVANCE)</option>
+                                                                <option value="EXPENSE">Pagamento de Despesa / Fornecedor (EXPENSE)</option>
+                                                                <option value="REVERSAL">Estorno Operacional (REVERSAL)</option>
+                                                                <option value="MANUAL_ADJUSTMENT">Ajuste Manual da Tesouraria (MANUAL_ADJUSTMENT)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="mb-2">
+                                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Produtor</label>
+                                                            <select id="sim-rul-producer-select" class="form-select form-select-sm" onchange="window.updateRulesSimEvents(this.value)">
+                                                                <option value="prod-1">DiskIngressos Eventos Ltda</option>
+                                                                <option value="prod-2">CWB Brasil Entretenimento</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="mb-2">
+                                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Evento de Origem</label>
+                                                            <select id="sim-rul-event-select" class="form-select form-select-sm">
+                                                                <!-- Preenchido via JS -->
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Valor da Operação (R$)</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text bg-white fw-bold">R$</span>
+                                                                <input type="number" step="0.01" min="0.01" id="sim-rul-amount-input" class="form-control fw-bold" placeholder="0,00" value="1200.00">
+                                                            </div>
+                                                        </div>
+
+                                                        <button class="btn btn-dark w-100 fw-bold d-flex align-items-center justify-content-center gap-1 py-2" onclick="window.runRulesSimulation()">
+                                                            <i class="ph-play-circle fs-5"></i> Simular Operação
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Painel de Resultado da Simulação -->
+                                                <div class="col-12 col-xl-7">
+                                                    <div class="card border p-3 shadow-none h-100" id="sim-rul-result-card" style="background: #ffffff;">
+                                                        <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
+                                                            <div>
+                                                                <span class="fs-xs text-muted text-uppercase fw-bold">Resultado da Avaliação</span>
+                                                                <div class="fs-4 fw-bold mt-1" id="sim-rul-res-decision-badge">Aguardando simulação...</div>
+                                                            </div>
+                                                            <span class="badge bg-light text-muted border fs-xs" id="sim-rul-res-corr-id">—</span>
+                                                        </div>
+
+                                                        <div class="row g-2 mb-3">
+                                                            <div class="col-4">
+                                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                                    <span class="fs-xs text-muted">Máximo Permitido</span>
+                                                                    <div class="fw-bold text-success fs-6 mt-1" id="sim-rul-res-max-allowed">R$ 0,00</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                                    <span class="fs-xs text-muted">Reserva Mínima</span>
+                                                                    <div class="fw-bold text-primary fs-6 mt-1" id="sim-rul-res-reserve">R$ 0,00</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                                    <span class="fs-xs text-muted">Alçada Exigida</span>
+                                                                    <div class="fw-bold text-dark fs-6 mt-1" id="sim-rul-res-approval-level">Automática</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Avisos e Motivos de Bloqueio -->
+                                                        <div id="sim-rul-res-alerts-container" class="mb-3"></div>
+
+                                                        <!-- Políticas Avaliadas -->
+                                                        <div class="border rounded p-2 bg-light">
+                                                            <span class="fs-xs text-muted fw-bold text-uppercase d-block mb-1">Políticas Financeiras Avaliadas:</span>
+                                                            <ul id="sim-rul-res-policies-list" class="list-unstyled mb-0 fs-xs">
+                                                                <li class="text-muted">Nenhuma simulação executada ainda.</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 8: TRILHA DE AUDITORIA DE REGRAS -->
+                                        <div id="ft-rul-pane-audit" class="rul-subpane" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">Log Imutável de Decisões do Motor de Regras</h6>
+                                                    <span class="fs-xs text-muted">Trilha de auditoria append-only de todas as avaliações, simulações, políticas e exceções.</span>
+                                                </div>
+                                                <button class="btn btn-xs btn-outline-secondary d-flex align-items-center gap-1" onclick="window.refreshRulesData()">
+                                                    <i class="ph-arrows-clockwise"></i> Atualizar
+                                                </button>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th style="width: 15%;">Data / Hora</th>
+                                                            <th style="width: 15%;">Ator / Perfil</th>
+                                                            <th style="width: 12%;">Ação</th>
+                                                            <th style="width: 10%;">Decisão</th>
+                                                            <th style="width: 33%;">Detalhes</th>
+                                                            <th style="width: 15%;">Correlation ID</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="ft-rul-audit-tbody" class="fs-xs">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
+
+                    <!-- MODAL: Cadastrar Exceção Temporária no Motor de Regras (Fase 26.17.9.5.6) -->
+                    <div class="modal fade" id="modal-create-financial-exception" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded bg-purple text-white p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; background-color: #7c3aed;">
+                                            <i class="ph-asterisk fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="modal-title fw-bold text-dark mb-0">Cadastrar Exceção Financeira</h6>
+                                            <div class="text-muted fs-xs">Alçada de Controladoria &bull; Trilha Auditada</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <form id="form-create-financial-exception" onsubmit="window.handleCreateException(event)">
+                                        <div class="mb-2">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Regra a Contornar</label>
+                                            <select id="exc-input-rule" class="form-select form-select-sm fw-bold" required>
+                                                <option value="DIVERGENCIA_CONTABIL">Divergência Contábil (DIVERGENCIA_CONTABIL)</option>
+                                                <option value="RESERVA_MINIMA">Reserva Mínima Contratual (RESERVA_MINIMA)</option>
+                                                <option value="JANELA_OPERACIONAL">Janela Operacional Bancária (JANELA_OPERACIONAL)</option>
+                                                <option value="CONCILIACAO_PENDENTE">Aguardando Conciliação Diária (CONCILIACAO_PENDENTE)</option>
+                                                <option value="CHARGEBACK_CRITICO">Volume de Chargeback em Disputa (CHARGEBACK_CRITICO)</option>
+                                                <option value="COMPLIANCE_PENDENTE">Bloqueio de Compliance / Documentos (COMPLIANCE_PENDENTE)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Escopo</label>
+                                                <select id="exc-input-scope" class="form-select form-select-sm">
+                                                    <option value="GLOBAL">Global</option>
+                                                    <option value="PRODUCER">Produtor Ativo</option>
+                                                    <option value="EVENT">Evento Específico</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Vigência Até</label>
+                                                <input type="date" id="exc-input-valid-until" class="form-control form-control-sm" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Aprovador Responsável</label>
+                                            <input type="text" id="exc-input-approved-by" class="form-control form-control-sm fw-bold" value="Controladoria Financeira" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Justificativa Formal Obrigatória</label>
+                                            <textarea id="exc-input-justification" class="form-control form-control-sm" rows="3" placeholder="Detalhe a razão operacional e comercial da concessão da exceção..." required></textarea>
+                                        </div>
+
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-xs btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-xs btn-primary fw-bold" style="background-color: #7c3aed; border-color: #6d28d9;">Salvar Exceção</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- MODAL: Timeline Gráfica da Transferência (Fase 26.17.9.5.3) -->
                     <div class="modal fade" id="modal-transfer-timeline" tabindex="-1" aria-hidden="true">

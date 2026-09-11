@@ -6,6 +6,7 @@
 
 import { eventBalanceGateway } from './eventBalanceGateway.js';
 import { eventBalanceService } from './eventBalanceService.js';
+import { financialRulesEngine } from './financialRulesService.js';
 
 // Cache em memória de transferências para persistência imediata e histórico consistente
 let LOCAL_TRANSFERS = [
@@ -115,6 +116,23 @@ export const balanceTransferService = {
       };
     }
 
+    // Avaliação no Motor Central de Regras Financeiras (Fase 26.17.9.5.6)
+    const ruleEval = await financialRulesEngine.evaluateFinancialOperation({
+      operationType: 'EVENT_TRANSFER',
+      producerId: source.producerId,
+      eventId: sourceEventId,
+      amount: val,
+      actor: { role: 'OPERADOR_FINANCEIRO' }
+    });
+
+    if (ruleEval.decision === 'BLOCK') {
+      return {
+        valid: false,
+        error: ruleEval.blockedReasons?.join('; ') || 'Operação bloqueada pelo Motor de Regras Financeiras.',
+        rulesEvaluation: ruleEval
+      };
+    }
+
     const sourceNewAvailable = Number((sourceAvailable - val).toFixed(2));
     const targetNewAvailable = Number((targetAvailable + val).toFixed(2));
 
@@ -144,7 +162,8 @@ export const balanceTransferService = {
         totalAfter,
         difference: consolidatedDifference,
         isStrictlyInvariant: consolidatedDifference === 0
-      }
+      },
+      rulesEvaluation: ruleEval
     };
   },
 
@@ -203,8 +222,33 @@ export const balanceTransferService = {
     const sourceEv = (await eventBalanceService.getEventBalance(sourceEventId)).data;
     const targetEv = (await eventBalanceService.getEventBalance(targetEventId)).data;
 
-    // Regra RN08: valor acima de 25k requer aprovação da controladoria
-    const status = val > 25000 ? 'EM_APROVACAO' : 'CONCLUIDA';
+    // INTEGRAÇÃO COM MOTOR DE REGRAS FINANCEIRAS (Fase 26.17.9.5.6)
+    const ruleEval = await financialRulesEngine.evaluateFinancialOperation({
+      operationType: 'EVENT_TRANSFER',
+      producerId: sourceEv.producerId,
+      eventId: sourceEventId,
+      amount: val,
+      actor: { name: actor, role: 'OPERADOR_FINANCEIRO' }
+    });
+
+    if (ruleEval.decision === 'BLOCK') {
+      const reasonMsg = ruleEval.blockedReasons?.join('; ') || 'Operação bloqueada pelo Motor de Regras Financeiras.';
+      throw new Error(`MOTOR_REGRAS_BLOQUEIO: ${reasonMsg}`);
+    }
+
+    if (ruleEval.decision === 'HOLD') {
+      const holdMsg = ruleEval.warnings?.join('; ') || 'Operação retida temporariamente (fora da janela operacional ou aguardando conciliação).';
+      throw new Error(`MOTOR_REGRAS_RETENCAO: ${holdMsg}`);
+    }
+
+    if (ruleEval.decision === 'ALLOW_PARTIAL') {
+      throw new Error(`MOTOR_REGRAS_PARCIAL: O valor solicitado de R$ ${val.toFixed(2)} excede a capacidade líquida liberável após reservas mínimas. Valor máximo permitido: R$ ${ruleEval.maxAllowedAmount.toFixed(2)}.`);
+    }
+
+    // Alçadas determinadas pelas políticas ativas do motor de regras
+    const requiresApproval = ruleEval.decision === 'ALLOW_WITH_APPROVAL' || ruleEval.requiresApproval;
+    const status = requiresApproval ? 'EM_APROVACAO' : 'CONCLUIDA';
+    const approvalRoleText = ruleEval.approvalLevel === 'NIVEL_2_DIRETORIA' ? 'Pendente Diretoria (Nível 2)' : 'Pendente Controladoria (Nível 1)';
 
     const newTransfer = {
       id: transferId,
@@ -220,7 +264,10 @@ export const balanceTransferService = {
       costCenter: costCenter ? costCenter.trim() : '',
       status,
       requestedBy: actor,
-      approvedBy: status === 'CONCLUIDA' ? 'Aprovação Automática (Dentro do Limite)' : 'Pendente Controladoria',
+      approvedBy: status === 'CONCLUIDA' ? 'Aprovação Automática (Dentro do Limite)' : approvalRoleText,
+      approvalLevel: ruleEval.approvalLevel,
+      rulesCorrelationId: ruleEval.correlationId,
+      reserveAmount: ruleEval.reserveAmount,
       createdAt: timestamp,
       processedAt: status === 'CONCLUIDA' ? timestamp : undefined,
       correlationId,
