@@ -274,7 +274,7 @@ export const financialRulesEngine = {
     if (!actor) return { allowed: true, role: 'OPERADOR_FINANCEIRO' };
 
     const role = (actor.role || 'OPERADOR_FINANCEIRO').toUpperCase();
-    const authorizedRoles = ['ADMIN', 'DIRETORIA', 'CONTROLADORIA', 'GERENTE_FINANCEIRO', 'ANALISTA_FINANCEIRO', 'OPERADOR_FINANCEIRO', 'PRODUTOR'];
+    const authorizedRoles = ['ADMIN', 'DIRETORIA', 'CONTROLADORIA', 'GERENTE_FINANCEIRO', 'ANALISTA_FINANCEIRO', 'OPERADOR_FINANCEIRO', 'OPERADOR', 'PRODUTOR', 'SISTEMA', 'CHECKER', 'CHECKER_DIRETORIA', 'BANCO'];
 
     if (!authorizedRoles.includes(role)) {
       throw new Error(`Acesso negado: Perfil "${role}" não possui autorização para operar o motor financeiro.`);

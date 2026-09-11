@@ -12,6 +12,7 @@ import { auditComplianceService } from './services/auditComplianceService.js';
 import { accountingIntelligenceService } from './services/accountingIntelligenceService.js';
 import { initFinancialEventTransfersView } from './controllers/financialEventTransfersController.js';
 import { initProcureToPayView, switchP2PTab } from './controllers/procureToPayController.js';
+import { initTreasuryView, switchTreasuryTab } from './controllers/treasuryController.js';
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 
@@ -427,6 +428,14 @@ function openView(viewName) {
     'gestao-saldos': 'financial-event-transfers',
     'financial-transfers': 'financial-event-transfers',
     'financial-event-transfers': 'financial-event-transfers',
+    'agenda-financeira': 'financial-event-transfers',
+    'financial-schedule': 'financial-event-transfers',
+    'payout-batches': 'financial-event-transfers',
+    'treasury': 'treasury',
+    'tesouraria': 'treasury',
+    'contas-bancarias': 'treasury',
+    'cnab': 'treasury',
+    'pix': 'treasury',
     'procure-to-pay': 'procure-to-pay',
     'approvals-inbox': 'procure-to-pay',
     'purchases-requests': 'procure-to-pay',
@@ -584,6 +593,9 @@ function openView(viewName) {
     if (typeof switchAccountingTab === 'function') switchAccountingTab(null, typeof currentAccountingTab !== 'undefined' ? currentAccountingTab : 'dashboard');
   } else if (resolvedName === 'financial-event-transfers') {
     if (typeof initFinancialEventTransfersView === 'function') initFinancialEventTransfersView();
+    if (viewName === 'agenda-financeira' || viewName === 'financial-schedule' || viewName === 'payout-batches') {
+      if (typeof switchTransferTab === 'function') switchTransferTab('schedule');
+    }
   } else if (resolvedName === 'procure-to-pay') {
     let p2pTab = 'approvals';
     if (viewName.includes('supplier')) p2pTab = 'suppliers';

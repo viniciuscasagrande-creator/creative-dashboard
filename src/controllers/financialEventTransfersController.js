@@ -7,6 +7,8 @@ import { eventBalanceService, OFFICIAL_PRODUCERS } from '../services/eventBalanc
 import { balanceTransferService } from '../services/balanceTransferService.js';
 import { cashForecastService } from '../services/cashForecastService.js';
 import { financialRulesEngine } from '../services/financialRulesService.js';
+import { payoutScheduleGateway } from '../services/payoutScheduleGateway.js';
+import { payoutScheduleService } from '../services/payoutScheduleService.js';
 
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -1987,6 +1989,588 @@ export function handleRevokeException(id) {
     alert(`Erro ao revogar exceção: ${err.message}`);
   }
 }
+
+
+// =========================================================================
+// FASE 26.17.9.5.7 — AGENDA FINANCEIRA, REPASSE AUTOMÁTICO E LOTES DE REPASSE
+// =========================================================================
+
+let cachedSchedule = [];
+let cachedBatches = [];
+let selectedScheduleIds = new Set();
+let currentScheduleSubTab = 'calendar';
+let activeBatchDetails = null;
+
+export async function refreshScheduleData() {
+  try {
+    const scheduleRes = await payoutScheduleGateway.getSchedule({ producerId: currentProducerId });
+    const batchesRes = await payoutScheduleGateway.getPayoutBatches({ producerId: currentProducerId });
+
+    if (scheduleRes.ok) cachedSchedule = scheduleRes.data || [];
+    if (batchesRes.ok) cachedBatches = batchesRes.data || [];
+
+    // 1. Atualizar KPIs
+    const now = new Date().toISOString().split('T')[0];
+    const totalScheduled = cachedSchedule.reduce((acc, i) => acc + (i.amount || 0), 0);
+    const todayItems = cachedSchedule.filter(i => i.dueDate === now);
+    const todayAmount = todayItems.reduce((acc, i) => acc + (i.amount || 0), 0);
+    
+    const next7Days = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+    const weekAmount = cachedSchedule
+      .filter(i => i.dueDate >= now && i.dueDate <= next7Days)
+      .reduce((acc, i) => acc + (i.amount || 0), 0);
+
+    const pendingBatches = cachedBatches.filter(b => ['AGUARDANDO_APROVACAO', 'EM_VALIDACAO', 'RASCUNHO'].includes(b.status)).length;
+    const settledBatches = cachedBatches.filter(b => b.status === 'CONCLUIDO').length;
+    
+    let retryableCount = 0;
+    cachedBatches.forEach(b => {
+      (b.items || []).forEach(it => {
+        if (it.status === 'FALHA_TECNICA' && it.isRetryable) retryableCount++;
+      });
+    });
+
+    const elTotalAmt = document.getElementById('ft-sch-kpi-total-amount');
+    const elTotalCnt = document.getElementById('ft-sch-kpi-total-count');
+    const elTodayAmt = document.getElementById('ft-sch-kpi-today-amount');
+    const elTodayCnt = document.getElementById('ft-sch-kpi-today-count');
+    const elWeekAmt = document.getElementById('ft-sch-kpi-week-amount');
+    const elBatchesPend = document.getElementById('ft-sch-kpi-batches-pending');
+    const elBatchesSett = document.getElementById('ft-sch-kpi-batches-settled');
+    const elRetryable = document.getElementById('ft-sch-kpi-retryable');
+    const elBadge = document.getElementById('ft-schedule-count-badge');
+
+    if (elTotalAmt) elTotalAmt.textContent = formatBRL(totalScheduled);
+    if (elTotalCnt) elTotalCnt.textContent = `${cachedSchedule.length} repasses`;
+    if (elTodayAmt) elTodayAmt.textContent = formatBRL(todayAmount);
+    if (elTodayCnt) elTodayCnt.textContent = `${todayItems.length} itens hoje`;
+    if (elWeekAmt) elWeekAmt.textContent = formatBRL(weekAmount);
+    if (elBatchesPend) elBatchesPend.textContent = pendingBatches;
+    if (elBatchesSett) elBatchesSett.textContent = settledBatches;
+    if (elRetryable) elRetryable.textContent = retryableCount;
+    if (elBadge) elBadge.textContent = cachedSchedule.length;
+
+    // 2. Renderizar Sub-abas ativas
+    renderScheduleCalendarTable();
+    renderScheduleBatchesTable();
+    renderScheduleAuditTable();
+  } catch (err) {
+    console.error('Erro ao recarregar dados da agenda financeira:', err);
+  }
+}
+
+export function switchScheduleSubTab(subTab) {
+  currentScheduleSubTab = subTab;
+  ['calendar', 'batches', 'webhook', 'audit'].forEach(t => {
+    const btn = document.getElementById(`ft-sch-btn-subtab-${t}`);
+    const pane = document.getElementById(`ft-sch-subpane-${t}`);
+    if (btn) btn.classList.toggle('active', t === subTab);
+    if (pane) pane.style.display = t === subTab ? 'block' : 'none';
+  });
+}
+
+export function renderScheduleCalendarTable() {
+  const tbody = document.getElementById('ft-sch-tbody-calendar');
+  if (!tbody) return;
+
+  if (cachedSchedule.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">Nenhum repasse agendado para este produtor.</td></tr>';
+    return;
+  }
+
+  const priorityColors = {
+    CRITICA: 'badge bg-danger',
+    ALTA: 'badge bg-warning text-dark',
+    NORMAL: 'badge bg-info text-dark'
+  };
+
+  const statusBadges = {
+    AGENDADO: '<span class="badge bg-primary">Agendado</span>',
+    EM_LOTE: '<span class="badge bg-info text-dark">Em Lote</span>',
+    CONCLUIDO: '<span class="badge bg-success">Concluído</span>',
+    CANCELADO: '<span class="badge bg-secondary">Cancelado</span>'
+  };
+
+  tbody.innerHTML = cachedSchedule.map(item => {
+    const isChecked = selectedScheduleIds.has(item.id) ? 'checked' : '';
+    const canSelect = item.status === 'AGENDADO';
+    return `
+      <tr>
+        <td>
+          <input type="checkbox" value="${item.id}" ${isChecked} ${canSelect ? '' : 'disabled'} onchange="window.toggleSelectScheduleItem('${item.id}', this.checked)">
+        </td>
+        <td class="fw-bold">${item.id}</td>
+        <td>
+          <div class="fw-semibold text-dark">${item.eventName}</div>
+          <span class="fs-xs text-muted">ID: ${item.eventId}</span>
+        </td>
+        <td>${item.dueDate}</td>
+        <td><span class="badge bg-light text-dark border">${item.type}</span></td>
+        <td><span class="${priorityColors[item.priority] || 'badge bg-secondary'}">${item.priority}</span></td>
+        <td class="fw-bold text-dark">${formatBRL(item.amount)}</td>
+        <td>
+          <div class="fs-xs text-muted">PIX: ${item.beneficiaryAccount?.pixKey || '—'}</div>
+          <div class="fs-xs text-muted">BCO: ${item.beneficiaryAccount?.bankCode || '—'} / AG: ${item.beneficiaryAccount?.agency || '—'}</div>
+        </td>
+        <td>${statusBadges[item.status] || item.status}</td>
+        <td class="text-end">
+          ${item.status === 'AGENDADO' ? `
+            <button class="btn btn-xs btn-outline-danger" onclick="window.cancelScheduledPayout('${item.id}')" title="Cancelar Agendamento">
+              <i class="ph-x"></i>
+            </button>
+          ` : '—'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+export function toggleSelectScheduleItem(id, checked) {
+  if (checked) {
+    selectedScheduleIds.add(id);
+  } else {
+    selectedScheduleIds.delete(id);
+  }
+}
+
+export function toggleSelectAllSchedule(checked) {
+  cachedSchedule.forEach(i => {
+    if (i.status === 'AGENDADO') {
+      if (checked) selectedScheduleIds.add(i.id);
+      else selectedScheduleIds.delete(i.id);
+    }
+  });
+  renderScheduleCalendarTable();
+}
+
+export function selectAllScheduleItems(bool) {
+  toggleSelectAllSchedule(bool);
+  const masterCheck = document.getElementById('ft-sch-check-all');
+  if (masterCheck) masterCheck.checked = bool;
+}
+
+export function openBatchFromSelection() {
+  if (selectedScheduleIds.size === 0) {
+    alert('Selecione ao menos um repasse agendado com status AGENDADO para criar o lote.');
+    return;
+  }
+  openCreatePayoutBatchModal();
+}
+
+export function renderScheduleBatchesTable() {
+  const tbody = document.getElementById('ft-sch-tbody-batches');
+  if (!tbody) return;
+
+  if (cachedBatches.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">Nenhum lote de repasse registrado.</td></tr>';
+    return;
+  }
+
+  const batchStatusBadges = {
+    RASCUNHO: '<span class="badge bg-secondary">Rascunho</span>',
+    EM_VALIDACAO: '<span class="badge bg-warning text-dark">Em Validação</span>',
+    AGUARDANDO_APROVACAO: '<span class="badge bg-warning text-dark">Aguardando Aprovação</span>',
+    APROVADO: '<span class="badge bg-primary">Aprovado</span>',
+    EM_PROCESSAMENTO: '<span class="badge bg-info text-dark">Processando</span>',
+    ENVIADO_BANCO: '<span class="badge bg-info text-dark">Enviado Banco</span>',
+    PARCIAL: '<span class="badge bg-warning text-dark">Parcial</span>',
+    CONCLUIDO: '<span class="badge bg-success">Concluído</span>',
+    FALHA: '<span class="badge bg-danger">Falha</span>',
+    CANCELADO: '<span class="badge bg-dark">Cancelado</span>'
+  };
+
+  tbody.innerHTML = cachedBatches.map(b => {
+    return `
+      <tr>
+        <td class="fw-bold">${b.id}</td>
+        <td>
+          <div class="fw-semibold text-dark">${b.title}</div>
+          <span class="fs-xs text-muted">${b.producerId}</span>
+        </td>
+        <td>${b.scheduledDate}</td>
+        <td><span class="badge bg-light text-dark border">${b.totalItems} itens</span></td>
+        <td class="fw-bold text-dark">${formatBRL(b.totalAmount)}</td>
+        <td class="fw-bold text-success">${formatBRL(b.approvedAmount || 0)}</td>
+        <td>${batchStatusBadges[b.status] || b.status}</td>
+        <td><span class="fs-xs text-muted">${b.createdBy || 'Sistema'}</span></td>
+        <td><code class="fs-xs">${b.idempotencyKey || '—'}</code></td>
+        <td class="text-end">
+          <button class="btn btn-xs btn-primary fw-bold" onclick="window.viewPayoutBatchDetails('${b.id}')">
+            <i class="ph-eye me-1"></i> Detalhes &amp; Ações
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+export async function renderScheduleAuditTable() {
+  const tbody = document.getElementById('ft-sch-tbody-audit');
+  if (!tbody) return;
+
+  const res = await payoutScheduleGateway.getScheduleAuditLog();
+  const list = res.data || [];
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum registro de auditoria.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.slice(0, 30).map(entry => {
+    return `
+      <tr>
+        <td>${formatDate(entry.timestamp)}</td>
+        <td>
+          <span class="fw-semibold text-dark">${entry.actor?.name || 'Sistema'}</span>
+          <span class="badge bg-light text-dark border fs-xs ms-1">${entry.actor?.role || 'AUTO'}</span>
+        </td>
+        <td><span class="badge bg-secondary">${entry.entityType}</span></td>
+        <td><span class="badge bg-light text-primary border">${entry.action}</span></td>
+        <td class="fs-xs">${entry.summary}</td>
+        <td><code class="fs-xs">${entry.correlationId}</code></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+export function openSchedulePayoutModal(preselectedEventId) {
+  const select = document.getElementById('sch-input-event');
+  if (select) {
+    const events = cachedEvents.filter(e => e.producerId === currentProducerId);
+    select.innerHTML = events.map(e =>
+      `<option value="${e.eventId}" ${preselectedEventId === e.eventId ? 'selected' : ''}>
+        ${e.eventName} (#${e.eventId}) — Disp: ${formatBRL(e.balances.availableBalance)}
+      </option>`
+    ).join('');
+  }
+  const dateInput = document.getElementById('sch-input-duedate');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  const modalEl = document.getElementById('modal-schedule-payout');
+  if (modalEl && typeof bootstrap !== 'undefined') {
+    const m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    m.show();
+  }
+}
+
+export async function handleSchedulePayoutSubmit(e) {
+  e.preventDefault();
+  const eventId = document.getElementById('sch-input-event')?.value;
+  const amount = parseFloat(document.getElementById('sch-input-amount')?.value);
+  const dueDate = document.getElementById('sch-input-duedate')?.value;
+  const type = document.getElementById('sch-input-type')?.value;
+  const priority = document.getElementById('sch-input-priority')?.value;
+  const pix = document.getElementById('sch-input-pix')?.value;
+
+  const ev = cachedEvents.find(ev => String(ev.eventId) === String(eventId));
+
+  try {
+    const payload = {
+      producerId: currentProducerId,
+      producerName: ev?.producerName || 'Produtor Oficial',
+      eventId,
+      eventName: ev?.eventName || `Evento ${eventId}`,
+      amount,
+      dueDate,
+      type,
+      priority,
+      beneficiaryAccount: { pixKey: pix || '08123456000199', bankCode: '001', agency: '1502-4', account: '99201-0' }
+    };
+
+    const res = await payoutScheduleGateway.schedulePayout(payload, { name: 'Operador Financeiro', role: 'OPERADOR' });
+    if (res.ok) {
+      alert(`Repasse agendado com sucesso! ID: ${res.data.id}`);
+      const modalEl = document.getElementById('modal-schedule-payout');
+      if (modalEl && typeof bootstrap !== 'undefined') {
+        const m = bootstrap.Modal.getInstance(modalEl);
+        if (m) m.hide();
+      }
+      refreshScheduleData();
+    }
+  } catch (err) {
+    alert(`Erro ao agendar repasse: ${err.message}`);
+  }
+}
+
+export async function cancelScheduledPayout(scheduleId) {
+  const reason = prompt('Informe a justificativa do cancelamento:');
+  if (reason === null) return;
+  try {
+    await payoutScheduleGateway.cancelScheduledPayout(scheduleId, reason, { name: 'Operador Financeiro', role: 'OPERADOR' });
+    alert(`Agendamento ${scheduleId} cancelado com sucesso.`);
+    refreshScheduleData();
+  } catch (err) {
+    alert(`Erro ao cancelar: ${err.message}`);
+  }
+}
+
+export function openCreatePayoutBatchModal() {
+  const dateInput = document.getElementById('batch-input-date');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+  const titleInput = document.getElementById('batch-input-title');
+  if (titleInput) {
+    const count = selectedScheduleIds.size;
+    titleInput.value = `Lote de Repasse (${count} itens) — ${new Date().toLocaleDateString('pt-BR')}`;
+  }
+
+  const modalEl = document.getElementById('modal-create-payout-batch');
+  if (modalEl && typeof bootstrap !== 'undefined') {
+    const m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    m.show();
+  }
+}
+
+export async function handleCreatePayoutBatchSubmit(e) {
+  e.preventDefault();
+  const title = document.getElementById('batch-input-title')?.value;
+  const scheduledDate = document.getElementById('batch-input-date')?.value;
+  const itemIds = Array.from(selectedScheduleIds);
+
+  if (itemIds.length === 0) {
+    alert('Nenhum item selecionado para o lote.');
+    return;
+  }
+
+  try {
+    const createRes = await payoutScheduleGateway.createPayoutBatch({
+      producerId: currentProducerId,
+      title,
+      scheduledDate,
+      scheduleItemIds: itemIds
+    }, { name: 'Operador Financeiro', role: 'OPERADOR_FINANCEIRO' });
+
+    if (!createRes.ok) throw new Error(createRes.error || 'Erro ao criar lote.');
+
+    const batch = createRes.data;
+
+    const modalEl = document.getElementById('modal-create-payout-batch');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const m = bootstrap.Modal.getInstance(modalEl);
+      if (m) m.hide();
+    }
+
+    selectedScheduleIds.clear();
+
+    // Validação mandatória no Motor de Regras da Fase 26.17.9.5.6
+    await payoutScheduleGateway.validatePayoutBatch(batch.id, { name: 'Motor de Lotes', role: 'SISTEMA' });
+
+    await refreshScheduleData();
+    viewPayoutBatchDetails(batch.id);
+  } catch (err) {
+    alert(`Erro ao criar e validar lote: ${err.message}`);
+  }
+}
+
+export async function viewPayoutBatchDetails(batchId) {
+  const res = await payoutScheduleGateway.getPayoutBatchById(batchId);
+  if (!res.ok) {
+    alert(res.error || 'Lote não localizado.');
+    return;
+  }
+
+  const batch = res.data;
+  activeBatchDetails = batch;
+
+  const titleEl = document.getElementById('modal-batch-details-title');
+  if (titleEl) titleEl.innerHTML = `<i class="ph-stack me-1"></i> Lote ${batch.id} &bull; ${batch.title}`;
+
+  const summaryEl = document.getElementById('batch-details-summary-card');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="row g-2">
+        <div class="col-md-3">
+          <span class="fs-xs text-muted">Status do Lote:</span>
+          <div class="fw-bold fs-sm text-dark">${batch.status}</div>
+        </div>
+        <div class="col-md-3">
+          <span class="fs-xs text-muted">Data Programada:</span>
+          <div class="fw-bold fs-sm text-dark">${batch.scheduledDate}</div>
+        </div>
+        <div class="col-md-3">
+          <span class="fs-xs text-muted">Valor Total Solicitado:</span>
+          <div class="fw-bold fs-sm text-dark">${formatBRL(batch.totalAmount)}</div>
+        </div>
+        <div class="col-md-3">
+          <span class="fs-xs text-muted">Valor Aprovado p/ Pagamento:</span>
+          <div class="fw-bold fs-sm text-success">${formatBRL(batch.approvedAmount || 0)}</div>
+        </div>
+      </div>
+      <div class="row g-2 mt-2 pt-2 border-top">
+        <div class="col-md-4">
+          <span class="fs-xs text-muted">Criado Por (Maker):</span>
+          <div class="fw-semibold fs-xs text-dark">${batch.createdBy || 'Operador Financeiro'}</div>
+        </div>
+        <div class="col-md-4">
+          <span class="fs-xs text-muted">Aprovado Por (Checker):</span>
+          <div class="fw-semibold fs-xs text-primary">${batch.approvedBy || 'Pendente de Homologação'}</div>
+        </div>
+        <div class="col-md-4">
+          <span class="fs-xs text-muted">Idempotency Key:</span>
+          <div><code class="fs-xs">${batch.idempotencyKey || '—'}</code></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Tabela dos Itens
+  const tbody = document.getElementById('batch-details-items-tbody');
+  if (tbody) {
+    const decisionBadges = {
+      ALLOW: '<span class="badge bg-success">ALLOW</span>',
+      ALLOW_WITH_APPROVAL: '<span class="badge bg-warning text-dark">ALLOW_WITH_APPROVAL</span>',
+      ALLOW_PARTIAL: '<span class="badge bg-info text-dark">ALLOW_PARTIAL</span>',
+      HOLD: '<span class="badge bg-secondary">HOLD</span>',
+      BLOCK: '<span class="badge bg-danger">BLOCK</span>'
+    };
+
+    tbody.innerHTML = (batch.items || []).map(item => {
+      const reasons = (item.ruleReasons || []).join('; ') || 'Sem restrições';
+      const isRetryable = item.status === 'FALHA_TECNICA' && item.isRetryable;
+      return `
+        <tr>
+          <td class="fw-bold">${item.id}</td>
+          <td>
+            <div class="fw-semibold text-dark">${item.eventName}</div>
+            <span class="fs-xs text-muted">#${item.eventId}</span>
+          </td>
+          <td class="fw-bold text-dark">${formatBRL(item.amount)}</td>
+          <td>${decisionBadges[item.ruleDecision] || '<span class="badge bg-light text-dark border">Pendente</span>'}</td>
+          <td class="fw-bold text-success">${formatBRL(item.authorizedAmount || 0)}</td>
+          <td><span class="badge bg-light text-dark border">${item.status}</span></td>
+          <td class="fs-xs text-muted" style="max-width: 250px;">${reasons}</td>
+          <td class="text-end">
+            ${isRetryable ? `
+              <button class="btn btn-xs btn-outline-danger fw-bold" onclick="window.retryPayoutItem('${item.id}')">
+                <i class="ph-arrow-counter-clockwise me-1"></i> Retry Seguro
+              </button>
+            ` : '—'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Botões de Ação
+  const btnContainer = document.getElementById('batch-actions-buttons-container');
+  if (btnContainer) {
+    let btns = '';
+    if (['RASCUNHO', 'FALHA'].includes(batch.status)) {
+      btns += `
+        <button class="btn btn-sm btn-outline-primary fw-bold" onclick="window.validatePayoutBatch('${batch.id}')">
+          <i class="ph-cpu me-1"></i> Reavaliar Motor de Regras
+        </button>
+      `;
+    }
+    if (['AGUARDANDO_APROVACAO', 'PARCIAL', 'EM_VALIDACAO'].includes(batch.status)) {
+      btns += `
+        <button class="btn btn-sm btn-warning text-dark fw-bold" onclick="window.approvePayoutBatch('${batch.id}')">
+          <i class="ph-check-square me-1"></i> Homologar Lote (Maker/Checker)
+        </button>
+      `;
+    }
+    if (batch.status === 'APROVADO') {
+      btns += `
+        <button class="btn btn-sm btn-success fw-bold" onclick="window.processPayoutBatch('${batch.id}')">
+          <i class="ph-paper-plane-tilt me-1"></i> Processar Lote Bancário
+        </button>
+      `;
+    }
+    btnContainer.innerHTML = btns || '<span class="fs-xs text-muted">Lote em estado final ou em processamento bancário.</span>';
+  }
+
+  const modalEl = document.getElementById('modal-payout-batch-details');
+  if (modalEl && typeof bootstrap !== 'undefined') {
+    const m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    m.show();
+  }
+}
+
+export async function validatePayoutBatch(batchId) {
+  try {
+    await payoutScheduleGateway.validatePayoutBatch(batchId, { name: 'Operador Financeiro', role: 'OPERADOR' });
+    alert(`Lote ${batchId} revalidado com sucesso pelo Motor de Regras!`);
+    await refreshScheduleData();
+    viewPayoutBatchDetails(batchId);
+  } catch (err) {
+    alert(`Erro na validação: ${err.message}`);
+  }
+}
+
+export async function approvePayoutBatch(batchId) {
+  try {
+    const checkerActor = { name: 'Controladoria SafeSaff', role: 'CHECKER_DIRETORIA' };
+    await payoutScheduleGateway.approvePayoutBatch(batchId, checkerActor);
+    alert(`Lote ${batchId} homologado com sucesso! Saldo liberado para envio bancário.`);
+    await refreshScheduleData();
+    viewPayoutBatchDetails(batchId);
+  } catch (err) {
+    alert(`Erro ao aprovar lote: ${err.message}`);
+  }
+}
+
+export async function processPayoutBatch(batchId) {
+  try {
+    const res = await payoutScheduleGateway.processPayoutBatch(batchId, {
+      actor: { name: 'Operador de Repasses', role: 'OPERADOR' }
+    });
+    if (res.isIdempotentReplay) {
+      alert('[IDEMPOTÊNCIA] O lote já havia sido submetido! Retornando resposta gravada com segurança.');
+    } else {
+      alert(`Lote ${batchId} transmitido ao provedor bancário com sucesso!`);
+    }
+    await refreshScheduleData();
+    viewPayoutBatchDetails(batchId);
+  } catch (err) {
+    alert(`Erro no processamento bancário: ${err.message}`);
+  }
+}
+
+export async function submitSimulatedBankWebhook() {
+  const txid = document.getElementById('ft-sch-sim-txid')?.value?.trim();
+  const status = document.getElementById('ft-sch-sim-status')?.value;
+  const error = document.getElementById('ft-sch-sim-error')?.value;
+
+  if (!txid) {
+    alert('Informe o ID da Transação Bancária ou o ID do Item (Ex: BK-TRX-882910 ou PIT-1001).');
+    return;
+  }
+
+  try {
+    const res = await payoutScheduleGateway.processBankReturnWebhook({
+      bankTransactionId: txid,
+      payoutItemId: txid,
+      status,
+      errorCode: error || undefined,
+      errorMessage: error ? `Falha simulada: ${error}` : undefined
+    }, { name: 'Provedor Bancário Webhook', role: 'BANCO' });
+
+    alert(`Webhook bancário processado com sucesso! Item: ${res.data.id} -> Status: ${res.data.status}`);
+    await refreshScheduleData();
+    if (activeBatchDetails) {
+      viewPayoutBatchDetails(activeBatchDetails.id);
+    }
+  } catch (err) {
+    alert(`Erro ao processar retorno bancário: ${err.message}`);
+  }
+}
+
+export async function retryPayoutItem(itemId) {
+  try {
+    await payoutScheduleGateway.retryPayoutItem(itemId, { name: 'Operador de Repasse', role: 'OPERADOR' });
+    alert(`Reprocessamento seguro acionado para o item ${itemId}! Nova transação bancária gerada.`);
+    await refreshScheduleData();
+    if (activeBatchDetails) {
+      viewPayoutBatchDetails(activeBatchDetails.id);
+    }
+  } catch (err) {
+    alert(`Reprocessamento negado: ${err.message}`);
+  }
+}
+
 
 // Registro das funções globais para consumo no DOM inline
 if (typeof window !== 'undefined') {

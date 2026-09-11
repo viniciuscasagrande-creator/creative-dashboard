@@ -220,7 +220,8 @@
                             <ul class="nav-group-sub collapse">
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard" onclick="if(window.switchActiveView) { window.switchActiveView('financial-dashboard'); event.preventDefault(); }"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-event-transfers" onclick="if(window.switchActiveView) { window.switchActiveView('financial-event-transfers'); event.preventDefault(); }"><i class="ph-arrows-left-right me-2"></i> Gestão de Saldos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance" onclick="if(window.switchActiveView) { window.switchActiveView('financial-balance'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Conta Financeira</a></li>
+                                                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury" onclick="if(window.switchActiveView) { window.switchActiveView('treasury'); event.preventDefault(); }"><i class="ph-vault me-2 text-primary"></i> Tesouraria &amp; Bancos</a></li>
+<li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance" onclick="if(window.switchActiveView) { window.switchActiveView('financial-balance'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Conta Financeira</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass" onclick="if(window.switchActiveView) { window.switchActiveView('financial-repass'); event.preventDefault(); }"><i class="ph-arrow-up-right me-2"></i> Contas a Receber</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses" onclick="if(window.switchActiveView) { window.switchActiveView('financial-expenses'); event.preventDefault(); }"><i class="ph-trend-down me-2"></i> Contas a Pagar</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance" onclick="if(window.switchActiveView) { window.switchActiveView('cashflow-performance'); event.preventDefault(); }"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
@@ -1560,6 +1561,12 @@
                                                 <span class="badge rounded-pill ms-1 text-white" id="ft-rules-count-badge" style="background-color: #7c3aed;">3</span>
                                             </a>
                                         </li>
+                                        <li class="nav-item">
+                                            <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTransferTab('schedule'); event.preventDefault();" id="ft-tab-link-schedule">
+                                                <i class="ph-calendar-check me-1"></i> Agenda &amp; Lotes
+                                                <span class="badge rounded-pill ms-1 text-white" id="ft-schedule-count-badge" style="background-color: #0284c7;">4</span>
+                                            </a>
+                                        </li>
                                     </ul>
                                     <div class="d-flex align-items-center gap-2">
                                         <input type="text" class="form-control form-control-sm" id="ft-events-search" placeholder="Filtrar eventos..." oninput="window.filterTransferEvents(this.value)" style="width: 180px;">
@@ -2471,7 +2478,250 @@
                                         </div>
                                     </div>
                                 </div>
+                            
+                            <!-- PANE 8: Agenda Financeira, Repasse Automático e Lotes de Repasse (Fase 26.17.9.5.7) -->
+                            <div class="card-body p-3" id="ft-pane-schedule" style="display:none;">
+                                <!-- Top Banner da Agenda Financeira -->
+                                <div class="card shadow-sm border-0 mb-3" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 5px solid #0284c7 !important;">
+                                    <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="rounded-circle bg-white shadow-sm p-2 text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; color: #0284c7;">
+                                                <i class="ph-calendar-check fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark fs-sm d-flex align-items-center gap-2">
+                                                    Agenda Financeira, Repasse Automático &amp; Lotes de Repasse
+                                                    <span class="badge text-white fs-xs" style="background-color: #0284c7;">Fase 26.17.9.5.7</span>
+                                                    <span class="badge bg-light text-dark border fs-xs">Maker / Checker &bull; Idempotência</span>
+                                                </div>
+                                                <div class="text-secondary fs-xs mt-1">
+                                                    Ciclo Completo: <strong>Agendamento</strong> &rarr; <strong>Reavaliação no Motor de Regras</strong> &rarr; <strong>Reserva</strong> &rarr; <strong>Aprovação em Lote</strong> &rarr; <strong>Envio Bancário</strong> &rarr; <strong>Retorno / Conciliação</strong> &rarr; <strong>Reprocessamento Seguro</strong>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <button class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1" onclick="window.refreshScheduleData()" style="font-size: 12px;">
+                                                <i class="ph-arrows-clockwise"></i> Atualizar
+                                            </button>
+                                            <button class="btn btn-sm btn-info text-white fw-bold d-flex align-items-center gap-1" onclick="window.openCreatePayoutBatchModal()" style="font-size: 12px; background-color: #0284c7; border-color: #0284c7;">
+                                                <i class="ph-stack"></i> Criar Lote
+                                            </button>
+                                            <button class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1" onclick="window.openSchedulePayoutModal()" style="font-size: 12px; background-color: #00a65a; border-color: #008d4c;">
+                                                <i class="ph-calendar-plus"></i> Novo Agendamento
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 6 KPIs da Agenda & Lotes -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Total Agendado</span>
+                                            <div class="fs-5 fw-bold text-dark mt-1" id="ft-sch-kpi-total-amount">R$ 0,00</div>
+                                            <span class="fs-xs text-muted" id="ft-sch-kpi-total-count">0 agendamentos</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Vencimento Hoje</span>
+                                            <div class="fs-5 fw-bold text-primary mt-1" id="ft-sch-kpi-today-amount">R$ 0,00</div>
+                                            <span class="fs-xs text-muted" id="ft-sch-kpi-today-count">0 itens hoje</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Próximos 7 Dias</span>
+                                            <div class="fs-5 fw-bold text-info mt-1" id="ft-sch-kpi-week-amount">R$ 0,00</div>
+                                            <span class="fs-xs text-muted">Janela prioritária</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Lotes Pendentes</span>
+                                            <div class="fs-5 fw-bold text-warning mt-1" id="ft-sch-kpi-batches-pending">0</div>
+                                            <span class="fs-xs text-muted">Aguardando Aprovação</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Lotes Liquidados</span>
+                                            <div class="fs-5 fw-bold text-success mt-1" id="ft-sch-kpi-batches-settled">0</div>
+                                            <span class="fs-xs text-muted">Concluídos com retorno</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4 col-xl-2">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Falhas / Retry Seguro</span>
+                                            <div class="fs-5 fw-bold text-danger mt-1" id="ft-sch-kpi-retryable">0</div>
+                                            <span class="fs-xs text-muted">Rejeições técnicas</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-abas da Agenda Financeira -->
+                                <div class="card border shadow-none mb-3">
+                                    <div class="card-header bg-light border-bottom p-2">
+                                        <ul class="nav nav-pills" id="ft-schedule-subtabs" style="gap: 6px;">
+                                            <li class="nav-item">
+                                                <button class="nav-link active py-1 px-3 fs-xs fw-bold" onclick="window.switchScheduleSubTab('calendar')" id="ft-sch-btn-subtab-calendar">
+                                                    <i class="ph-calendar me-1"></i> Agenda de Repasses
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchScheduleSubTab('batches')" id="ft-sch-btn-subtab-batches">
+                                                    <i class="ph-stack me-1"></i> Central de Lotes
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchScheduleSubTab('webhook')" id="ft-sch-btn-subtab-webhook">
+                                                    <i class="ph-plugs me-1"></i> Retorno Bancário &amp; Webhook
+                                                </button>
+                                            </li>
+                                            <li class="nav-item">
+                                                <button class="nav-link py-1 px-3 fs-xs fw-bold" onclick="window.switchScheduleSubTab('audit')" id="ft-sch-btn-subtab-audit">
+                                                    <i class="ph-shield-check me-1"></i> Trilha de Auditoria &amp; Idempotência
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="card-body p-3">
+                                        <!-- SUB-PANE 1: Agenda de Repasses -->
+                                        <div id="ft-sch-subpane-calendar">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <span class="fw-bold text-dark fs-sm">Repasses Agendados &bull; Visão Operacional</span>
+                                                    <div class="text-muted fs-xs">Selecione itens para agrupar em um lote de repasse automático ou manual</div>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-xs btn-outline-secondary" onclick="window.selectAllScheduleItems(true)">Marcar Todos</button>
+                                                    <button class="btn btn-xs btn-outline-secondary" onclick="window.selectAllScheduleItems(false)">Desmarcar</button>
+                                                    <button class="btn btn-xs btn-primary fw-bold" onclick="window.openBatchFromSelection()">
+                                                        <i class="ph-stack-plus me-1"></i> Agrupar Selecionados em Lote
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th style="width: 40px;"><input type="checkbox" id="ft-sch-check-all" onchange="window.toggleSelectAllSchedule(this.checked)"></th>
+                                                            <th>ID</th>
+                                                            <th>Evento</th>
+                                                            <th>Data Vencimento</th>
+                                                            <th>Tipo</th>
+                                                            <th>Prioridade</th>
+                                                            <th>Valor (BRL)</th>
+                                                            <th>Conta Beneficiária</th>
+                                                            <th>Status</th>
+                                                            <th class="text-end">Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="ft-sch-tbody-calendar" class="fs-xs">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 2: Central de Lotes -->
+                                        <div id="ft-sch-subpane-batches" style="display:none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <span class="fw-bold text-dark fs-sm">Lotes de Repasse Programados</span>
+                                                    <div class="text-muted fs-xs">Ciclo de vida, validação do motor de regras, aprovação Maker/Checker e liquidação bancária</div>
+                                                </div>
+                                                <button class="btn btn-xs btn-info text-white fw-bold" onclick="window.openCreatePayoutBatchModal()" style="background-color: #0284c7;">
+                                                    <i class="ph-plus-circle me-1"></i> Novo Lote
+                                                </button>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th>ID Lote</th>
+                                                            <th>Título</th>
+                                                            <th>Data Programada</th>
+                                                            <th>Itens</th>
+                                                            <th>Valor Total</th>
+                                                            <th>Valor Aprovado</th>
+                                                            <th>Status</th>
+                                                            <th>Criado por</th>
+                                                            <th>Idempotency Key</th>
+                                                            <th class="text-end">Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="ft-sch-tbody-batches" class="fs-xs">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 3: Retorno Bancário & Webhook Simulator -->
+                                        <div id="ft-sch-subpane-webhook" style="display:none;">
+                                            <div class="card border p-3 mb-3 bg-light">
+                                                <h6 class="fw-bold text-dark mb-1"><i class="ph-plugs me-1 text-primary"></i> Simulador de Retorno Bancário / Webhook de Liquidação</h6>
+                                                <div class="text-secondary fs-xs mb-3">
+                                                    Simula a resposta do provedor bancário (Pix/CNAB) para conciliação contábil automática e baixa nas reservas de saldo.
+                                                </div>
+                                                <div class="row g-3">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label fs-xs fw-bold">ID da Transação Bancária / Item</label>
+                                                        <input type="text" class="form-control form-control-sm" id="ft-sch-sim-txid" placeholder="Ex: BK-TRX-882910 ou PIT-1001">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label fs-xs fw-bold">Status Bancário de Retorno</label>
+                                                        <select class="form-select form-select-sm" id="ft-sch-sim-status">
+                                                            <option value="PAGO">PAGO (Liquidado com sucesso)</option>
+                                                            <option value="REJEITADO">REJEITADO (Falha técnica / Retry)</option>
+                                                            <option value="DEVOLVIDO">DEVOLVIDO (Estorno de Saldo)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label fs-xs fw-bold">Código de Ocorrência / Erro</label>
+                                                        <select class="form-select form-select-sm" id="ft-sch-sim-error">
+                                                            <option value="">Nenhum (Sucesso)</option>
+                                                            <option value="TIMEOUT">TIMEOUT (Falha Técnica - Elegível a Retry)</option>
+                                                            <option value="COMMUNICATION_FAIL">COMMUNICATION_FAIL (Falha Técnica)</option>
+                                                            <option value="ERR_ACCOUNT_INVALID">ERR_ACCOUNT_INVALID (Dados Inválidos - Sem Retry)</option>
+                                                            <option value="ERR_COMPLIANCE">ERR_COMPLIANCE (Compliance - Sem Retry)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3 d-flex align-items-end">
+                                                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="window.submitSimulatedBankWebhook()">
+                                                            <i class="ph-paper-plane-tilt me-1"></i> Disparar Webhook
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUB-PANE 4: Trilha de Auditoria & Idempotência -->
+                                        <div id="ft-sch-subpane-audit" style="display:none;">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th>Data / Hora</th>
+                                                            <th>Ator</th>
+                                                            <th>Tipo</th>
+                                                            <th>Ação</th>
+                                                            <th>Resumo</th>
+                                                            <th>Correlation ID</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="ft-sch-tbody-audit" class="fs-xs">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+</div>
                         </div>
                     </section>
 
@@ -3219,6 +3469,314 @@
                             </div>
                         </div>
                     </section>
+
+                    <!-- SEÇÃO: TESOURARIA OPERACIONAL & BANCOS (Fase 26.17.9.4.6) -->
+                    <section id="view-treasury" class="page-section" style="display:none;">
+                        <!-- Top Action Bar -->
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Tesouraria Operacional &amp; Bancos</h5>
+                                <div class="text-muted fs-xs">Financeiro &bull; Gestão de contas bancárias reais, pagamentos PIX instantâneos, remessas CNAB 240/400 e conciliação bancária</div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center w-100 w-md-auto">
+                                <button class="btn btn-outline-light text-dark border fw-bold d-flex align-items-center gap-1" onclick="window.refreshTreasuryData()" style="height: 36px; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                                    <i class="ph-arrows-clockwise"></i> Atualizar
+                                </button>
+                                <button class="btn btn-outline-primary fw-bold d-flex align-items-center gap-1" onclick="window.openNewBankAccountModal()" style="height: 36px; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                                    <i class="ph-bank"></i> Nova Conta Bancária
+                                </button>
+                                <button class="btn btn-info text-white fw-bold d-flex align-items-center gap-1" onclick="window.openCreateTreasuryBatchModal()" style="height: 36px; padding: 6px 12px; border-radius: 6px; font-size: 13px; background-color: #0284c7; border-color: #0284c7;">
+                                    <i class="ph-stack"></i> Criar Lote CNAB
+                                </button>
+                                <button class="btn btn-success fw-bold d-flex align-items-center gap-1" onclick="window.openNewPixPaymentModal()" style="height: 36px; padding: 6px 14px; border-radius: 6px; font-size: 13px; background-color: #00a65a; border-color: #008d4c;">
+                                    <i class="ph-paper-plane-tilt"></i> Novo Pagamento PIX
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Banner de Separação Tríplice de Contas -->
+                        <div class="card shadow-sm mb-3 border-0" style="background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%); border-left: 5px solid #3b82f6 !important;">
+                            <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="rounded-circle bg-white shadow-sm p-2 text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                        <i class="ph-shield-check fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark fs-sm d-flex align-items-center gap-2">
+                                            Separação Tríplice Mandatória &bull; Governança Financeira SafeSaff
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xs">Fase 26.17.9.4.6</span>
+                                        </div>
+                                        <div class="text-secondary fs-xs mt-1">
+                                            <strong>Conta Contábil (Ledger)</strong>: propriedade econômica &bull; 
+                                            <strong>Conta Bancária Física</strong>: onde os fundos reais residem (Itaú, BB, Bradesco) &bull; 
+                                            <strong>Saldo por Evento</strong>: sub-contas virtuais com reserva para despesas e repasses.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success text-white px-3 py-2 fs-xs fw-semibold shadow-sm d-flex align-items-center gap-1">
+                                        <i class="ph-lock-key fs-sm"></i> Maker / Checker Ativo
+                                    </span>
+                                    <span class="badge bg-white text-muted border px-2 py-2 fs-xs">
+                                        <i class="ph-check-circle text-success me-1"></i> Anti-Duplicidade
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6 KPIs Consolidados da Tesouraria -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #3b82f6 !important;">
+                                    <span class="fs-xs fw-bold text-uppercase text-muted">Saldo Bancário Total</span>
+                                    <h5 class="fw-bold mb-0 mt-2 text-dark" id="trz-kpi-total-balance">R$ 0,00</h5>
+                                    <span class="fs-xs text-muted mt-1">Todas as contas</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #10b981 !important; background: #f0fdf4;">
+                                    <span class="fs-xs fw-bold text-uppercase text-success">Disponível em Bancos</span>
+                                    <h5 class="fw-bold mb-0 mt-2 text-success" id="trz-kpi-avail-balance">R$ 0,00</h5>
+                                    <span class="fs-xs text-muted mt-1">Livre para pagamentos</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #f59e0b !important;">
+                                    <span class="fs-xs fw-bold text-uppercase text-muted">Saídas Hoje</span>
+                                    <h5 class="fw-bold mb-0 mt-2 text-dark" id="trz-kpi-today-outflow">R$ 0,00</h5>
+                                    <span class="fs-xs text-muted mt-1">Pagamentos projetados</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #8b5cf6 !important;">
+                                    <span class="fs-xs fw-bold text-uppercase text-muted">PIX Pendentes</span>
+                                    <h5 class="fw-bold mb-0 mt-2 text-dark" id="trz-kpi-pending-pix">0</h5>
+                                    <span class="fs-xs text-muted mt-1">Aguardando aprovação/envio</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #06b6d4 !important;">
+                                    <span class="fs-xs fw-bold text-uppercase text-muted">Lotes CNAB</span>
+                                    <h5 class="fw-bold mb-0 mt-2 text-dark" id="trz-kpi-pending-batches">0</h5>
+                                    <span class="fs-xs text-muted mt-1">Remessas em aberto</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <div class="card h-100 shadow-sm border-0 p-3" style="border-top: 3px solid #64748b !important;">
+                                    <span class="fs-xs fw-bold text-uppercase text-muted">Contas Ativas</span>
+                                    <h5 class="fw-bold mb-0 mt-2 text-dark" id="trz-kpi-active-accounts">0</h5>
+                                    <span class="fs-xs text-muted mt-1">Instituições integradas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Principal com Abas da Tesouraria -->
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-transparent border-bottom p-0">
+                                <ul class="nav nav-tabs border-0 mb-0 px-3 pt-2" id="trz-main-tabs" style="gap: 4px;">
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link submenu-link tab border-0 active py-2" onclick="window.switchTreasuryTab('dashboard'); event.preventDefault();" id="trz-tab-link-dashboard">
+                                            <i class="ph-chart-pie me-1"></i> Dashboard da Tesouraria
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTreasuryTab('accounts'); event.preventDefault();" id="trz-tab-link-accounts">
+                                            <i class="ph-bank me-1"></i> Contas Bancárias
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTreasuryTab('pix'); event.preventDefault();" id="trz-tab-link-pix">
+                                            <i class="ph-paper-plane-tilt me-1"></i> Pagamentos PIX
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTreasuryTab('batches'); event.preventDefault();" id="trz-tab-link-batches">
+                                            <i class="ph-stack me-1"></i> Pagamentos em Lote &amp; CNAB
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTreasuryTab('reconciliation'); event.preventDefault();" id="trz-tab-link-reconciliation">
+                                            <i class="ph-file-arrow-up me-1"></i> Retorno Bancário &amp; Conciliação
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTreasuryTab('audit'); event.preventDefault();" id="trz-tab-link-audit">
+                                            <i class="ph-shield-check me-1"></i> Trilha de Auditoria
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- PANE 1: Dashboard da Tesouraria -->
+                            <div class="card-body p-3" id="trz-pane-dashboard">
+                                <h6 class="fw-bold text-dark fs-xs text-uppercase mb-2">Posição Consolidada por Instituição Financeira</h6>
+                                <div class="row g-2 mb-4" id="trz-bank-accounts-cards">
+                                    <!-- Renderizado dinamicamente -->
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold text-dark fs-xs text-uppercase mb-0">Extrato Recente de Movimentações Bancárias</h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Data / Hora</th>
+                                                <th>Método</th>
+                                                <th>Favorecido / Descrição</th>
+                                                <th>Valor</th>
+                                                <th>Status</th>
+                                                <th>Transação Bancária</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="trz-tbody-recent-movements" class="fs-xs">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- PANE 2: Contas Bancárias Reais -->
+                            <div class="card-body p-3" id="trz-pane-accounts" style="display:none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="fw-bold text-dark fs-sm">Central de Contas Bancárias do Produtor &amp; SafeSaff</span>
+                                        <div class="text-muted fs-xs">Dados bancários reais cadastrados com mascaramento de segurança e fluxo de alteração de alto risco</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary fw-bold" onclick="window.openNewBankAccountModal()">
+                                        <i class="ph-plus-circle me-1"></i> Nova Conta
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Banco</th>
+                                                <th>Agência</th>
+                                                <th>Conta (Mascarada)</th>
+                                                <th>Tipo</th>
+                                                <th>Finalidade</th>
+                                                <th>Titular / CNPJ</th>
+                                                <th>Chave PIX</th>
+                                                <th>Saldo Disponível</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="trz-tbody-accounts" class="fs-xs">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- PANE 3: Pagamentos PIX -->
+                            <div class="card-body p-3" id="trz-pane-pix" style="display:none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="fw-bold text-dark fs-sm">Pagamentos PIX Instantâneos</span>
+                                        <div class="text-muted fs-xs">Ciclo de vida formal: Emissão &rarr; Validação Anti-Duplicidade &rarr; Aprovação de Alçada &rarr; Transmissão E2E</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-success fw-bold" onclick="window.openNewPixPaymentModal()" style="background-color: #00a65a; border-color: #008d4c;">
+                                        <i class="ph-paper-plane-tilt me-1"></i> Novo Pagamento PIX
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Favorecido / Chave</th>
+                                                <th>Valor</th>
+                                                <th>Data Agendada</th>
+                                                <th>Status</th>
+                                                <th>Criado por</th>
+                                                <th>Aprovado por</th>
+                                                <th>EndToEnd ID</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="trz-tbody-pix" class="fs-xs">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- PANE 4: Pagamentos em Lote & CNAB -->
+                            <div class="card-body p-3" id="trz-pane-batches" style="display:none;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="fw-bold text-dark fs-sm">Lotes de Pagamento &amp; Remessa CNAB 240</span>
+                                        <div class="text-muted fs-xs">Agrupamento em lote, validação de alçadas Maker/Checker e geração de arquivos FEBRABAN</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-info text-white fw-bold" onclick="window.openCreateTreasuryBatchModal()" style="background-color: #0284c7;">
+                                        <i class="ph-stack me-1"></i> Novo Lote CNAB
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>ID Lote</th>
+                                                <th>Título</th>
+                                                <th>Banco de Origem</th>
+                                                <th>Itens</th>
+                                                <th>Valor Total</th>
+                                                <th>Status</th>
+                                                <th>Arquivo Remessa</th>
+                                                <th class="text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="trz-tbody-batches" class="fs-xs">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- PANE 5: Retorno Bancário & Conciliação -->
+                            <div class="card-body p-3" id="trz-pane-reconciliation" style="display:none;">
+                                <div class="card border p-3 mb-3 bg-light">
+                                    <h6 class="fw-bold text-dark mb-1"><i class="ph-file-arrow-up me-1 text-primary"></i> Processador de Arquivos de Retorno CNAB 240 / 400</h6>
+                                    <div class="text-secondary fs-xs mb-3">
+                                        Faça upload do arquivo <code>.RET</code> fornecido pelo banco para leitura de ocorrências (00 = Pago, 03 = Rejeição), baixa automática de contas e conciliação bancária.
+                                    </div>
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-6">
+                                            <input type="file" class="form-control form-control-sm" id="trz-cnab-retorno-file" accept=".ret,.txt,.rem" onchange="window.handleCnabRetornoUpload(event)">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span class="fs-xs text-muted"><i class="ph-info me-1"></i> Suporta layouts bancários FEBRABAN 240 e CNAB 400 padrão de todos os bancos integrados.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PANE 6: Trilha de Auditoria -->
+                            <div class="card-body p-3" id="trz-pane-audit" style="display:none;">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light fs-xs text-uppercase text-muted">
+                                            <tr>
+                                                <th>Data / Hora</th>
+                                                <th>Ator</th>
+                                                <th>Entidade</th>
+                                                <th>Ação</th>
+                                                <th>Resumo</th>
+                                                <th>Correlation ID</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="trz-tbody-audit" class="fs-xs">
+                                            <!-- Renderizado dinamicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
 
                     <!-- MODAL: FORNECEDOR 360° -->
                     <div class="modal fade" id="modal-supplier-360" tabindex="-1" aria-hidden="true">
@@ -17818,5 +18376,373 @@ Como podemos te ajudar hoje?
         </div>
     </div>
 
+
+    <!-- MODAL: Agendar Repasse (Fase 26.17.9.5.7) -->
+    <div class="modal fade" id="modal-schedule-payout" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-calendar-plus me-1"></i> Novo Agendamento de Repasse</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form id="form-schedule-payout" onsubmit="window.handleSchedulePayoutSubmit(event)">
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Evento de Origem *</label>
+                            <select class="form-select form-select-sm" id="sch-input-event" required>
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Valor (R$) *</label>
+                                <input type="number" step="0.01" min="1" class="form-control form-control-sm" id="sch-input-amount" required placeholder="0.00">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Data de Vencimento *</label>
+                                <input type="date" class="form-control form-control-sm" id="sch-input-duedate" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Tipo de Repasse</label>
+                                <select class="form-select form-select-sm" id="sch-input-type">
+                                    <option value="PAYOUT_AUTOMATIC">Repasse Automático Programado</option>
+                                    <option value="PAYOUT_MANUAL">Repasse Manual Solicitado</option>
+                                    <option value="PAYOUT_URGENT">Repasse Emergencial / Prioritário</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Prioridade</label>
+                                <select class="form-select form-select-sm" id="sch-input-priority">
+                                    <option value="NORMAL">Normal</option>
+                                    <option value="ALTA">Alta</option>
+                                    <option value="CRITICA">Crítica</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Chave PIX / Favorecido</label>
+                            <input type="text" class="form-control form-control-sm" id="sch-input-pix" placeholder="08.123.456/0001-99 (CNPJ Padrão)">
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-success fw-bold"><i class="ph-check me-1"></i> Agendar Repasse</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Criar Lote de Repasse (Fase 26.17.9.5.7) -->
+    <div class="modal fade" id="modal-create-payout-batch" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white py-2 px-3" style="background-color: #0284c7 !important;">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-stack me-1"></i> Criar Lote de Repasse</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form id="form-create-payout-batch" onsubmit="window.handleCreatePayoutBatchSubmit(event)">
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Título do Lote *</label>
+                            <input type="text" class="form-control form-control-sm" id="batch-input-title" required placeholder="Ex: Lote Diário Repasses Programados - Seg 12/09">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Data Programada de Execução *</label>
+                            <input type="date" class="form-control form-control-sm" id="batch-input-date" required>
+                        </div>
+                        <div class="alert alert-info py-2 px-3 fs-xs mb-3">
+                            <i class="ph-info me-1"></i> Os itens selecionados serão vinculados a este lote e submetidos à <strong>reavaliação individual mandatória</strong> no Motor Central de Regras da Fase 26.17.9.5.6.
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-primary fw-bold" style="background-color: #0284c7; border-color: #0284c7;">
+                                <i class="ph-check-circle me-1"></i> Criar &amp; Validar Lote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Detalhes & Governança do Lote (Fase 26.17.9.5.7) -->
+    <div class="modal fade" id="modal-payout-batch-details" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold fs-sm" id="modal-batch-details-title"><i class="ph-stack me-1"></i> Detalhes do Lote de Repasse</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <!-- Resumo Executivo do Lote -->
+                    <div class="card bg-light border-0 p-3 mb-3" id="batch-details-summary-card">
+                        <!-- Renderizado dinamicamente -->
+                    </div>
+
+                    <!-- Tabela dos Itens do Lote com Decisão do Motor de Regras -->
+                    <h6 class="fw-bold text-dark fs-xs text-uppercase mb-2">Itens do Lote &bull; Avaliação do Motor de Regras</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light fs-xs text-uppercase text-muted">
+                                <tr>
+                                    <th>Item ID</th>
+                                    <th>Evento</th>
+                                    <th>Valor Solicitado</th>
+                                    <th>Decisão Motor</th>
+                                    <th>Valor Aprovado</th>
+                                    <th>Status Atual</th>
+                                    <th>Motivos / Avisos</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-details-items-tbody" class="fs-xs">
+                                <!-- Renderizado dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Rodapé de Ações de Governança -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div class="text-muted fs-xs" id="batch-maker-checker-notice">
+                            <i class="ph-shield-check me-1 text-primary"></i> <strong>Governança Maker/Checker:</strong> O aprovador deve ser diferente do criador do lote.
+                        </div>
+                        <div class="d-flex gap-2" id="batch-actions-buttons-container">
+                            <!-- Botões dinâmicos de Validação, Aprovação Maker/Checker e Processamento -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Nova Conta Bancária (Fase 26.17.9.4.6) -->
+    <div class="modal fade" id="modal-treasury-account-create" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-bank me-1"></i> Cadastrar Nova Conta Bancária</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form id="form-treasury-account-create" onsubmit="window.handleNewBankAccountSubmit(event)">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs fw-bold">Cód. Banco *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-bankcode" required placeholder="001">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fs-xs fw-bold">Nome do Banco *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-bankname" required placeholder="Banco do Brasil">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs fw-bold">Agência *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-agency" required placeholder="1502-4">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Conta Corrente *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-account" required placeholder="99201">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fs-xs fw-bold">Dígito</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-digit" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Titular da Conta *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-holder" required placeholder="DiskIngressos Eventos Ltda">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">CPF/CNPJ do Titular *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-taxid" required placeholder="08.123.456/0001-99">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Finalidade da Conta</label>
+                                <select class="form-select form-select-sm" id="tr-acc-purpose">
+                                    <option value="OPERACIONAL">Operacional</option>
+                                    <option value="REPASSES">Repasses a Produtores</option>
+                                    <option value="ARRECADACAO">Arrecadação de Ingressos</option>
+                                    <option value="RESERVA">Reserva de Emergência</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Saldo Inicial (R$)</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" id="tr-acc-balance" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label fs-xs fw-bold">Chave PIX Principal</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-acc-pixkey" placeholder="08123456000199">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs fw-bold">Tipo Chave</label>
+                                <select class="form-select form-select-sm" id="tr-acc-pixtype">
+                                    <option value="CNPJ">CNPJ</option>
+                                    <option value="CPF">CPF</option>
+                                    <option value="EMAIL">E-mail</option>
+                                    <option value="PHONE">Telefone</option>
+                                    <option value="EVP">Chave Aleatória (EVP)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-primary fw-bold"><i class="ph-check me-1"></i> Cadastrar Conta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Solicitação de Alteração de Alto Risco (Fase 26.17.9.4.6) -->
+    <div class="modal fade" id="modal-treasury-account-change" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning text-dark py-2 px-3">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-shield-warning me-1"></i> Alteração de Domicílio Bancário / PIX (Alto Risco)</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form id="form-treasury-account-change" onsubmit="window.handleRequestAccountChangeSubmit(event)">
+                        <input type="hidden" id="tr-chg-acc-id">
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Conta Bancária de Origem</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="tr-chg-acc-bank" readonly>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Nova Chave PIX (se aplicável)</label>
+                            <input type="text" class="form-control form-control-sm" id="tr-chg-new-pix" placeholder="Nova chave PIX...">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Novo Número de Conta (se aplicável)</label>
+                            <input type="text" class="form-control form-control-sm" id="tr-chg-new-acc" placeholder="Nova conta...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Justificativa Formal *</label>
+                            <textarea class="form-control form-control-sm" id="tr-chg-reason" rows="2" required placeholder="Motivo documentado da alteração cadastral..."></textarea>
+                        </div>
+                        <div class="alert alert-warning py-2 px-3 fs-xs mb-3">
+                            <i class="ph-warning me-1"></i> Esta operação altera dados bancários de alto risco e exige <strong>aprovação de alçada de segurança (Maker/Checker)</strong> antes de ser efetivada.
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-warning fw-bold text-dark"><i class="ph-check me-1"></i> Submeter Solicitação</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Novo Pagamento PIX (Fase 26.17.9.4.6) -->
+    <div class="modal fade" id="modal-treasury-pix-create" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white py-2 px-3" style="background-color: #00a65a !important;">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-paper-plane-tilt me-1"></i> Emitir Pagamento Instantâneo PIX</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form id="form-treasury-pix-create" onsubmit="window.handleNewPixPaymentSubmit(event)">
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Conta Bancária de Débito (Origem) *</label>
+                            <select class="form-select form-select-sm" id="tr-pix-origin-acc" required>
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Favorecido (Nome / Razão Social) *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-pix-dest-name" required placeholder="Nome do favorecido">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">CPF/CNPJ do Favorecido *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-pix-dest-taxid" required placeholder="00.000.000/0000-00">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-8">
+                                <label class="form-label fs-xs fw-bold">Chave PIX de Destino *</label>
+                                <input type="text" class="form-control form-control-sm" id="tr-pix-dest-key" required placeholder="Chave PIX...">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs fw-bold">Tipo Chave</label>
+                                <select class="form-select form-select-sm" id="tr-pix-dest-type">
+                                    <option value="CNPJ">CNPJ</option>
+                                    <option value="CPF">CPF</option>
+                                    <option value="EMAIL">E-mail</option>
+                                    <option value="PHONE">Telefone</option>
+                                    <option value="EVP">Aleatória</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Valor (R$) *</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="tr-pix-amount" required placeholder="0.00">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs fw-bold">Data de Pagamento *</label>
+                                <input type="date" class="form-control form-control-sm" id="tr-pix-date" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Descrição / Finalidade</label>
+                            <input type="text" class="form-control form-control-sm" id="tr-pix-desc" placeholder="Ex: Pagamento Fornecedor Palco - NF 1234">
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-success fw-bold"><i class="ph-check me-1"></i> Criar Ordem PIX</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Criar Lote de Pagamento Tesouraria (Fase 26.17.9.4.6) -->
+    <div class="modal fade" id="modal-treasury-batch-create" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white py-2 px-3" style="background-color: #0284c7 !important;">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-stack me-1"></i> Criar Lote de Pagamento CNAB</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form id="form-treasury-batch-create" onsubmit="window.handleCreateTreasuryBatchSubmit(event)">
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Conta Bancária de Origem *</label>
+                            <select class="form-select form-select-sm" id="tr-batch-origin-acc" required>
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Título do Lote *</label>
+                            <input type="text" class="form-control form-control-sm" id="tr-batch-title" required placeholder="Lote Diário de Pagamentos Fornecedores">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Data Programada *</label>
+                            <input type="date" class="form-control form-control-sm" id="tr-batch-date" required>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-primary fw-bold" style="background-color: #0284c7; border-color: #0284c7;">
+                                <i class="ph-check-circle me-1"></i> Criar Lote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
