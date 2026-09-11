@@ -135,6 +135,10 @@ export function initLocalBalanceStore(events = []) {
 }
 
 export const eventBalanceService = {
+  getLocalBalanceStore() {
+    return getLocalBalanceStore();
+  },
+
   /**
    * Obtém a visão consolidada de saldos do produtor (Fase 26.17.9.5)
    */
@@ -196,15 +200,20 @@ export const eventBalanceService = {
   /**
    * Lista os saldos de todos os eventos de um produtor
    */
-  async getEventsBalances(producerId = 'prod-1') {
+  async getEvents(params = 'prod-1') {
+    const producerId = typeof params === 'string' ? params : (params?.producerId || 'prod-1');
     const res = await eventBalanceGateway.getEvents({ producerId });
     if (res.ok && res.data && Array.isArray(res.data)) {
       return { ok: true, isLiveApi: true, data: res.data };
     }
 
     const store = getLocalBalanceStore();
-    const list = store.filter(e => !producerId || e.producerId === producerId);
+    const list = store.filter(e => !producerId || producerId === 'todos' || e.producerId === producerId);
     return { ok: true, isLiveApi: false, data: list };
+  },
+
+  async getEventsBalances(producerId = 'prod-1') {
+    return this.getEvents(producerId);
   },
 
   /**

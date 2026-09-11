@@ -574,17 +574,23 @@ export const balanceTransferService = {
   /**
    * Lista o histórico de transferências
    */
-  async getTransfersHistory(producerId = null) {
+  async getTransfers(params = {}) {
+    const producerId = typeof params === 'string' ? params : params?.producerId;
+    const eventId = typeof params === 'object' ? params?.eventId : null;
+    const status = typeof params === 'object' ? params?.status : null;
+
     const res = await eventBalanceGateway.getTransfers({ producerId });
-    if (res.ok && res.data && Array.isArray(res.data)) {
-      return { ok: true, isLiveApi: true, data: res.data };
-    }
+    let list = (res.ok && res.data && Array.isArray(res.data)) ? res.data : LOCAL_TRANSFERS;
 
-    const list = producerId
-      ? LOCAL_TRANSFERS.filter(t => t.producerId === producerId)
-      : LOCAL_TRANSFERS;
+    if (producerId) list = list.filter(t => t.producerId === producerId);
+    if (eventId) list = list.filter(t => String(t.sourceEventId) === String(eventId) || String(t.targetEventId) === String(eventId));
+    if (status) list = list.filter(t => t.status === status);
 
-    return { ok: true, isLiveApi: false, data: list };
+    return { ok: true, isLiveApi: res.ok, data: list };
+  },
+
+  async getTransfersHistory(producerId = null) {
+    return this.getTransfers({ producerId });
   },
 
   /**

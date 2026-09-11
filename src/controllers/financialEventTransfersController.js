@@ -5,6 +5,7 @@
 
 import { eventBalanceService, OFFICIAL_PRODUCERS } from '../services/eventBalanceService.js';
 import { balanceTransferService } from '../services/balanceTransferService.js';
+import { cashForecastService } from '../services/cashForecastService.js';
 
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -35,6 +36,12 @@ let cachedHistory = [];
 let cachedAudit = [];
 let cachedApprovals = [];
 let cachedDashboard = null;
+let currentHorizonDays = 30;
+let currentForecastEventId = 'consolidado';
+let cachedForecast = null;
+let forecastChartCurve = null;
+let forecastChartFlow = null;
+
 
 export function initFinancialEventTransfersView() {
   const select = document.getElementById('ft-producer-select');
@@ -152,6 +159,9 @@ export async function refreshFinancialTransfersView() {
       cachedAudit = audRes.data;
       renderAuditTable(cachedAudit);
     }
+
+    // 7. Carregar Projeção Preditiva de Caixa e Repasses (Fase 26.17.9.5.5)
+    refreshForecastData();
   } catch (err) {
     console.error('[FinancialTransfers] Erro ao carregar saldos:', err);
   } finally {
@@ -498,12 +508,15 @@ export function changeTransferProducer(prodId) {
 
 export function switchTransferTab(tab) {
   currentTab = tab;
-  ['dashboard', 'events', 'approvals', 'history', 'audit'].forEach(t => {
+  ['dashboard', 'events', 'approvals', 'history', 'audit', 'forecast'].forEach(t => {
     const link = document.getElementById(`ft-tab-link-${t}`);
     const pane = document.getElementById(`ft-pane-${t}`);
     if (link) link.classList.toggle('active', t === tab);
     if (pane) pane.style.display = t === tab ? 'block' : 'none';
   });
+  if (tab === 'forecast') {
+    refreshForecastData();
+  }
 }
 
 export function filterTransferEvents(query) {
@@ -519,7 +532,7 @@ export function filterTransferEvents(query) {
   renderEventsTable(filtered);
 }
 
-export async function openBalanceTransferModal(preselectedSourceId = null) {
+export async function openBalanceTransferModal(preselectedSourceId = null, preselectedTargetId = null, prefillAmount = null, prefillReason = '') {
   const modalEl = document.getElementById('modal-balance-transfer');
   if (!modalEl) return;
 
@@ -548,10 +561,22 @@ export async function openBalanceTransferModal(preselectedSourceId = null) {
 
   if (targetSelect) {
     targetSelect.innerHTML = `<option value="">Selecione o evento de destino...</option>${options}`;
-    if (preselectedSourceId && events.length > 1) {
+    if (preselectedTargetId) {
+      targetSelect.value = String(preselectedTargetId);
+    } else if (preselectedSourceId && events.length > 1) {
       const other = events.find(e => String(e.eventId) !== String(preselectedSourceId));
       if (other) targetSelect.value = String(other.eventId);
     }
+  }
+
+  if (prefillAmount) {
+    const amountInput = document.getElementById('trf-input-amount');
+    if (amountInput) amountInput.value = Number(prefillAmount).toFixed(2);
+  }
+
+  if (prefillReason) {
+    const reasonInput = document.getElementById('trf-input-reason');
+    if (reasonInput) reasonInput.value = prefillReason;
   }
 
   updateTransferPreview();
@@ -560,6 +585,7 @@ export async function openBalanceTransferModal(preselectedSourceId = null) {
     bootstrap.Modal.getOrCreateInstance(modalEl).show();
   }
 }
+
 
 export async function updateTransferPreview() {
   const sourceId = document.getElementById('trf-select-source')?.value;
@@ -972,6 +998,514 @@ export function printTransferReceipt() {
   window.print();
 }
 
+// =========================================================================
+// Fase 26.17.9.5.5 — Projeção de Caixa e Repasses por Evento
+// =========================================================================
+
+export async function refreshForecastData() {
+  const icon = document.getElementById('ft-fc-refresh-icon');
+  if (icon) icon.classList.add('ph-spin');
+
+  try {
+    // 1. Popular select de eventos do forecast se estiver vazio ou com opções desatualizadas
+    const eventSelect = document.getElementById('ft-fc-event-select');
+    if (eventSelect) {
+      const currentVal = eventSelect.value || currentForecastEventId;
+      const events = cachedEvents.filter(e => e.producerId === currentProducerId);
+      const opts = [
+        '<option value="consolidado">Consolidado (Todos os Eventos)</option>',
+        ...events.map(e => `<option value="${e.eventId}">${e.eventName} (#${e.eventId})</option>`)
+      ].join('');
+      eventSelect.innerHTML = opts;
+      eventSelect.value = currentVal;
+    }
+
+    // 2. Carregar dados de projeção (Consolidado ou Evento Específico)
+    if (currentForecastEventId === 'consolidado') {
+      const res = await cashForecastService.getConsolidatedCashForecast(currentProducerId, { horizonDays: currentHorizonDays });
+      if (res.ok && res.data) {
+        cachedForecast = res.data;
+        renderForecastConsolidatedKpis(cachedForecast);
+        renderForecastCharts(cachedForecast.timeline);
+        renderForecastEventsTable(cachedForecast.events);
+        renderForecastCoverageSection(cachedForecast.coverageSuggestions || []);
+      }
+    } else {
+      const evForecast = await cashForecastService.calculateEventCashForecast(currentForecastEventId, { horizonDays: currentHorizonDays });
+      cachedForecast = evForecast;
+      renderForecastSingleEventKpis(evForecast);
+      renderForecastCharts(evForecast.timeline);
+      renderForecastEventsTable([evForecast]);
+      
+      // Buscar sugestões se em déficit
+      if (evForecast.forecast.riskStatus === 'DEFICIT_PROJETADO') {
+        const cov = await cashForecastService.buildCoverageSuggestions(currentForecastEventId, { horizonDays: currentHorizonDays });
+        renderForecastCoverageSection(cov.suggestions.map(s => ({
+          targetEventId: evForecast.eventId,
+          targetEventName: evForecast.eventName,
+          ...s
+        })));
+      } else {
+        renderForecastCoverageSection([]);
+      }
+    }
+  } catch (err) {
+    console.error('[CashForecast] Erro ao carregar projeção:', err);
+  } finally {
+    if (icon) icon.classList.remove('ph-spin');
+  }
+}
+
+function renderForecastConsolidatedKpis(data) {
+  const k = data.kpis;
+  const elAvail = document.getElementById('ft-fc-kpi-current-available');
+  const elInflows = document.getElementById('ft-fc-kpi-expected-inflows');
+  const elOutflows = document.getElementById('ft-fc-kpi-expected-outflows');
+  const elProj = document.getElementById('ft-fc-kpi-projected-balance');
+  const elMin = document.getElementById('ft-fc-kpi-minimum-balance');
+  const elCritDate = document.getElementById('ft-fc-kpi-critical-date-label');
+  const elRiskBadge = document.getElementById('ft-fc-kpi-risk-badge');
+  const elRiskSublabel = document.getElementById('ft-fc-kpi-risk-sublabel');
+  const elEventsRisk = document.getElementById('ft-fc-kpi-events-at-risk');
+  const elReqCov = document.getElementById('ft-fc-kpi-required-coverage');
+  const tabBadge = document.getElementById('ft-forecast-risk-badge');
+
+  if (elAvail) elAvail.textContent = formatBRL(k.totalAvailable);
+  if (elInflows) elInflows.textContent = formatBRL(k.totalExpectedInflows);
+  if (elOutflows) elOutflows.textContent = formatBRL(k.totalExpectedOutflows);
+  if (elProj) {
+    elProj.textContent = formatBRL(k.totalProjectedBalance);
+    elProj.className = `fw-bold mb-0 mt-2 ${k.totalProjectedBalance < 0 ? 'text-danger' : 'text-indigo'}`;
+  }
+  if (elMin) {
+    elMin.textContent = formatBRL(k.minimumProjectedBalance);
+    elMin.className = `fs-5 fw-bold mt-1 ${k.minimumProjectedBalance < 0 ? 'text-danger' : 'text-dark'}`;
+  }
+  if (elCritDate) elCritDate.textContent = `Menor nível em: ${k.minimumProjectedDate ? formatDate(k.minimumProjectedDate).slice(0, 10) : '—'}`;
+
+  // Risco Global
+  let riskStatus = 'NORMAL';
+  let badgeClass = 'badge bg-success text-white px-2 py-1 fs-xs fw-semibold';
+  let sublabel = 'Folga financeira adequada';
+
+  if (k.totalRequiredCoverage > 0) {
+    riskStatus = 'DEFICIT_PROJETADO';
+    badgeClass = 'badge bg-danger text-white px-2 py-1 fs-xs fw-semibold';
+    sublabel = 'Déficit projetado identificado';
+  } else if (k.eventsAtRiskCount > 0) {
+    riskStatus = 'ATENÇÃO';
+    badgeClass = 'badge bg-warning text-dark px-2 py-1 fs-xs fw-semibold';
+    sublabel = `${k.eventsAtRiskCount} evento(s) com folga estreita`;
+  }
+
+  if (elRiskBadge) {
+    elRiskBadge.textContent = riskStatus;
+    elRiskBadge.className = badgeClass;
+  }
+  if (elRiskSublabel) elRiskSublabel.textContent = sublabel;
+
+  if (elEventsRisk) elEventsRisk.textContent = `${k.eventsAtRiskCount} / ${k.totalEvents}`;
+  if (elReqCov) {
+    elReqCov.textContent = formatBRL(k.totalRequiredCoverage);
+    elReqCov.className = `fs-5 fw-bold mt-1 ${k.totalRequiredCoverage > 0 ? 'text-danger' : 'text-muted'}`;
+  }
+
+  // Atualizar badge no cabeçalho da aba
+  if (tabBadge) {
+    if (k.eventsAtRiskCount > 0 || k.totalRequiredCoverage > 0) {
+      tabBadge.textContent = String(k.eventsAtRiskCount || 1);
+      tabBadge.classList.remove('d-none');
+    } else {
+      tabBadge.classList.add('d-none');
+    }
+  }
+}
+
+function renderForecastSingleEventKpis(ev) {
+  const f = ev.forecast;
+  const c = ev.current;
+
+  const elAvail = document.getElementById('ft-fc-kpi-current-available');
+  const elInflows = document.getElementById('ft-fc-kpi-expected-inflows');
+  const elOutflows = document.getElementById('ft-fc-kpi-expected-outflows');
+  const elProj = document.getElementById('ft-fc-kpi-projected-balance');
+  const elMin = document.getElementById('ft-fc-kpi-minimum-balance');
+  const elCritDate = document.getElementById('ft-fc-kpi-critical-date-label');
+  const elRiskBadge = document.getElementById('ft-fc-kpi-risk-badge');
+  const elRiskSublabel = document.getElementById('ft-fc-kpi-risk-sublabel');
+  const elEventsRisk = document.getElementById('ft-fc-kpi-events-at-risk');
+  const elReqCov = document.getElementById('ft-fc-kpi-required-coverage');
+
+  if (elAvail) elAvail.textContent = formatBRL(c.availableBalance);
+  if (elInflows) elInflows.textContent = formatBRL(f.expectedInflows);
+  if (elOutflows) elOutflows.textContent = formatBRL(f.expectedOutflows);
+  if (elProj) {
+    elProj.textContent = formatBRL(f.projectedBalance);
+    elProj.className = `fw-bold mb-0 mt-2 ${f.projectedBalance < 0 ? 'text-danger' : 'text-indigo'}`;
+  }
+  if (elMin) {
+    elMin.textContent = formatBRL(f.minimumProjectedBalance);
+    elMin.className = `fs-5 fw-bold mt-1 ${f.minimumProjectedBalance < 0 ? 'text-danger' : 'text-dark'}`;
+  }
+  if (elCritDate) elCritDate.textContent = `Menor nível em: ${f.minimumProjectedDate ? formatDate(f.minimumProjectedDate).slice(0, 10) : '—'}`;
+
+  let badgeClass = 'badge bg-success text-white px-2 py-1 fs-xs fw-semibold';
+  let sub = 'Folga financeira adequada';
+  if (f.riskStatus === 'DEFICIT_PROJETADO') {
+    badgeClass = 'badge bg-danger text-white px-2 py-1 fs-xs fw-semibold';
+    sub = 'Necessidade de cobertura';
+  } else if (f.riskStatus === 'CRITICO') {
+    badgeClass = 'badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-xs fw-semibold';
+    sub = 'Próximo do limite de segurança';
+  } else if (f.riskStatus === 'ATENCAO') {
+    badgeClass = 'badge bg-warning text-dark px-2 py-1 fs-xs fw-semibold';
+    sub = 'Folga inferior a 15% das obrigações';
+  }
+
+  if (elRiskBadge) {
+    elRiskBadge.textContent = f.riskStatus;
+    elRiskBadge.className = badgeClass;
+  }
+  if (elRiskSublabel) elRiskSublabel.textContent = sub;
+  if (elEventsRisk) elEventsRisk.textContent = f.riskStatus === 'NORMAL' ? '0 / 1' : '1 / 1';
+  if (elReqCov) {
+    elReqCov.textContent = formatBRL(ev.coverage?.requiredAmount || 0);
+    elReqCov.className = `fs-5 fw-bold mt-1 ${(ev.coverage?.requiredAmount || 0) > 0 ? 'text-danger' : 'text-muted'}`;
+  }
+}
+
+export function switchForecastHorizon(days) {
+  currentHorizonDays = parseInt(days, 10) || 30;
+  refreshForecastData();
+}
+
+export function switchForecastEvent(eventId) {
+  currentForecastEventId = eventId;
+  refreshForecastData();
+}
+
+export function renderForecastCharts(timeline) {
+  if (!timeline || timeline.length === 0) return;
+  if (typeof window === 'undefined' || !window.Chart) return;
+
+  const canvasCurve = document.getElementById('ft-fc-chart-curve');
+  const canvasFlow = document.getElementById('ft-fc-chart-flow');
+  if (!canvasCurve || !canvasFlow) return;
+
+  const labels = timeline.map((pt, i) => {
+    if (timeline.length <= 15) return pt.date.slice(5);
+    return i % 3 === 0 ? pt.date.slice(5) : '';
+  });
+
+  const balances = timeline.map(pt => pt.projectedBalance);
+  const inflows = timeline.map(pt => pt.inflows);
+  const outflows = timeline.map(pt => pt.outflows);
+
+  // 1. Curva de Caixa
+  if (forecastChartCurve) {
+    forecastChartCurve.destroy();
+    forecastChartCurve = null;
+  }
+
+  try {
+    const ctxCurve = canvasCurve.getContext('2d');
+    forecastChartCurve = new window.Chart(ctxCurve, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Saldo Projetado (R$)',
+          data: balances,
+          borderColor: '#4f46e5',
+          backgroundColor: 'rgba(79, 70, 229, 0.08)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.2,
+          pointRadius: timeline.length <= 15 ? 3 : 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `Saldo Projetado: ${formatBRL(ctx.raw)}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: {
+              callback: (val) => formatBRL(val).replace('R$', '').trim()
+            }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('[CashForecast] Erro ao renderizar Chart Curve:', err);
+  }
+
+  // 2. Gráfico de Entradas vs Saídas
+  if (forecastChartFlow) {
+    forecastChartFlow.destroy();
+    forecastChartFlow = null;
+  }
+
+  try {
+    const ctxFlow = canvasFlow.getContext('2d');
+    forecastChartFlow = new window.Chart(ctxFlow, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Entradas Previstas',
+            data: inflows,
+            backgroundColor: '#0284c7'
+          },
+          {
+            label: 'Saídas Previstas',
+            data: outflows,
+            backgroundColor: '#ef4444'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${formatBRL(ctx.raw)}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: {
+              callback: (val) => formatBRL(val).replace('R$', '').trim()
+            }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('[CashForecast] Erro ao renderizar Chart Flow:', err);
+  }
+}
+
+function renderForecastEventsTable(events) {
+  const tbody = document.getElementById('ft-fc-events-tbody');
+  if (!tbody) return;
+
+  if (!events || events.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Nenhum evento encontrado para o produtor selecionado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = events.map(ev => {
+    const c = ev.current || {};
+    const f = ev.forecast || {};
+    const r = f.riskStatus || 'NORMAL';
+
+    let riskBadgeClass = 'bg-success text-white';
+    if (r === 'DEFICIT_PROJETADO') riskBadgeClass = 'bg-danger text-white';
+    else if (r === 'CRITICO') riskBadgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+    else if (r === 'ATENCAO') riskBadgeClass = 'bg-warning text-dark';
+
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark">${ev.eventName}</div>
+          <div class="text-muted fs-xs">#${ev.eventId} &bull; ${ev.producerName || 'Produtor Oficial'}</div>
+        </td>
+        <td class="text-end fw-semibold text-dark">${formatBRL(c.availableBalance)}</td>
+        <td class="text-end text-primary">${formatBRL(f.expectedInflows)}</td>
+        <td class="text-end text-danger">${formatBRL(f.expectedOutflows)}</td>
+        <td class="text-end fw-bold ${f.projectedBalance < 0 ? 'text-danger' : 'text-dark'}">${formatBRL(f.projectedBalance)}</td>
+        <td class="text-end fw-bold ${f.minimumProjectedBalance < 0 ? 'text-danger' : 'text-dark'}">
+          ${formatBRL(f.minimumProjectedBalance)}
+          <div class="text-muted fs-xs">${f.minimumProjectedDate ? formatDate(f.minimumProjectedDate).slice(0, 10) : ''}</div>
+        </td>
+        <td class="text-center">
+          <span class="badge ${riskBadgeClass} fs-xs px-2 py-1">${r}</span>
+        </td>
+        <td class="text-center">
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary btn-xs" onclick="window.switchForecastEvent('${ev.eventId}')" title="Ver Curva Individual">
+              <i class="ph-chart-line"></i>
+            </button>
+            <button class="btn btn-outline-primary btn-xs" onclick="window.openCoverageSimulator('${ev.eventId}')" title="Simular Cobertura">
+              <i class="ph-flask"></i>
+            </button>
+            <button class="btn btn-success btn-xs" onclick="window.openBalanceTransferModal(null, '${ev.eventId}')" title="Solicitar Transferência">
+              <i class="ph-arrows-left-right"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderForecastCoverageSection(suggestions) {
+  const container = document.getElementById('ft-fc-coverage-section');
+  const cardsContainer = document.getElementById('ft-fc-coverage-cards-container');
+  const countBadge = document.getElementById('ft-fc-coverage-count-badge');
+  if (!container || !cardsContainer) return;
+
+  if (!suggestions || suggestions.length === 0) {
+    container.classList.add('d-none');
+    return;
+  }
+
+  container.classList.remove('d-none');
+  if (countBadge) countBadge.textContent = `${suggestions.length} Alerta(s)`;
+
+  cardsContainer.innerHTML = suggestions.map(s => `
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card h-100 border shadow-none bg-white p-3">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-xs">Déficit no Evento Destino</span>
+          <span class="fw-bold text-success fs-xs">Sugestão: ${formatBRL(s.suggestedAmount)}</span>
+        </div>
+        <div class="mb-2">
+          <div class="fs-xs text-muted text-uppercase fw-bold">Evento Destino em Risco</div>
+          <div class="fw-bold text-dark fs-sm">${s.targetEventName || 'Evento em Risco'} (#${s.targetEventId})</div>
+        </div>
+        <div class="mb-3 pt-2 border-top">
+          <div class="fs-xs text-muted text-uppercase fw-bold">Origem Recomendada (Candidato)</div>
+          <div class="fw-bold text-dark fs-sm">${s.sourceEventName} (#${s.sourceEventId})</div>
+          <div class="d-flex justify-content-between text-muted fs-xs mt-1">
+            <span>Disp. Atual: <strong>${formatBRL(s.availableBalance)}</strong></span>
+            <span>Capacidade: <strong>${formatBRL(s.safeCapacity)}</strong></span>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-auto">
+          <button class="btn btn-xs btn-outline-primary w-50 d-flex align-items-center justify-content-center gap-1" onclick="window.openCoverageSimulator('${s.targetEventId}', '${s.sourceEventId}', ${s.suggestedAmount})">
+            <i class="ph-flask"></i> Simular
+          </button>
+          <button class="btn btn-xs btn-primary w-50 fw-bold d-flex align-items-center justify-content-center gap-1" onclick="window.openBalanceTransferModal('${s.sourceEventId}', '${s.targetEventId}', ${s.suggestedAmount}, 'Cobertura preventiva de fluxo de caixa projetado')">
+            <i class="ph-arrows-left-right"></i> Solicitar
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+export async function openCoverageSimulator(targetEventId = null, sourceEventId = null, prefillAmount = null) {
+  const modalEl = document.getElementById('modal-forecast-coverage-simulator');
+  if (!modalEl) return;
+
+  const targetSelect = document.getElementById('sim-select-target');
+  const sourceSelect = document.getElementById('sim-select-source');
+  const amountInput = document.getElementById('sim-input-amount');
+
+  const events = cachedEvents.filter(e => e.producerId === currentProducerId);
+
+  const targetOptions = events.map(e =>
+    `<option value="${e.eventId}">${e.eventName} (#${e.eventId}) — Disp: ${formatBRL(e.balances.availableBalance)}</option>`
+  ).join('');
+
+  const sourceOptions = events.map(e =>
+    `<option value="${e.eventId}">${e.eventName} (#${e.eventId}) — Disp: ${formatBRL(e.balances.availableBalance)}</option>`
+  ).join('');
+
+  if (targetSelect) {
+    targetSelect.innerHTML = targetOptions;
+    if (targetEventId) targetSelect.value = String(targetEventId);
+  }
+
+  if (sourceSelect) {
+    sourceSelect.innerHTML = sourceOptions;
+    if (sourceEventId) {
+      sourceSelect.value = String(sourceEventId);
+    } else {
+      const other = events.find(e => String(e.eventId) !== String(targetSelect?.value));
+      if (other) sourceSelect.value = String(other.eventId);
+    }
+  }
+
+  if (amountInput) {
+    amountInput.value = prefillAmount ? Number(prefillAmount).toFixed(2) : '1000';
+  }
+
+  await updateCoverageSimulation();
+
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+}
+
+export async function updateCoverageSimulation() {
+  const targetId = document.getElementById('sim-select-target')?.value;
+  const sourceId = document.getElementById('sim-select-source')?.value;
+  const amount = Number(document.getElementById('sim-input-amount')?.value || 0);
+
+  const displayEl = document.getElementById('sim-amount-display');
+  if (displayEl) displayEl.textContent = formatBRL(amount);
+
+  if (!targetId || !sourceId || amount <= 0 || targetId === sourceId) return;
+
+  try {
+    const sim = await cashForecastService.simulateCoverage({
+      sourceEventId: sourceId,
+      targetEventId: targetId,
+      amount,
+      horizonDays: currentHorizonDays
+    });
+
+    const elSrcBef = document.getElementById('sim-res-source-before');
+    const elSrcAft = document.getElementById('sim-res-source-after');
+    const elSrcRisk = document.getElementById('sim-res-source-risk-badge');
+
+    const elTgtBef = document.getElementById('sim-res-target-before');
+    const elTgtAft = document.getElementById('sim-res-target-after');
+    const elTgtRisk = document.getElementById('sim-res-target-risk-badge');
+
+    if (sim.before) {
+      if (elSrcBef) elSrcBef.textContent = formatBRL(sim.before.sourceMinBalance);
+      if (elTgtBef) elTgtBef.textContent = formatBRL(sim.before.targetMinBalance);
+    }
+
+    if (sim.after) {
+      if (elSrcAft) elSrcAft.textContent = formatBRL(sim.after.sourceMinBalance);
+      if (elTgtAft) elTgtAft.textContent = formatBRL(sim.after.targetMinBalance);
+
+      if (elSrcRisk) elSrcRisk.innerHTML = `<span class="badge ${sim.after.sourceRisk === 'NORMAL' ? 'bg-success' : 'bg-warning'} fs-xs">${sim.after.sourceRisk}</span>`;
+      if (elTgtRisk) elTgtRisk.innerHTML = `<span class="badge ${sim.after.targetRisk === 'NORMAL' ? 'bg-success' : 'bg-warning'} fs-xs">${sim.after.targetRisk}</span>`;
+    }
+  } catch (err) {
+    console.warn('[CashForecast] Erro na simulação:', err);
+  }
+}
+
+export function applySimulatedTransferToModal() {
+  const targetId = document.getElementById('sim-select-target')?.value;
+  const sourceId = document.getElementById('sim-select-source')?.value;
+  const amount = Number(document.getElementById('sim-input-amount')?.value || 0);
+
+  const modalEl = document.getElementById('modal-forecast-coverage-simulator');
+  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    bootstrap.Modal.getInstance(modalEl)?.hide();
+  }
+
+  openBalanceTransferModal(sourceId, targetId, amount, 'Cobertura simulada de fluxo de caixa projetado');
+}
+
 // Registro das funções globais para consumo no DOM inline
 if (typeof window !== 'undefined') {
   window.initFinancialEventTransfersView = initFinancialEventTransfersView;
@@ -991,4 +1525,13 @@ if (typeof window !== 'undefined') {
   window.handleReverseTransfer = handleReverseTransfer;
   window.exportTransfersCsv = exportTransfersCsv;
   window.printTransferReceipt = printTransferReceipt;
+  // Fase 26.17.9.5.5
+  window.refreshForecastData = refreshForecastData;
+  window.switchForecastHorizon = switchForecastHorizon;
+  window.switchForecastEvent = switchForecastEvent;
+  window.renderForecastCharts = renderForecastCharts;
+  window.openCoverageSimulator = openCoverageSimulator;
+  window.updateCoverageSimulation = updateCoverageSimulation;
+  window.applySimulatedTransferToModal = applySimulatedTransferToModal;
 }
+

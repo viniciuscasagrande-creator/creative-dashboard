@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-BAQdQCTW.js"></script>
+      <script type="module" crossorigin src="./assets/index-Cps1eTUr.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
     </head>
 <body>
@@ -1506,6 +1506,12 @@
                                                 <i class="ph-shield-check me-1"></i> Trilha de Auditoria & Compliance
                                             </a>
                                         </li>
+                                        <li class="nav-item">
+                                            <a href="#" class="nav-link submenu-link tab border-0 py-2" onclick="window.switchTransferTab('forecast'); event.preventDefault();" id="ft-tab-link-forecast">
+                                                <i class="ph-chart-line-up me-1"></i> Projeção de Caixa &amp; Repasses
+                                                <span class="badge bg-danger text-white rounded-pill ms-1 d-none" id="ft-forecast-risk-badge">0</span>
+                                            </a>
+                                        </li>
                                     </ul>
                                     <div class="d-flex align-items-center gap-2">
                                         <input type="text" class="form-control form-control-sm" id="ft-events-search" placeholder="Filtrar eventos..." oninput="window.filterTransferEvents(this.value)" style="width: 180px;">
@@ -1792,6 +1798,196 @@
                                     </table>
                                 </div>
                             </div>
+
+                            <!-- PANE 6: Projeção de Caixa e Repasses por Evento (Fase 26.17.9.5.5) -->
+                            <div class="card-body p-3" id="ft-pane-forecast" style="display: none;">
+                                <!-- Top Bar de Controles do Forecast -->
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 p-3 bg-light rounded-3 border mb-3">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h6 class="fw-bold mb-0 text-dark">Projeção Preditiva de Fluxo de Caixa e Repasses</h6>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xs">Fase 26.17.9.5.5</span>
+                                        </div>
+                                        <div class="text-muted fs-xs mt-1">
+                                            Modelo canônico: <strong>Saldo Projetado = Saldo Disponível + Entradas Previstas &minus; Saídas Previstas</strong>. Identifica riscos e recomenda cobertura sem movimentação automática.
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <label class="fs-xs fw-bold text-muted text-uppercase mb-0">Horizonte:</label>
+                                            <select class="form-select form-select-sm" id="ft-fc-horizon-select" onchange="window.switchForecastHorizon(this.value)" style="width: 120px; font-size: 12px;">
+                                                <option value="7">7 dias</option>
+                                                <option value="15">15 dias</option>
+                                                <option value="30" selected>30 dias</option>
+                                                <option value="60">60 dias</option>
+                                                <option value="90">90 dias</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <label class="fs-xs fw-bold text-muted text-uppercase mb-0">Visualização:</label>
+                                            <select class="form-select form-select-sm" id="ft-fc-event-select" onchange="window.switchForecastEvent(this.value)" style="width: 220px; font-size: 12px;">
+                                                <option value="consolidado" selected>Consolidado (Todos)</option>
+                                                <!-- Preenchido dinamicamente -->
+                                            </select>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onclick="window.refreshForecastData()" title="Recalcular Projeção">
+                                            <i class="ph-arrows-clockwise" id="ft-fc-refresh-icon"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 8 KPIs Executivos da Projeção -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-3 shadow-none" style="border-top: 3px solid #10b981 !important;">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fs-xs fw-bold text-uppercase text-muted">Saldo Real Atual</span>
+                                                <i class="ph-wallet text-success fs-5"></i>
+                                            </div>
+                                            <h4 class="fw-bold mb-0 mt-2 text-dark" id="ft-fc-kpi-current-available">R$ 0,00</h4>
+                                            <span class="fs-xs text-muted mt-1">Disponível real (t₀)</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-3 shadow-none" style="border-top: 3px solid #0284c7 !important;">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fs-xs fw-bold text-uppercase text-muted">Entradas Previstas</span>
+                                                <i class="ph-trend-up text-primary fs-5"></i>
+                                            </div>
+                                            <h4 class="fw-bold mb-0 mt-2 text-primary" id="ft-fc-kpi-expected-inflows">R$ 0,00</h4>
+                                            <span class="fs-xs text-muted mt-1">Liquidações e entradas</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-3 shadow-none" style="border-top: 3px solid #f59e0b !important;">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fs-xs fw-bold text-uppercase text-muted">Saídas Previstas</span>
+                                                <i class="ph-trend-down text-warning fs-5"></i>
+                                            </div>
+                                            <h4 class="fw-bold mb-0 mt-2 text-danger" id="ft-fc-kpi-expected-outflows">R$ 0,00</h4>
+                                            <span class="fs-xs text-muted mt-1">Repasses e despesas</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-3 shadow-none" style="border-top: 3px solid #6366f1 !important; background: #faf5ff;">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fs-xs fw-bold text-uppercase text-indigo">Saldo Projetado</span>
+                                                <i class="ph-chart-line-up text-indigo fs-5"></i>
+                                            </div>
+                                            <h4 class="fw-bold mb-0 mt-2 text-indigo" id="ft-fc-kpi-projected-balance">R$ 0,00</h4>
+                                            <span class="fs-xs text-muted mt-1">Posição final no horizonte</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Menor Saldo Projetado</span>
+                                            <div class="fs-5 fw-bold text-dark mt-1" id="ft-fc-kpi-minimum-balance">R$ 0,00</div>
+                                            <span class="fs-xs text-muted" id="ft-fc-kpi-critical-date-label">Ponto de maior exposição</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Classificação de Risco</span>
+                                            <div class="mt-1" id="ft-fc-kpi-risk-container">
+                                                <span class="badge bg-success text-white px-2 py-1 fs-xs fw-semibold" id="ft-fc-kpi-risk-badge">NORMAL</span>
+                                            </div>
+                                            <span class="fs-xs text-muted" id="ft-fc-kpi-risk-sublabel">Folga adequada</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Eventos com Risco</span>
+                                            <div class="fs-5 fw-bold text-dark mt-1" id="ft-fc-kpi-events-at-risk">0 / 0</div>
+                                            <span class="fs-xs text-muted">Monitoramento ativo</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border p-2 mb-0 shadow-none bg-light">
+                                            <span class="fs-xs text-muted">Necessidade de Cobertura</span>
+                                            <div class="fs-5 fw-bold text-danger mt-1" id="ft-fc-kpi-required-coverage">R$ 0,00</div>
+                                            <span class="fs-xs text-muted">Para neutralizar déficit</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Gráficos: Curva de Caixa e Entradas vs Saídas -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-12 col-xl-8">
+                                        <div class="card h-100 border shadow-none p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                    <i class="ph-chart-line text-primary"></i> Curva de Caixa Projetada (Dia a Dia)
+                                                </h6>
+                                                <span class="badge bg-light text-muted border fs-xs" id="ft-fc-curve-legend">Evolução de Saldo</span>
+                                            </div>
+                                            <div style="height: 250px; position: relative;" id="ft-fc-chart-container">
+                                                <canvas id="ft-fc-chart-curve"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-xl-4">
+                                        <div class="card h-100 border shadow-none p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                    <i class="ph-chart-bar text-success"></i> Entradas vs Saídas Diárias
+                                                </h6>
+                                                <span class="badge bg-light text-muted border fs-xs">Fluxo Diário</span>
+                                            </div>
+                                            <div style="height: 250px; position: relative;">
+                                                <canvas id="ft-fc-chart-flow"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Seção de Cobertura Recomendada & Alertas Preditivos -->
+                                <div id="ft-fc-coverage-section" class="mb-4 d-none">
+                                    <div class="card border-danger-subtle bg-danger-subtle p-3 mb-0">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="ph-warning-octagon text-danger fs-4"></i>
+                                                <div>
+                                                    <h6 class="fw-bold text-danger mb-0">Recomendações de Cobertura entre Eventos do Mesmo Produtor</h6>
+                                                    <span class="fs-xs text-danger">Eventos com déficit projetado identificados. Cobertura calculada com base na capacidade segura dos candidatos.</span>
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-danger text-white fs-xs" id="ft-fc-coverage-count-badge">0 Alertas</span>
+                                        </div>
+                                        <div class="row g-2 mt-2" id="ft-fc-coverage-cards-container">
+                                            <!-- Cards de Cobertura gerados via JS -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tabela Preditiva por Evento -->
+                                <div class="card border shadow-none">
+                                    <div class="card-header bg-transparent border-bottom py-2 d-flex justify-content-between align-items-center">
+                                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                            <i class="ph-table text-primary"></i> Posição Preditiva Detalhada por Evento
+                                        </h6>
+                                        <span class="badge bg-light text-muted border fs-xs">Classificação de Risco &amp; Ações</span>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="table-light fs-xs text-uppercase text-muted">
+                                                <tr>
+                                                    <th style="width: 24%;">Evento</th>
+                                                    <th style="width: 11%;" class="text-end">Disponível Real</th>
+                                                    <th style="width: 11%;" class="text-end">Entradas Prev.</th>
+                                                    <th style="width: 11%;" class="text-end">Saídas Prev.</th>
+                                                    <th style="width: 11%;" class="text-end">Saldo Projetado</th>
+                                                    <th style="width: 11%;" class="text-end">Menor Saldo</th>
+                                                    <th style="width: 9%;" class="text-center">Status Risco</th>
+                                                    <th style="width: 12%;" class="text-center">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ft-fc-events-tbody" class="fs-xs">
+                                                <!-- Preenchido via JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -2035,6 +2231,100 @@
                                 <div class="modal-footer bg-light border-top py-2">
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
                                     <button type="button" class="btn btn-sm btn-primary" onclick="window.printTransferReceipt()"><i class="ph-printer me-1"></i> Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL: Simulador de Cobertura entre Eventos (Fase 26.17.9.5.5) -->
+                    <div class="modal fade" id="modal-forecast-coverage-simulator" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-3">
+                                    <div>
+                                        <h5 class="modal-title fw-bold text-dark mb-0">Simulador de Cobertura Financeira entre Eventos</h5>
+                                        <div class="text-muted fs-xs">Simulação preditiva sem impacto financeiro real imediato (RN07 &amp; RN08)</div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase">Evento em Risco (Destino)</label>
+                                            <select class="form-select form-select-sm" id="sim-select-target" onchange="window.updateCoverageSimulation()">
+                                                <!-- Opções de eventos em déficit -->
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase">Evento Candidato à Cobertura (Origem)</label>
+                                            <select class="form-select form-select-sm" id="sim-select-source" onchange="window.updateCoverageSimulation()">
+                                                <!-- Opções de eventos candidatos com saldo real -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-0">Valor da Cobertura Simulada</label>
+                                            <span class="fs-xs fw-bold text-primary" id="sim-amount-display">R$ 0,00</span>
+                                        </div>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="number" step="100" min="0" class="form-control" id="sim-input-amount" value="1000" oninput="window.updateCoverageSimulation()">
+                                        </div>
+                                    </div>
+                                    <!-- Painel de Comparação Antes vs Depois -->
+                                    <div class="card border bg-light p-3 mb-3">
+                                        <h6 class="fw-bold fs-xs text-uppercase text-muted mb-3">Resultado da Simulação Comparativa</h6>
+                                        <div class="row g-3 text-center">
+                                            <div class="col-12 col-md-6 border-end">
+                                                <div class="fw-bold fs-xs text-muted text-uppercase mb-2">Evento Origem (Candidato)</div>
+                                                <div class="d-flex justify-content-around">
+                                                    <div>
+                                                        <span class="fs-xs text-muted">Menor Saldo Antes</span>
+                                                        <div class="fw-bold fs-sm text-dark mt-1" id="sim-res-source-before">R$ 0,00</div>
+                                                    </div>
+                                                    <i class="ph-arrow-right text-muted align-self-center"></i>
+                                                    <div>
+                                                        <span class="fs-xs text-muted">Menor Saldo Depois</span>
+                                                        <div class="fw-bold fs-sm text-primary mt-1" id="sim-res-source-after">R$ 0,00</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2" id="sim-res-source-risk-badge">
+                                                    <span class="badge bg-success fs-xs">NORMAL</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <div class="fw-bold fs-xs text-muted text-uppercase mb-2">Evento Destino (Em Risco)</div>
+                                                <div class="d-flex justify-content-around">
+                                                    <div>
+                                                        <span class="fs-xs text-muted">Menor Saldo Antes</span>
+                                                        <div class="fw-bold fs-sm text-danger mt-1" id="sim-res-target-before">-R$ 0,00</div>
+                                                    </div>
+                                                    <i class="ph-arrow-right text-muted align-self-center"></i>
+                                                    <div>
+                                                        <span class="fs-xs text-muted">Menor Saldo Depois</span>
+                                                        <div class="fw-bold fs-sm text-success mt-1" id="sim-res-target-after">R$ 0,00</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2" id="sim-res-target-risk-badge">
+                                                    <span class="badge bg-success fs-xs">NORMAL</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center fs-xs text-muted">
+                                            <span><i class="ph-check-circle text-success me-1"></i> Invariância Patrimonial Mantida: Δ Consolidado = R$ 0,00</span>
+                                            <span class="badge bg-primary-subtle text-primary border">Simulação Matemática Pura</span>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info py-2 px-3 fs-xs mb-0">
+                                        <i class="ph-info me-1"></i> <strong>Atenção</strong>: Nenhuma movimentação é realizada nesta simulação. Para efetivar, clique abaixo em <strong>"Criar Solicitação Formal de Transferência"</strong> para iniciar o fluxo oficial da Fase 26.17.9.5.2 (com reserva e aprovação).
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top py-2 d-flex justify-content-between">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1" onclick="window.applySimulatedTransferToModal()">
+                                        <i class="ph-arrow-square-out"></i> Criar Solicitação Formal de Transferência
+                                    </button>
                                 </div>
                             </div>
                         </div>

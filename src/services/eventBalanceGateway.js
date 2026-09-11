@@ -75,5 +75,11 @@ export const eventBalanceGateway = {
   rejectTransfer: (id, reason) => request(`/api/finance/balance-transfers/${encodeURIComponent(id)}/reject`, { method: 'POST', body: { reason } }),
   cancelTransfer: (id, reason) => request(`/api/finance/balance-transfers/${encodeURIComponent(id)}/cancel`, { method: 'POST', body: { reason } }),
   reverseTransfer: (id, reason) => request(`/api/finance/balance-transfers/${encodeURIComponent(id)}/reverse`, { method: 'POST', body: { reason } }),
-  getTransferAudit: (id) => request(`/api/finance/balance-transfers/${encodeURIComponent(id)}/audit-log`)
+  getTransferAudit: (id) => request(`/api/finance/balance-transfers/${encodeURIComponent(id)}/audit-log`),
+  // Fase 26.17.9.5.5 — Projeção de Caixa e Repasses
+  getCashForecast: (params = {}) => request('/api/finance/cash-forecast', { params }),
+  getEventCashForecast: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}`, { params: { horizonDays } }),
+  getEventCashForecastTimeline: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}/timeline`, { params: { horizonDays } }),
+  getEventCoverageSuggestions: (eventId, horizonDays = 30) => request(`/api/finance/cash-forecast/events/${encodeURIComponent(eventId)}/coverage-suggestions`, { params: { horizonDays } })
 };
+
