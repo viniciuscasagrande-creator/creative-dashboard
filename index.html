@@ -104,7 +104,7 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
                         <a href="#" class="dropdown-item"><i class="ph-user-circle me-2"></i> Meu Perfil</a>
-                        <a href="#" class="dropdown-item" onclick="switchActiveView('settings-profile')"><i class="ph-gear me-2"></i> Configurações</a>
+                        <a href="#" class="dropdown-item" data-view="settings-profile"><i class="ph-gear me-2"></i> Configurações</a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item"><i class="ph-sign-out me-2"></i> Sair</a>
                     </div>
@@ -139,7 +139,7 @@
                         
                         <!-- TODOS OS EVENTOS standalone menu item -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link submenu-link active" data-view="events-list" title="Todos os Eventos">
+                            <a href="#" class="nav-link submenu-link" data-view="events-list" title="Todos os Eventos">
                                 <i class="ph-calendar"></i>
                                 <span>Todos os Eventos</span>
                             </a>
@@ -218,17 +218,17 @@
                                 <span class="badge bg-success align-self-center rounded-pill ms-auto">24</span>
                             </a>
                             <ul class="nav-group-sub collapse">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard" onclick="if(window.switchActiveView) { window.switchActiveView('financial-dashboard'); event.preventDefault(); }"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-event-transfers" onclick="if(window.switchActiveView) { window.switchActiveView('financial-event-transfers'); event.preventDefault(); }"><i class="ph-arrows-left-right me-2"></i> Gestão de Saldos</a></li>
-                                                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury" onclick="if(window.switchActiveView) { window.switchActiveView('treasury'); event.preventDefault(); }"><i class="ph-vault me-2 text-primary"></i> Tesouraria &amp; Bancos</a></li>
-<li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance" onclick="if(window.switchActiveView) { window.switchActiveView('financial-balance'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Conta Financeira</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass" onclick="if(window.switchActiveView) { window.switchActiveView('financial-repass'); event.preventDefault(); }"><i class="ph-arrow-up-right me-2"></i> Contas a Receber</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses" onclick="if(window.switchActiveView) { window.switchActiveView('financial-expenses'); event.preventDefault(); }"><i class="ph-trend-down me-2"></i> Contas a Pagar</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance" onclick="if(window.switchActiveView) { window.switchActiveView('cashflow-performance'); event.preventDefault(); }"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-event-transfers"><i class="ph-arrows-left-right me-2"></i> Gestão de Saldos</a></li>
+                                                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury"><i class="ph-vault me-2 text-primary"></i> Tesouraria &amp; Bancos</a></li>
+<li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance"><i class="ph-bank me-2"></i> Conta Financeira</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass"><i class="ph-arrow-up-right me-2"></i> Contas a Receber</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses"><i class="ph-trend-down me-2"></i> Contas a Pagar</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
 
                                 <!-- Central de Aprovações Unificada -->
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link submenu-link text-warning fw-bold" data-view="approvals-inbox" onclick="if(window.switchActiveView) { window.switchActiveView('approvals-inbox'); event.preventDefault(); }">
+                                    <a href="#" class="nav-link submenu-link text-warning fw-bold" data-view="approvals-inbox">
                                         <i class="ph-check-circle me-2 text-warning"></i> Central de Aprovações
                                         <span class="badge bg-danger rounded-pill ms-auto" id="p2p-header-pending-count" style="display:none;">0</span>
                                     </a>
@@ -236,64 +236,64 @@
 
                                 <!-- COMPRAS (Procure-to-Pay) -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Compras & Procure-to-Pay</li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-requests" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-requests'); event.preventDefault(); }"><i class="ph-file-plus me-2"></i> Solicitações de Compra</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-quotations" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-quotations'); event.preventDefault(); }"><i class="ph-scales me-2"></i> Cotações & Propostas</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-orders" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-orders'); event.preventDefault(); }"><i class="ph-receipt me-2"></i> Pedidos de Compra</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-receipts" onclick="if(window.switchActiveView) { window.switchActiveView('purchases-receipts'); event.preventDefault(); }"><i class="ph-package me-2"></i> Recebimentos (3-Way)</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-requests"><i class="ph-file-plus me-2"></i> Solicitações de Compra</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-quotations"><i class="ph-scales me-2"></i> Cotações & Propostas</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-orders"><i class="ph-receipt me-2"></i> Pedidos de Compra</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="purchases-receipts"><i class="ph-package me-2"></i> Recebimentos (3-Way)</a></li>
 
                                 <!-- FORNECEDORES -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Fornecedores</li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-registry" onclick="if(window.switchActiveView) { window.switchActiveView('suppliers-registry'); event.preventDefault(); }"><i class="ph-buildings me-2"></i> Cadastro Fornecedores</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-360" onclick="if(window.switchActiveView) { window.switchActiveView('suppliers-360'); event.preventDefault(); }"><i class="ph-arrows-out-card me-2"></i> Fornecedor 360°</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-documents" onclick="if(window.switchActiveView) { window.switchActiveView('suppliers-documents'); event.preventDefault(); }"><i class="ph-files me-2"></i> Documentos & CNDs</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-registry"><i class="ph-buildings me-2"></i> Cadastro Fornecedores</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-360"><i class="ph-arrows-out-card me-2"></i> Fornecedor 360°</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="suppliers-documents"><i class="ph-files me-2"></i> Documentos & CNDs</a></li>
 
                                 <!-- CONTRATOS -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Contratos</li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-management" onclick="if(window.switchActiveView) { window.switchActiveView('contracts-management'); event.preventDefault(); }"><i class="ph-scroll me-2"></i> Central de Contratos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-installments" onclick="if(window.switchActiveView) { window.switchActiveView('contracts-installments'); event.preventDefault(); }"><i class="ph-calendar-blank me-2"></i> Parcelas Contratuais</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-expirations" onclick="if(window.switchActiveView) { window.switchActiveView('contracts-expirations'); event.preventDefault(); }"><i class="ph-clock-countdown me-2"></i> Vencimentos (30 dias)</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-management"><i class="ph-scroll me-2"></i> Central de Contratos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-installments"><i class="ph-calendar-blank me-2"></i> Parcelas Contratuais</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="contracts-expirations"><i class="ph-clock-countdown me-2"></i> Vencimentos (30 dias)</a></li>
 
                                 <!-- GESTÃO & CENTRO DE CUSTOS -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Gestão Orçamentária</li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-costcenters" onclick="if(window.switchActiveView) { window.switchActiveView('management-costcenters'); event.preventDefault(); }"><i class="ph-flag me-2"></i> Centro de Custos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-budgets" onclick="if(window.switchActiveView) { window.switchActiveView('management-budgets'); event.preventDefault(); }"><i class="ph-target me-2"></i> Orçamentos por Evento</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre" onclick="if(window.switchActiveView) { window.switchActiveView('cashflow-dre'); event.preventDefault(); }"><i class="ph-presentation-chart me-2"></i> DRE do Evento</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-costcenters"><i class="ph-flag me-2"></i> Centro de Custos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-budgets"><i class="ph-target me-2"></i> Orçamentos por Evento</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre"><i class="ph-presentation-chart me-2"></i> DRE do Evento</a></li>
 
                                 <!-- MENUS CLÁSSICOS PRESERVADOS -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Operações Financeiras</li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics" onclick="if(window.switchActiveView) { window.switchActiveView('financial-analytics'); event.preventDefault(); }"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-statement" onclick="if(window.switchActiveView) { window.switchActiveView('financial-statement'); event.preventDefault(); }"><i class="ph-receipt me-2"></i> Extrato</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-accounts" onclick="if(window.switchActiveView) { window.switchActiveView('financial-accounts'); event.preventDefault(); }"><i class="ph-bank me-2"></i> Contas Bancárias</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-bordero" onclick="if(window.switchActiveView) { window.switchActiveView('financial-bordero'); event.preventDefault(); }"><i class="ph-signature me-2"></i> Borderô</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-pdv" onclick="if(window.switchActiveView) { window.switchActiveView('financial-pdv'); event.preventDefault(); }"><i class="ph-storefront me-2"></i> Pontos de Venda (PDV)</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-paymethods" onclick="if(window.switchActiveView) { window.switchActiveView('financial-paymethods'); event.preventDefault(); }"><i class="ph-credit-card me-2"></i> Métodos de Pagamento</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-custompay" onclick="if(window.switchActiveView) { window.switchActiveView('financial-custompay'); event.preventDefault(); }"><i class="ph-gear me-2"></i> Pagamentos Customizados</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-negotiations" onclick="if(window.switchActiveView) { window.switchActiveView('financial-negotiations'); event.preventDefault(); }"><i class="ph-handshake me-2"></i> Negociações Financeiras</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-refunds" onclick="if(window.switchActiveView) { window.switchActiveView('financial-refunds'); event.preventDefault(); }"><i class="ph-arrow-counter-clockwise me-2"></i> Devoluções / Estornos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-operators" onclick="if(window.switchActiveView) { window.switchActiveView('financial-operators'); event.preventDefault(); }"><i class="ph-shield-check me-2"></i> Operadoras de Cartão</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-statement"><i class="ph-receipt me-2"></i> Extrato</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-accounts"><i class="ph-bank me-2"></i> Contas Bancárias</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-bordero"><i class="ph-signature me-2"></i> Borderô</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-pdv"><i class="ph-storefront me-2"></i> Pontos de Venda (PDV)</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-paymethods"><i class="ph-credit-card me-2"></i> Métodos de Pagamento</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-custompay"><i class="ph-gear me-2"></i> Pagamentos Customizados</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-negotiations"><i class="ph-handshake me-2"></i> Negociações Financeiras</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-refunds"><i class="ph-arrow-counter-clockwise me-2"></i> Devoluções / Estornos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-operators"><i class="ph-shield-check me-2"></i> Operadoras de Cartão</a></li>
                             </ul>
                         </li>
 
                         <!-- Contabilidade accordion group (Design Oficial ChatGPT Image) -->
-                        <li class="nav-item nav-item-submenu nav-item-open">
-                            <a href="#" class="nav-link" title="Menu Contabilidade Disk">
+                        <li class="nav-item nav-item-submenu">
+                                <a href="#" class="nav-link" title="Menu Contabilidade Disk">
                                 <i class="ph-book-open"></i>
                                 <span>Contabilidade</span>
                                 <span class="badge bg-primary align-self-center rounded-pill ms-auto">Enterprise</span>
                             </a>
-                            <ul class="nav-group-sub collapse show">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link active text-primary fw-bold" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'dashboard')"><i class="ph-chart-pie-slice me-2"></i> Vis&atilde;o Geral</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'inteligencia-contabil')"><i class="ph-brain me-2"></i> Intelig&ecirc;ncia Cont&aacute;bil</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'conciliacao')"><i class="ph-arrows-left-right me-2"></i> Centro de Concilia&ccedil;&atilde;o</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'lancamentos')"><i class="ph-crosshair me-2"></i> Rastreabilidade</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-dre')"><i class="ph-presentation me-2"></i> DRE Gerencial</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-balanco')"><i class="ph-scales me-2"></i> Balan&ccedil;o Patrimonial</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'cont-fechamento')"><i class="ph-lock-key me-2"></i> Fechamento Mensal</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'lancamentos')"><i class="ph-pencil me-2"></i> Lan&ccedil;amentos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'plano-contas')"><i class="ph-list-bullets me-2"></i> Plano de Contas</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'relatorios-dre')"><i class="ph-file-text me-2"></i> Relat&oacute;rios</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'auditoria')"><i class="ph-shield-check me-2"></i> Auditoria</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" onclick="window.switchAccountingTab(event, 'config-plano')"><i class="ph-gear me-2"></i> Configura&ccedil;&otilde;es</a></li>
+                            <ul class="nav-group-sub collapse">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="dashboard"><i class="ph-chart-pie-slice me-2"></i> Vis&atilde;o Geral</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="inteligencia-contabil"><i class="ph-brain me-2"></i> Intelig&ecirc;ncia Cont&aacute;bil</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="conciliacao"><i class="ph-arrows-left-right me-2"></i> Centro de Concilia&ccedil;&atilde;o</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="lancamentos"><i class="ph-crosshair me-2"></i> Rastreabilidade</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-dre"><i class="ph-presentation me-2"></i> DRE Gerencial</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-balanco"><i class="ph-scales me-2"></i> Balan&ccedil;o Patrimonial</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="cont-fechamento"><i class="ph-lock-key me-2"></i> Fechamento Mensal</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="lancamentos"><i class="ph-pencil me-2"></i> Lan&ccedil;amentos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="plano-contas"><i class="ph-list-bullets me-2"></i> Plano de Contas</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-dre"><i class="ph-file-text me-2"></i> Relat&oacute;rios</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="auditoria"><i class="ph-shield-check me-2"></i> Auditoria</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="config-plano"><i class="ph-gear me-2"></i> Configura&ccedil;&otilde;es</a></li>
                             </ul>
                         </li>
                         <!-- Fluxo de Caixa accordion group -->
@@ -396,7 +396,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link submenu-link" data-view="event-marketing" onclick="if(window.switchActiveView) { window.switchActiveView('event-marketing'); event.preventDefault(); }" title="Gráficos de Marketing">
+                            <a href="#" class="nav-link submenu-link" data-view="event-marketing" title="Gráficos de Marketing">
                                 <i class="ph-megaphone me-2"></i>
                                 <span>Gráficos Marketing</span>
                             </a>
@@ -438,7 +438,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link submenu-link" data-view="financial-negotiations" title="Negociações Financeiro do Evento" onclick="if(window.switchActiveView) { window.switchActiveView('financial-negotiations'); event.preventDefault(); }">
+                            <a href="#" class="nav-link submenu-link" data-view="financial-negotiations" title="Negociações Financeiro do Evento">
                                 <i class="ph-handshake me-2"></i>
                                 <span>Negociações Financeiras</span>
                             </a>

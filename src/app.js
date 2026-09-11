@@ -275,35 +275,35 @@ function initMobileSidebar() {
 
   const sidebar = document.querySelector('.sidebar.sidebar-main');
 
-  // Toggle do menu mobile para todos os botões com a classe .sidebar-mobile-main-toggle
+  // Toggle do menu mobile para todos os botões com a classe .sidebar-mobile-main-toggle (com captura e sem duplicidade)
   document.querySelectorAll('.sidebar-mobile-main-toggle').forEach(btn => {
-    // Remove listeners antigos se houver
-    btn.removeEventListener('click', btn.__mobileToggleHandler);
-    btn.__mobileToggleHandler = (e) => {
+    if (btn.__mobileToggleBound) return;
+    btn.__mobileToggleBound = true;
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       if (!sidebar) return;
-      const isExpanded = sidebar.classList.toggle('sidebar-mobile-expanded');
-      backdrop.classList.toggle('show', isExpanded);
-      if (typeof triggerGlobalChartResize === 'function') {
-        setTimeout(triggerGlobalChartResize, 200);
+      
+      const isExpanded = sidebar.classList.contains('sidebar-mobile-expanded');
+      if (isExpanded) {
+        sidebar.classList.remove('sidebar-mobile-expanded');
+        backdrop.classList.remove('show');
+      } else {
+        sidebar.classList.add('sidebar-mobile-expanded');
+        backdrop.classList.add('show');
       }
-    };
-    btn.addEventListener('click', btn.__mobileToggleHandler);
+    }, true); // useCapture para precedência sobre o template Limitless
   });
 
-  // Fechar ao clicar no backdrop escuro
-  backdrop.addEventListener('click', () => {
-    if (sidebar) sidebar.classList.remove('sidebar-mobile-expanded');
-    backdrop.classList.remove('show');
-  });
-
-  // Fechar com a tecla ESC
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-mobile-expanded')) {
-      sidebar.classList.remove('sidebar-mobile-expanded');
+  // Fechar ao clicar no backdrop
+  if (backdrop && !backdrop.__clickBound) {
+    backdrop.__clickBound = true;
+    backdrop.addEventListener('click', () => {
+      if (sidebar) sidebar.classList.remove('sidebar-mobile-expanded');
       backdrop.classList.remove('show');
-    }
-  });
+    });
+  }
 }
 window.initMobileSidebar = initMobileSidebar;
 
@@ -398,264 +398,313 @@ function initApp() {
    NATIVE DATA-VIEW NAVIGATION CONTROLLER (data-view -> view-*)
    ========================================================================== */
 
-function openView(viewName) {
-  if (!viewName) viewName = 'dashboard-main';
-  viewName = String(viewName).replace(/^#\/?/, '').replace(/^view-/, '').trim().toLowerCase();
+let __isNavigatingRoute = false;
 
-  const aliasMap = {
-    '': 'dashboard-main',
-    'dashboard': 'dashboard-main',
-    'dashboard-main': 'dashboard-main',
-    'agenda': 'dashboard-agenda',
-    'indicadores': 'dashboard-indicators',
-    'eventos': 'events-list',
-    'events': 'events-list',
-    'novo-evento': 'events-new',
-    'lotes': 'events-lotes',
-    'cupons': 'events-cupons',
-    'checkin': 'events-checkin',
-    'participantes': 'events-attendees',
-    'consulta': 'global-consult-ticket',
-    'marketing': 'marketing-overview',
-    'marketing-dashboard': 'marketing-overview',
-    'campanhas': 'marketing-campaigns',
-    'whatsapp': 'marketing-whatsapp',
-    'email': 'marketing-email',
-    'sms': 'marketing-sms',
-    'automacao': 'marketing-automation',
-    'financeiro': 'financial-dashboard',
-    'saldo': 'financial-balance',
-    'gestao-saldos': 'financial-event-transfers',
-    'financial-transfers': 'financial-event-transfers',
-    'financial-event-transfers': 'financial-event-transfers',
-    'agenda-financeira': 'financial-event-transfers',
-    'financial-schedule': 'financial-event-transfers',
-    'payout-batches': 'financial-event-transfers',
-    'treasury': 'treasury',
-    'tesouraria': 'treasury',
-    'contas-bancarias': 'treasury',
-    'cnab': 'treasury',
-    'pix': 'treasury',
-    'procure-to-pay': 'procure-to-pay',
-    'approvals-inbox': 'procure-to-pay',
-    'purchases-requests': 'procure-to-pay',
-    'purchases-quotations': 'procure-to-pay',
-    'purchases-orders': 'procure-to-pay',
-    'purchases-receipts': 'procure-to-pay',
-    'suppliers-registry': 'procure-to-pay',
-    'suppliers-360': 'procure-to-pay',
-    'suppliers-documents': 'procure-to-pay',
-    'contracts-management': 'procure-to-pay',
-    'contracts-installments': 'procure-to-pay',
-    'contracts-expirations': 'procure-to-pay',
-    'management-costcenters': 'procure-to-pay',
-    'management-budgets': 'procure-to-pay',
-    'contabilidade': 'accounting-disk',
-    'relatorios': 'reports-sales',
-    'configuracoes': 'settings-profile'
-  };
+function openView(viewName, subTab = null) {
+  if (__isNavigatingRoute) return;
+  __isNavigatingRoute = true;
 
-  const resolvedName = aliasMap[viewName] || viewName;
-  const targetId = 'view-' + resolvedName;
-  let target = document.getElementById(targetId) || document.getElementById(resolvedName);
+  try {
+    if (!viewName) viewName = 'dashboard-main';
+    
+    // Suporte a rotas compostas no formato view/subtab (ex: accounting-disk/conciliacao)
+    if (typeof viewName === 'string' && viewName.includes('/')) {
+      const parts = viewName.split('/');
+      viewName = parts[0];
+      if (!subTab) subTab = parts[1];
+    }
 
-  console.log('[NAV]', {
-    viewName,
-    resolvedName,
-    targetId,
-    found: !!target
-  });
+    viewName = String(viewName).replace(/^#\/?/, '').replace(/^view-/, '').trim().toLowerCase();
 
-  if (!target) {
-    console.error('[NAV] Página inexistente: ' + targetId);
-    target = document.getElementById('view-dashboard-main');
-    if (!target) return false;
-  }
+    const aliasMap = {
+      '': 'dashboard-main',
+      'dashboard': 'dashboard-main',
+      'dashboard-main': 'dashboard-main',
+      'agenda': 'dashboard-agenda',
+      'indicadores': 'dashboard-indicators',
+      'eventos': 'events-list',
+      'events': 'events-list',
+      'novo-evento': 'events-new',
+      'lotes': 'events-lotes',
+      'cupons': 'events-cupons',
+      'checkin': 'events-checkin',
+      'participantes': 'events-attendees',
+      'consulta': 'global-consult-ticket',
+      'marketing': 'marketing-overview',
+      'marketing-dashboard': 'marketing-overview',
+      'campanhas': 'marketing-campaigns',
+      'whatsapp': 'marketing-whatsapp',
+      'email': 'marketing-email',
+      'sms': 'marketing-sms',
+      'automacao': 'marketing-automation',
+      'financeiro': 'financial-dashboard',
+      'saldo': 'financial-balance',
+      'gestao-saldos': 'financial-event-transfers',
+      'financial-transfers': 'financial-event-transfers',
+      'financial-event-transfers': 'financial-event-transfers',
+      'agenda-financeira': 'financial-event-transfers',
+      'financial-schedule': 'financial-event-transfers',
+      'payout-batches': 'financial-event-transfers',
+      'treasury': 'treasury',
+      'tesouraria': 'treasury',
+      'contas-bancarias': 'treasury',
+      'cnab': 'treasury',
+      'pix': 'treasury',
+      'procure-to-pay': 'procure-to-pay',
+      'approvals-inbox': 'procure-to-pay',
+      'purchases-requests': 'procure-to-pay',
+      'purchases-quotations': 'procure-to-pay',
+      'purchases-orders': 'procure-to-pay',
+      'purchases-receipts': 'procure-to-pay',
+      'suppliers-registry': 'procure-to-pay',
+      'suppliers-360': 'procure-to-pay',
+      'suppliers-documents': 'procure-to-pay',
+      'contracts-management': 'procure-to-pay',
+      'contracts-installments': 'procure-to-pay',
+      'contracts-expirations': 'procure-to-pay',
+      'management-costcenters': 'procure-to-pay',
+      'management-budgets': 'procure-to-pay',
+      'contabilidade': 'accounting-disk',
+      'relatorios': 'reports-sales',
+      'configuracoes': 'settings-profile'
+    };
 
-  // Esconder TODAS as .page-section
-  document.querySelectorAll('.page-section').forEach(section => {
-    section.style.display = 'none';
-  });
+    const resolvedName = aliasMap[viewName] || viewName;
+    const targetId = 'view-' + resolvedName;
+    let target = document.getElementById(targetId) || document.getElementById(resolvedName);
 
-  // Exibir somente a tela encontrada
-  target.style.display = 'block';
+    console.log('[ROUTER ÚNICO]', {
+      viewName,
+      subTab,
+      resolvedName,
+      targetId,
+      found: !!target
+    });
 
-  // Atualizar classe active em todos os links com [data-view]
-  document.querySelectorAll('[data-view]').forEach(item => {
-    const dv = (item.getAttribute('data-view') || '').replace(/^view-/, '');
-    const isActive = dv === resolvedName || dv === viewName;
-    item.classList.toggle('active', isActive);
+    if (!target) {
+      console.warn('[ROUTER] View inexistente: ' + targetId + ', direcionando para dashboard-main.');
+      target = document.getElementById('view-dashboard-main');
+      if (!target) return false;
+    }
 
-    // Expandir accordion pai se estiver ativo
-    if (isActive) {
-      const parentLi = item.closest('.nav-item-submenu');
-      if (parentLi) {
-        parentLi.classList.add('nav-item-open');
-        const sub = parentLi.querySelector('.nav-group-sub');
-        if (sub && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
-          bootstrap.Collapse.getOrCreateInstance(sub, { toggle: false }).show();
-        }
+    // Esconder todas as seções
+    document.querySelectorAll('.page-section').forEach(section => {
+      section.style.display = 'none';
+    });
+
+    // Exibir exclusivamente a view selecionada
+    target.style.display = 'block';
+
+    // Se a aba contábil foi especificada, sincronizar o estado
+    if (resolvedName === 'accounting-disk' && subTab) {
+      if (typeof switchAccountingTab === 'function') {
+        switchAccountingTab(subTab);
       }
     }
-  });
 
-  // Atualizar Título e Subtítulo da Página dinamicamente
-  const viewTitles = {
-    'dashboard-main': { title: 'Painel Geral', sub: 'Métricas operacionais consolidadas e resumo de vendas.' },
-    'dashboard-agenda': { title: 'Agenda de Eventos', sub: 'Calendário e programação de eventos da plataforma.' },
-    'dashboard-indicators': { title: 'Indicadores de Performance', sub: 'Metas e indicadores consolidados de bilheteria.' },
-    'events-list': { title: 'Todos os Eventos', sub: 'Gestão, acompanhamento e status em tempo real de eventos.' },
-    'events-new': { title: 'Novo Evento', sub: 'Cadastro e configuração de eventos, lotes e ingressos.' },
-    'events-lotes': { title: 'Lotes de Ingressos', sub: 'Gestão de lotes, disponibilidade e precificação.' },
-    'events-cupons': { title: 'Cupons de Desconto', sub: 'Criação e gestão de cupons promocionais para eventos.' },
-    'events-checkin': { title: 'Validador de Portaria', sub: 'Controle de acesso e leitura de ingressos na portaria.' },
-    'events-attendees': { title: 'Lista de Participantes', sub: 'Lista consolidada de compradores e participantes.' },
-    'events-page': { title: 'Página do Evento', sub: 'Link público de vendas e QR Code de divulgação.' },
-    'global-consult-ticket': { title: 'Consulta de Ingressos', sub: 'Busca unificada por pedido, código, CPF ou comprador.' },
-    'financial-dashboard': { title: 'Painel Financeiro', sub: 'Resumo financeiro, conciliação e fluxo de caixa.' },
-    'financial-event-transfers': { title: 'Gestão de Saldos & Transferência entre Eventos', sub: 'Painel consolidado, saldos disponíveis reais por evento e transferência atômica.' },
-    'financial-balance': { title: 'Saldo Consolidado', sub: 'Saldos disponíveis, repasses e fechamento financeiro.' },
-    'financial-repass': { title: 'Solicitações de Repasse', sub: 'Gestão e histórico de transferências a produtores.' },
-    'financial-advance': { title: 'Antecipações', sub: 'Simulação e contratação de antecipação de recebíveis.' },
-    'financial-negotiations': { title: 'Negociações Financeiras', sub: 'Taxas de serviço, conveniência e comissões por evento.' },
-    'financial-statement': { title: 'Extrato Financeiro', sub: 'Histórico detalhado de transações e movimentações.' },
-    'financial-expenses': { title: 'Despesas Financeiras', sub: 'Controle e lançamentos de custos operacionais.' },
-    'financial-accounts': { title: 'Contas Bancárias', sub: 'Cadastro e gestão de contas de produtores e parceiros.' },
-    'financial-bordero': { title: 'Borderô Financeiro', sub: 'Demonstrativo consolidado de fechamento de eventos.' },
-    'financial-pdv': { title: 'Pontos de Venda (PDV)', sub: 'Monitoramento em tempo real de caixas físicos e operadores.' },
-    'financial-paymethods': { title: 'Métodos de Pagamento', sub: 'Taxas, adquirentes e regras de parcelamento.' },
-    'financial-custompay': { title: 'Pagamentos Customizados', sub: 'Condições especiais e formas personalizadas de recebimento.' },
-    'financial-refunds': { title: 'Devoluções e Estornos', sub: 'Gestão de cancelamentos, estornos e chargebacks.' },
-    'financial-operators': { title: 'Operadoras de Cartão', sub: 'Gateways, adquirentes e conciliação de recebíveis.' },
-    'financial-analytics': { title: 'Inteligência Financeira', sub: 'Análise preditiva, lucratividade e insights de vendas.' },
-    'marketing-overview': { title: 'Marketing Hub', sub: 'Visão geral 360° de campanhas, públicos e conversões.' },
-    'marketing-campaigns': { title: 'Central de Campanhas', sub: 'Planeje, dispare e acompanhe campanhas multicanal.' },
-    'marketing-campaign-create': { title: 'Nova Campanha', sub: 'Assistente de criação de campanhas de tráfego e vendas.' },
-    'marketing-whatsapp': { title: 'WhatsApp Marketing', sub: 'Disparos e automação de mensagens em massa via WhatsApp.' },
-    'marketing-email': { title: 'E-mail Marketing', sub: 'Gestão de campanhas de e-mail e métricas de engajamento.' },
-    'marketing-sms': { title: 'SMS Marketing', sub: 'Disparo de SMS direto com alta taxa de entrega e abertura.' },
-    'marketing-abandoned-cart': { title: 'Recuperação de Carrinho', sub: 'Recuperação automatizada de pedidos pendentes.' },
-    'marketing-coupons': { title: 'Cupons e Promoções', sub: 'Gestão estratégica de cupons e afiliados de divulgação.' },
-    'marketing-audiences': { title: 'Públicos e CRM', sub: 'Segmentação de compradores e clusters de interesse.' },
-    'marketing-automation': { title: 'Automações de Marketing', sub: 'Fluxos automáticos de régua de relacionamento.' },
-    'marketing-utm': { title: 'UTMs & Analytics', sub: 'Rastreamento avançado e atribuição de receita por canal.' },
-    'marketing-pixel': { title: 'Pixel & Meta CAPI', sub: 'Integrações com Meta Pixel, Google Tag e TikTok.' },
-    'marketing-ads': { title: 'Disk Ads', sub: 'Anúncios patrocinados dentro da plataforma DiskIngressos.' },
-    'marketing-reports': { title: 'Relatórios de Marketing', sub: 'ROI, ROAS e conversão consolidada por canal.' },
-    'accounting-disk': { title: 'Contabilidade Disk', sub: 'Plano de contas, livro diário, razão e conciliação contábil.' },
-    'reports-sales': { title: 'Relatórios e Métricas', sub: 'Relatórios consolidados de vendas e participantes.' },
-    'settings-profile': { title: 'Configurações', sub: 'Perfil, preferências e configurações da conta.' }
-  };
+    // Atualizar estado ativo preciso em links [data-view] e [data-tab]
+    document.querySelectorAll('[data-view]').forEach(item => {
+      const dv = (item.getAttribute('data-view') || '').replace(/^view-/, '');
+      const dt = item.getAttribute('data-tab');
+      
+      let isActive = (dv === resolvedName || dv === viewName);
+      if (dt && subTab) {
+        isActive = isActive && (dt === subTab);
+      } else if (dt && resolvedName === 'accounting-disk') {
+        const currentAccTab = (typeof currentAccountingTab !== 'undefined' && currentAccountingTab) ? currentAccountingTab : 'dashboard';
+        isActive = isActive && (dt === currentAccTab);
+      } else if (!dt && (resolvedName === 'accounting-disk' || resolvedName === 'procure-to-pay')) {
+        if (subTab) isActive = false;
+      }
 
-  const titleEl = document.getElementById('active-view-title');
-  const subEl = document.getElementById('active-view-subtitle');
-  if (titleEl && viewTitles[resolvedName]) {
-    titleEl.textContent = viewTitles[resolvedName].title;
-    if (subEl) subEl.textContent = viewTitles[resolvedName].sub;
-  }
+      item.classList.toggle('active', isActive);
 
-  // Fechar sidebar mobile automaticamente após clique de navegação
-  if (window.innerWidth < 992) {
-    const mobileSidebar = document.querySelector('.sidebar.sidebar-main');
-    const mobileBackdrop = document.querySelector('.sidebar-mobile-backdrop');
-    if (mobileSidebar && mobileSidebar.classList.contains('sidebar-mobile-expanded')) {
-      mobileSidebar.classList.remove('sidebar-mobile-expanded');
+      // Expandir accordion pai se estiver ativo
+      if (isActive) {
+        const parentLi = item.closest('.nav-item-submenu');
+        if (parentLi) {
+          parentLi.classList.add('nav-item-open');
+          const sub = parentLi.querySelector('.nav-group-sub');
+          if (sub && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            bootstrap.Collapse.getOrCreateInstance(sub, { toggle: false }).show();
+          }
+        }
+      }
+    });
+
+    // Atualizar Título e Subtítulo da Página dinamicamente
+    const viewTitles = {
+      'dashboard-main': { title: 'Painel Geral', sub: 'Métricas operacionais consolidadas e resumo de vendas.' },
+      'dashboard-agenda': { title: 'Agenda de Eventos', sub: 'Calendário e programação de eventos da plataforma.' },
+      'dashboard-indicators': { title: 'Indicadores de Performance', sub: 'Metas e indicadores consolidados de bilheteria.' },
+      'events-list': { title: 'Todos os Eventos', sub: 'Gestão, acompanhamento e status em tempo real de eventos.' },
+      'events-new': { title: 'Novo Evento', sub: 'Cadastro e configuração de eventos, lotes e ingressos.' },
+      'events-lotes': { title: 'Lotes de Ingressos', sub: 'Gestão de lotes, disponibilidade e precificação.' },
+      'events-cupons': { title: 'Cupons de Desconto', sub: 'Criação e gestão de cupons promocionais para eventos.' },
+      'events-checkin': { title: 'Validador de Portaria', sub: 'Controle de acesso e leitura de ingressos na portaria.' },
+      'events-attendees': { title: 'Lista de Participantes', sub: 'Lista consolidada de compradores e participantes.' },
+      'events-page': { title: 'Página do Evento', sub: 'Link público de vendas e QR Code de divulgação.' },
+      'global-consult-ticket': { title: 'Consulta de Ingressos', sub: 'Busca unificada por pedido, código, CPF ou comprador.' },
+      'financial-dashboard': { title: 'Painel Financeiro', sub: 'Resumo financeiro, conciliação e fluxo de caixa.' },
+      'financial-event-transfers': { title: 'Gestão de Saldos & Transferência entre Eventos', sub: 'Painel consolidado, saldos disponíveis reais por evento e transferência atômica.' },
+      'financial-balance': { title: 'Saldo Consolidado', sub: 'Saldos disponíveis, repasses e fechamento financeiro.' },
+      'financial-repass': { title: 'Solicitações de Repasse', sub: 'Gestão e histórico de transferências a produtores.' },
+      'financial-advance': { title: 'Antecipações', sub: 'Simulação e contratação de antecipação de recebíveis.' },
+      'financial-negotiations': { title: 'Negociações Financeiras', sub: 'Taxas de serviço, conveniência e comissões por evento.' },
+      'financial-statement': { title: 'Extrato Financeiro', sub: 'Histórico detalhado de transações e movimentações.' },
+      'financial-expenses': { title: 'Despesas Financeiras', sub: 'Controle e lançamentos de custos operacionais.' },
+      'financial-accounts': { title: 'Contas Bancárias', sub: 'Cadastro e gestão de contas de produtores e parceiros.' },
+      'financial-bordero': { title: 'Borderô Financeiro', sub: 'Demonstrativo consolidado de fechamento de eventos.' },
+      'financial-pdv': { title: 'Pontos de Venda (PDV)', sub: 'Monitoramento em tempo real de caixas físicos e operadores.' },
+      'financial-paymethods': { title: 'Métodos de Pagamento', sub: 'Taxas, adquirentes e regras de parcelamento.' },
+      'financial-custompay': { title: 'Pagamentos Customizados', sub: 'Condições especiais e formas personalizadas de recebimento.' },
+      'financial-refunds': { title: 'Devoluções e Estornos', sub: 'Gestão de cancelamentos, estornos e chargebacks.' },
+      'financial-operators': { title: 'Operadoras de Cartão', sub: 'Gateways, adquirentes e conciliação de recebíveis.' },
+      'financial-analytics': { title: 'Inteligência Financeira', sub: 'Análise preditiva, lucratividade e insights de vendas.' },
+      'treasury': { title: 'Tesouraria Operacional & Bancos', sub: 'Posição consolidada de caixa, contas bancárias, PIX e remessa CNAB 240.' },
+      'procure-to-pay': { title: 'Procure-to-Pay & Compras', sub: 'Fornecedor 360°, cotações, pedidos, contratos e centro de custos.' },
+      'marketing-overview': { title: 'Marketing Hub', sub: 'Visão geral 360° de campanhas, públicos e conversões.' },
+      'marketing-campaigns': { title: 'Central de Campanhas', sub: 'Planeje, dispare e acompanhe campanhas multicanal.' },
+      'marketing-campaign-create': { title: 'Nova Campanha', sub: 'Assistente de criação de campanhas de tráfego e vendas.' },
+      'marketing-whatsapp': { title: 'WhatsApp Marketing', sub: 'Disparos e automação de mensagens em massa via WhatsApp.' },
+      'marketing-email': { title: 'E-mail Marketing', sub: 'Gestão de campanhas de e-mail e métricas de engajamento.' },
+      'marketing-sms': { title: 'SMS Marketing', sub: 'Disparo de SMS direto com alta taxa de entrega e abertura.' },
+      'marketing-abandoned-cart': { title: 'Recuperação de Carrinho', sub: 'Recuperação automatizada de pedidos pendentes.' },
+      'marketing-coupons': { title: 'Cupons e Promoções', sub: 'Gestão estratégica de cupons e afiliados de divulgação.' },
+      'marketing-audiences': { title: 'Públicos e CRM', sub: 'Segmentação de compradores e clusters de interesse.' },
+      'marketing-automation': { title: 'Automações de Marketing', sub: 'Fluxos automáticos de régua de relacionamento.' },
+      'marketing-utm': { title: 'UTMs & Analytics', sub: 'Rastreamento avançado e atribuição de receita por canal.' },
+      'marketing-pixel': { title: 'Pixels & Tracking Central', sub: 'Meta Pixel, Google Tag, TikTok e Spotify Conversions.' },
+      'marketing-ads': { title: 'Disk Ads', sub: 'Anúncios patrocinados dentro da plataforma DiskIngressos.' },
+      'marketing-reports': { title: 'Relatórios de Marketing', sub: 'ROI, ROAS e conversão consolidada por canal.' },
+      'accounting-disk': { title: 'Contabilidade Disk Enterprise', sub: 'Plano de contas, livro diário, razão, DRE e conciliação contábil.' },
+      'reports-sales': { title: 'Relatórios e Métricas', sub: 'Relatórios consolidados de vendas e participantes.' },
+      'settings-profile': { title: 'Configurações', sub: 'Perfil, preferências e configurações da conta.' }
+    };
+
+    const titleEl = document.getElementById('active-view-title');
+    const subEl = document.getElementById('active-view-subtitle');
+    if (titleEl && viewTitles[resolvedName]) {
+      titleEl.textContent = viewTitles[resolvedName].title;
+      if (subEl) subEl.textContent = viewTitles[resolvedName].sub;
     }
-    if (mobileBackdrop) {
-      mobileBackdrop.classList.remove('show');
+
+    // Fechar sidebar mobile automaticamente após clique de navegação
+    if (window.innerWidth < 992) {
+      const mobileSidebar = document.querySelector('.sidebar.sidebar-main');
+      const mobileBackdrop = document.querySelector('.sidebar-mobile-backdrop');
+      if (mobileSidebar && mobileSidebar.classList.contains('sidebar-mobile-expanded')) {
+        mobileSidebar.classList.remove('sidebar-mobile-expanded');
+      }
+      if (mobileBackdrop) {
+        mobileBackdrop.classList.remove('show');
+      }
     }
-  }
 
-  // Atualizar hash na URL
-  try {
-    history.replaceState({ page: resolvedName }, '', '#' + resolvedName);
-    sessionStorage.setItem('currentPage', resolvedName);
-  } catch (e) {}
+    // Atualizar hash na URL de forma limpa (suportando subrotas)
+    const newHash = subTab ? `#${resolvedName}/${subTab}` : `#${resolvedName}`;
+    try {
+      if (window.location.hash !== newHash) {
+        history.replaceState({ page: resolvedName, tab: subTab }, '', newHash);
+      }
+      sessionStorage.setItem('currentPage', resolvedName);
+    } catch (e) {}
 
-  // Disparar renderizadores específicos
-  if (resolvedName === 'marketing-overview') {
-    if (typeof renderMarketingOverviewCharts === 'function') setTimeout(renderMarketingOverviewCharts, 50);
-  } else if (resolvedName === 'marketing-campaigns') {
-    if (typeof initMultichannelCampaignsModule === 'function') initMultichannelCampaignsModule();
-  } else if (resolvedName === 'marketing-whatsapp') {
-    if (typeof initWhatsAppMarketingModule === 'function') initWhatsAppMarketingModule();
-  } else if (resolvedName === 'marketing-email') {
-    if (typeof initEmailMarketingModule === 'function') initEmailMarketingModule();
-  } else if (resolvedName === 'marketing-automation') {
-    if (typeof initMarketingAutomationModule === 'function') initMarketingAutomationModule();
-  } else if (resolvedName === 'marketing-pixel' || resolvedName === 'marketing-config') {
-    if (typeof initMarketingPixelModule === 'function') initMarketingPixelModule();
-  } else if (resolvedName === 'marketing-audiences') {
-    if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
-  } else if (resolvedName === 'marketing-abandoned-cart') {
-    if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
-  } else if (resolvedName === 'accounting-disk') {
-    if (typeof switchAccountingTab === 'function') switchAccountingTab(null, typeof currentAccountingTab !== 'undefined' ? currentAccountingTab : 'dashboard');
-  } else if (resolvedName === 'financial-event-transfers') {
-    if (typeof initFinancialEventTransfersView === 'function') initFinancialEventTransfersView();
-    if (viewName === 'agenda-financeira' || viewName === 'financial-schedule' || viewName === 'payout-batches') {
-      if (typeof switchTransferTab === 'function') switchTransferTab('schedule');
+    // Disparar renderizadores específicos
+    if (resolvedName === 'marketing-overview') {
+      if (typeof renderMarketingOverviewCharts === 'function') setTimeout(renderMarketingOverviewCharts, 50);
+    } else if (resolvedName === 'marketing-campaigns') {
+      if (typeof initMultichannelCampaignsModule === 'function') initMultichannelCampaignsModule();
+    } else if (resolvedName === 'marketing-whatsapp') {
+      if (typeof initWhatsAppMarketingModule === 'function') initWhatsAppMarketingModule();
+    } else if (resolvedName === 'marketing-email') {
+      if (typeof initEmailMarketingModule === 'function') initEmailMarketingModule();
+    } else if (resolvedName === 'marketing-automation') {
+      if (typeof initMarketingAutomationModule === 'function') initMarketingAutomationModule();
+    } else if (resolvedName === 'marketing-pixel' || resolvedName === 'marketing-config') {
+      if (typeof initMarketingPixelModule === 'function') initMarketingPixelModule();
+    } else if (resolvedName === 'marketing-audiences') {
+      if (typeof initRemarketingAudiencesModule === 'function') initRemarketingAudiencesModule();
+    } else if (resolvedName === 'marketing-abandoned-cart') {
+      if (typeof initRemarketingRecoveryModule === 'function') initRemarketingRecoveryModule();
+    } else if (resolvedName === 'accounting-disk') {
+      const accTabToOpen = subTab || (typeof currentAccountingTab !== 'undefined' && currentAccountingTab ? currentAccountingTab : 'dashboard');
+      if (typeof switchAccountingTab === 'function') {
+        switchAccountingTab(accTabToOpen);
+      }
+    } else if (resolvedName === 'financial-event-transfers') {
+      if (typeof initFinancialEventTransfersView === 'function') initFinancialEventTransfersView();
+      if (viewName === 'agenda-financeira' || viewName === 'financial-schedule' || viewName === 'payout-batches' || subTab === 'schedule') {
+        if (typeof switchTransferTab === 'function') switchTransferTab('schedule');
+      }
+    } else if (resolvedName === 'procure-to-pay') {
+      let p2pTab = subTab || 'approvals';
+      if (!subTab) {
+        if (viewName.includes('supplier')) p2pTab = 'suppliers';
+        else if (viewName.includes('receipt') || viewName.includes('match')) p2pTab = 'matching';
+        else if (viewName.includes('purchase')) p2pTab = 'purchases';
+        else if (viewName.includes('contract')) p2pTab = 'contracts';
+        else if (viewName.includes('budget') || viewName.includes('costcenter') || viewName.includes('management')) p2pTab = 'budgets';
+        else if (viewName.includes('approval')) p2pTab = 'approvals';
+      }
+      if (typeof initProcureToPayView === 'function') initProcureToPayView(p2pTab);
     }
-  } else if (resolvedName === 'procure-to-pay') {
-    let p2pTab = 'approvals';
-    if (viewName.includes('supplier')) p2pTab = 'suppliers';
-    else if (viewName.includes('receipt') || viewName.includes('match')) p2pTab = 'matching';
-    else if (viewName.includes('purchase')) p2pTab = 'purchases';
-    else if (viewName.includes('contract')) p2pTab = 'contracts';
-    else if (viewName.includes('budget') || viewName.includes('costcenter') || viewName.includes('management')) p2pTab = 'budgets';
-    else if (viewName.includes('approval')) p2pTab = 'approvals';
-    if (typeof initProcureToPayView === 'function') initProcureToPayView(p2pTab);
-  }
 
-  // Redimensionamento global de gráficos para garantir adaptação perfeita no container
-  if (typeof triggerGlobalChartResize === 'function') {
-    setTimeout(triggerGlobalChartResize, 60);
-    setTimeout(triggerGlobalChartResize, 250);
-  }
+    // Redimensionamento global de gráficos
+    if (typeof triggerGlobalChartResize === 'function') {
+      setTimeout(triggerGlobalChartResize, 60);
+      setTimeout(triggerGlobalChartResize, 250);
+    }
 
-  window.scrollTo(0, 0);
-  return true;
+    window.scrollTo(0, 0);
+    return true;
+  } finally {
+    __isNavigatingRoute = false;
+  }
 }
 
 window.openView = openView;
 window.navigateTo = openView;
 window.switchActiveView = openView;
 
-// ÚNICO Listener nativo para [data-view]
+// ÚNICO Listener nativo central para navegação declarativa [data-view]
 document.addEventListener('click', function(event) {
   const link = event.target.closest('[data-view]');
   if (link) {
     event.preventDefault();
+    event.stopPropagation();
     const view = link.getAttribute('data-view');
+    const tab = link.getAttribute('data-tab');
     if (view) {
-      openView(view);
+      openView(view, tab || null);
     }
   }
 });
 
-// Listener para navegação por hash / popstate
-window.addEventListener('hashchange', function() {
-  const hash = (window.location.hash || '').replace(/^#\/?/, '').trim();
-  if (hash) openView(hash);
-});
-
 function renderMarketingOverviewCharts() {
-  refreshMarketingDashboard();
+  if (typeof refreshMarketingDashboard === 'function') {
+    refreshMarketingDashboard();
+  }
 }
 window.renderMarketingOverviewCharts = renderMarketingOverviewCharts;
 
-// Listen to URL hash and browser history popstate
-window.addEventListener('hashchange', () => {
-  const hash = window.location.hash.replace(/^#\/?/, '').trim();
-  if (hash) {
-    navigateTo(hash);
+// ÚNICO Listener nativo para navegação por hash e popstate
+window.addEventListener('hashchange', function() {
+  const rawHash = (window.location.hash || '').replace(/^#\/?/, '').trim();
+  if (rawHash) {
+    const parts = rawHash.split('/');
+    openView(parts[0], parts[1] || null);
   }
 });
+
 window.addEventListener('popstate', (e) => {
-  if (e.state && e.state.page) {
-    navigateTo(e.state.page);
+  const page = (e.state && e.state.page) ? e.state.page : (window.location.hash || '').replace(/^#\/?/, '').trim();
+  if (page) {
+    const parts = String(page).split('/');
+    openView(parts[0], parts[1] || null);
   }
 });
+
 
 
 /**
@@ -6625,7 +6674,18 @@ function switchAccountingCategory(category, defaultTab) {
 }
 
 /* --- switchAccountingTab --- */
-function switchAccountingTab(e, tabName) {
+function switchAccountingTab(tabName, e = null) {
+  // Tratamento robusto para inversão de argumentos legados (ex: event, tabName)
+  if (typeof tabName === 'object' && tabName !== null && typeof e === 'string') {
+    const temp = tabName;
+    tabName = e;
+    e = temp;
+  }
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+  // Tratamento de alias de rastreabilidade para lancamentos
+  if (tabName === 'rastreabilidade') tabName = 'lancamentos';
+  if (!tabName) tabName = 'dashboard';
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
   // Ensure view-accounting-disk is visible if hidden
@@ -6678,8 +6738,10 @@ function switchAccountingTab(e, tabName) {
 
   // 2. Sync Sidebar Menu Active State
   document.querySelectorAll('.nav-group-sub .submenu-link[data-view="accounting-disk"]').forEach(link => {
+    const dt = link.getAttribute('data-tab');
     const oc = link.getAttribute('onclick') || '';
-    if (oc.includes(`'${tabName}'`) || oc.includes(`"${tabName}"`) || (tabName === 'dashboard' && oc.includes("'dashboard'"))) {
+    const isThisTab = (dt && dt === tabName) || oc.includes(`'${tabName}'`) || oc.includes(`"${tabName}"`) || (tabName === 'dashboard' && (dt === 'dashboard' || oc.includes("'dashboard'")));
+    if (isThisTab) {
       link.classList.add('active', 'text-primary', 'fw-bold');
     } else {
       link.classList.remove('active', 'text-primary', 'fw-bold');
@@ -7454,7 +7516,7 @@ function switchAnalyticsView(view, btn) {
 
 function renderAnalyticsChart(view,period,data){const container=document.getElementById('acc-chart-bars-container');if(!container)return;if(!data){setAccountingNoDataState();return;}let items=[];if(view==='eventos'){items=(data.featuredEvents||[]).map(e=>({label:e.eventName||e.name||'Evento',value:Number(e.diskRevenue||0)}));}else if(view==='gateways'){items=(data.gateways||[]).map(g=>({label:g.name||'Gateway',value:Number(g.amount||0)}));}else if(view==='produtores'){const map=new Map();(data.featuredEvents||[]).forEach(e=>{const key=e.producerName||'Produtor';map.set(key,(map.get(key)||0)+Number(e.payout||0));});items=[...map.entries()].map(([label,value])=>({label,value}));}else{items=[{label:'GMV Transacionado',value:data.grossTransactionValue},{label:'Valores de Terceiros',value:data.thirdPartyFunds.total},{label:'Receita Disk',value:data.diskRevenue.total},{label:'Taxas Gateway',value:data.financialCosts.gatewayFees},{label:'Tributos',value:data.taxes.provisioned},{label:'Resultado Operacional',value:data.operatingResult}];}if(!items.length){container.innerHTML='<div class="w-100 text-center text-muted">Sem dados reais para esta visão.</div>';return;}const max=Math.max(1,...items.map(i=>Math.abs(Number(i.value||0))));container.innerHTML=items.map(i=>{const pct=Math.max(4,Math.round(Math.abs(Number(i.value||0))/max*100));return `<div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end px-1" style="min-width:55px" title="${i.label}: ${brlFormatter.format(Number(i.value||0))}"><span class="fs-xxs fw-bold font-monospace text-primary mb-1" style="font-size:9px">${brlFormatter.format(Number(i.value||0))}</span><div class="w-100 rounded-top bg-primary" style="height:${pct}%"></div><span class="fs-xxs text-muted mt-1 text-truncate text-center" style="font-size:9.5px;max-width:90px">${i.label}</span></div>`;}).join('');}
 
-function renderAccountingEventsTable(currentData){const tbody=document.getElementById('acc-dashboard-events-tbody');if(!tbody)return;const events=currentData?.featuredEvents||[];if(!events.length){tbody.innerHTML='<tr><td colspan="10" class="text-center py-4 text-muted">Nenhum evento financeiro retornado pela fonte oficial.</td></tr>';return;}tbody.innerHTML=events.map(ev=>`<tr><td class="ps-3"><strong>${ev.eventName||ev.name||'Evento'}</strong></td><td>${ev.producerName||ev.producer||'—'}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.gmv||0))}</td><td class="text-end font-monospace text-success">${brlFormatter.format(Number(ev.diskRevenue||0))}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.gatewayFees||0))}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.taxes||0))}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.payout||0))}</td><td class="text-end font-monospace fw-bold">${brlFormatter.format(Number(ev.result||0))}</td><td class="text-center"><span class="badge bg-light text-dark">${ev.status||'—'}</span></td><td class="text-end pe-3"><button class="btn btn-xxs btn-outline-primary" onclick="window.switchAccountingTab&&window.switchAccountingTab('rastreabilidade')">Rastrear</button></td></tr>`).join('');}
+function renderAccountingEventsTable(currentData){const tbody=document.getElementById('acc-dashboard-events-tbody');if(!tbody)return;const events=currentData?.featuredEvents||[];if(!events.length){tbody.innerHTML='<tr><td colspan="10" class="text-center py-4 text-muted">Nenhum evento financeiro retornado pela fonte oficial.</td></tr>';return;}tbody.innerHTML=events.map(ev=>`<tr><td class="ps-3"><strong>${ev.eventName||ev.name||'Evento'}</strong></td><td>${ev.producerName||ev.producer||'—'}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.gmv||0))}</td><td class="text-end font-monospace text-success">${brlFormatter.format(Number(ev.diskRevenue||0))}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.gatewayFees||0))}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.taxes||0))}</td><td class="text-end font-monospace">${brlFormatter.format(Number(ev.payout||0))}</td><td class="text-end font-monospace fw-bold">${brlFormatter.format(Number(ev.result||0))}</td><td class="text-center"><span class="badge bg-light text-dark">${ev.status||'—'}</span></td><td class="text-end pe-3"><button class="btn btn-xxs btn-outline-primary" onclick="window.switchAccountingTab&&window.switchAccountingTab('lancamentos')">Rastrear</button></td></tr>`).join('');}
 
 function openTransactionAuditModal(eventId) {
   const events = {
