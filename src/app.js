@@ -3879,6 +3879,12 @@ function initCharts() {
       }
     });
   }
+
+  // 4. Financial Evolution Chart (Accounting Dashboard)
+  const evolutionCanvas = document.getElementById('acc-evolution-chart-canvas');
+  if (evolutionCanvas && typeof renderFinancialEvolutionChart === 'function') {
+    renderFinancialEvolutionChart('30d');
+  }
 }
 
 /* ==========================================================================
@@ -6801,65 +6807,293 @@ function switchAccountingTab(e, tabName) {
   }
 }
 
-/* --- updateChartRange --- */
-function updateChartRange(range, btn) {
-  if (btn && btn.parentElement) {
-    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+/* --- Financial Evolution Chart (Chart.js) --- */
+let currentEvolutionChartInstance = null;
+let currentEvolutionRange = '30d';
+
+const EVOLUTION_DATASETS = {
+  'hoje': {
+    subtitle: 'Hoje (Tempo Real)',
+    labels: ['00h-04h', '04h-08h', '08h-12h', '12h-16h', '16h-20h', '20h-24h'],
+    receitaDisk: [380, 220, 1750, 2650, 2280, 540],
+    repasses: [2800, 1600, 12800, 19500, 16700, 3950],
+    taxasGateway: [114, 66, 525, 795, 684, 162],
+    tributos: [76, 44, 350, 530, 456, 108],
+    resultadoLiquido: [190, 110, 875, 1325, 1140, 270]
+  },
+  '7d': {
+    subtitle: 'Últimos 7 dias',
+    labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+    receitaDisk: [1150, 1320, 1700, 2080, 1570, 860, 450],
+    repasses: [8450, 9700, 12500, 15300, 11550, 6300, 3300],
+    taxasGateway: [345, 396, 510, 624, 471, 258, 135],
+    tributos: [230, 264, 340, 416, 314, 172, 90],
+    resultadoLiquido: [575, 660, 850, 1040, 785, 430, 225]
+  },
+  '30d': {
+    subtitle: 'Últimos 30 dias',
+    labels: ['01-05/09', '06-10/09', '11-15/09', '16-20/09', '21-25/09', '26-30/09'],
+    receitaDisk: [1180, 1570, 2210, 2580, 1060, 495],
+    repasses: [8680, 11530, 16250, 18950, 7790, 3640],
+    taxasGateway: [354, 471, 663, 774, 318, 148],
+    tributos: [236, 314, 442, 516, 212, 99],
+    resultadoLiquido: [590, 785, 1105, 1290, 530, 248]
+  },
+  'mes': {
+    subtitle: 'Mês Vigente (Setembro/2026)',
+    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+    receitaDisk: [2150, 2680, 2890, 2120],
+    repasses: [15800, 19700, 21200, 15550],
+    taxasGateway: [645, 804, 867, 636],
+    tributos: [430, 536, 578, 424],
+    resultadoLiquido: [1075, 1340, 1445, 1060]
+  },
+  'ano': {
+    subtitle: 'Exercício Anual (2026)',
+    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    receitaDisk: [4760, 5390, 5890, 6750, 7890, 9100, 8400, 8950, 9095, 9600, 10400, 12800],
+    repasses: [35000, 39600, 43200, 49500, 57800, 66800, 61600, 65700, 66840, 70500, 76300, 93900],
+    taxasGateway: [1428, 1617, 1767, 2025, 2367, 2730, 2520, 2685, 2728, 2880, 3120, 3840],
+    tributos: [952, 1078, 1178, 1350, 1578, 1820, 1680, 1790, 1819, 1920, 2080, 2560],
+    resultadoLiquido: [2380, 2695, 2945, 3375, 3945, 4550, 4200, 4475, 4548, 4800, 5200, 6400]
+  }
+};
+
+function renderFinancialEvolutionChart(range = '30d') {
+  currentEvolutionRange = range;
+  const dataConfig = EVOLUTION_DATASETS[range] || EVOLUTION_DATASETS['30d'];
+
+  // 1. Atualizar subtítulo de período
+  const subtitleEl = document.getElementById('acc-evolution-period-subtitle');
+  if (subtitleEl && dataConfig.subtitle) {
+    subtitleEl.textContent = dataConfig.subtitle;
   }
 
-  const container = document.getElementById('acc-chart-bars-container');
-  if (!container) return;
+  // 2. Calcular e atualizar indicadores rápidos de rodapé
+  const sum = arr => (arr || []).reduce((acc, v) => acc + Number(v || 0), 0);
+  const totalReceita = sum(dataConfig.receitaDisk);
+  const totalRepasses = sum(dataConfig.repasses);
+  const totalCustos = sum(dataConfig.taxasGateway) + sum(dataConfig.tributos);
+  const totalResultado = sum(dataConfig.resultadoLiquido);
 
-  const configs = {
-    'hoje': [
-      { label: '00-04h', val: 3200, pct: 35 },
-      { label: '04-08h', val: 1800, pct: 20 },
-      { label: '08-12h', val: 14500, pct: 75 },
-      { label: '12-16h', val: 22100, pct: 95 },
-      { label: '16-20h', val: 18900, pct: 82 },
-      { label: '20-24h', val: 4481, pct: 40 }
-    ],
-    '7d': [
-      { label: 'Seg', val: 8200, pct: 55 },
-      { label: 'Ter', val: 9400, pct: 62 },
-      { label: 'Qua', val: 12100, pct: 80 },
-      { label: 'Qui', val: 14800, pct: 95 },
-      { label: 'Sex', val: 11200, pct: 72 },
-      { label: 'Sáb', val: 6100, pct: 42 },
-      { label: 'Dom', val: 3181, pct: 25 }
-    ],
-    '30d': [
-      { label: '01-05', val: 8450, pct: 45 },
-      { label: '06-10', val: 11200, pct: 60 },
-      { label: '11-15', val: 15800, pct: 85 },
-      { label: '16-20', val: 18400, pct: 95 },
-      { label: '21-25', val: 7600, pct: 42 },
-      { label: '26-30', val: 3531, pct: 28 }
-    ],
-    '90d': [
-      { label: 'Mês -2 (Abr)', val: 48200, pct: 68 },
-      { label: 'Mês -1 (Mai)', val: 56400, pct: 80 },
-      { label: 'Mês Atual (Jun)', val: 64981, pct: 92 }
-    ],
-    'ano': [
-      { label: 'Jan', val: 34000, pct: 50 },
-      { label: 'Fev', val: 38500, pct: 58 },
-      { label: 'Mar', val: 42100, pct: 64 },
-      { label: 'Abr', val: 48200, pct: 72 },
-      { label: 'Mai', val: 56400, pct: 84 },
-      { label: 'Jun', val: 64981, pct: 96 }
-    ]
-  };
+  const formatBRL = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const series = configs[range] || configs['30d'];
-  container.innerHTML = series.map(item => `
-    <div class="flex-grow-1 d-flex flex-column align-items-center h-100 justify-content-end" style="min-width: 32px;" title="${item.label}: R$ ${item.val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}">
-      <span class="fs-xxs fw-bold font-monospace text-muted mb-1" style="font-size: 9px;">${item.pct}%</span>
-      <div class="w-100 rounded-top chart-bar-custom" style="height: ${item.pct}%; background: linear-gradient(180deg, #3d78e3 0%, #1e52b5 100%); transition: height 0.4s ease;"></div>
-      <span class="fs-xxs text-muted mt-1 text-nowrap" style="font-size: 10px;">${item.label}</span>
-    </div>
-  `).join('');
+  const statRec = document.getElementById('acc-evo-stat-receita');
+  const statRep = document.getElementById('acc-evo-stat-repasses');
+  const statCus = document.getElementById('acc-evo-stat-custos');
+  const statRes = document.getElementById('acc-evo-stat-resultado');
+
+  if (statRec) statRec.textContent = formatBRL(totalReceita);
+  if (statRep) statRep.textContent = formatBRL(totalRepasses);
+  if (statCus) statCus.textContent = formatBRL(totalCustos);
+  if (statRes) statRes.textContent = formatBRL(totalResultado);
+
+  // 3. Renderizar com Chart.js
+  const canvas = document.getElementById('acc-evolution-chart-canvas');
+  if (!canvas) return;
+
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js ainda não disponível no ambiente.');
+    return;
+  }
+
+  if (currentEvolutionChartInstance) {
+    try {
+      currentEvolutionChartInstance.destroy();
+    } catch (e) {
+      console.warn('Falha ao destruir instância anterior do gráfico:', e);
+    }
+    currentEvolutionChartInstance = null;
+  }
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Gradientes suaves de preenchimento
+  const gradientReceita = ctx.createLinearGradient(0, 0, 0, 240);
+  gradientReceita.addColorStop(0, 'rgba(59, 130, 246, 0.18)');
+  gradientReceita.addColorStop(1, 'rgba(59, 130, 246, 0.01)');
+
+  const gradientResultado = ctx.createLinearGradient(0, 0, 0, 240);
+  gradientResultado.addColorStop(0, 'rgba(139, 92, 246, 0.20)');
+  gradientResultado.addColorStop(1, 'rgba(139, 92, 246, 0.01)');
+
+  currentEvolutionChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dataConfig.labels,
+      datasets: [
+        {
+          label: 'Receita Disk',
+          data: dataConfig.receitaDisk,
+          borderColor: '#3b82f6',
+          backgroundColor: gradientReceita,
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#3b82f6',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 1.5,
+          order: 2
+        },
+        {
+          label: 'Repasses',
+          data: dataConfig.repasses,
+          borderColor: '#10b981',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          tension: 0.35,
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#10b981',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 1.5,
+          order: 3
+        },
+        {
+          label: 'Taxas Gateway',
+          data: dataConfig.taxasGateway,
+          borderColor: '#f97316',
+          backgroundColor: 'transparent',
+          borderWidth: 1.8,
+          borderDash: [4, 4],
+          tension: 0.3,
+          fill: false,
+          pointRadius: 2.5,
+          pointHoverRadius: 5,
+          pointBackgroundColor: '#f97316',
+          order: 4
+        },
+        {
+          label: 'Tributos',
+          data: dataConfig.tributos,
+          borderColor: '#ef4444',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3, 3],
+          tension: 0.3,
+          fill: false,
+          pointRadius: 2.5,
+          pointHoverRadius: 5,
+          pointBackgroundColor: '#ef4444',
+          order: 5
+        },
+        {
+          label: 'Resultado Líquido',
+          data: dataConfig.resultadoLiquido,
+          borderColor: '#8b5cf6',
+          backgroundColor: gradientResultado,
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#8b5cf6',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+          titleColor: '#f8fafc',
+          bodyColor: '#e2e8f0',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: {
+            family: "'Inter', sans-serif",
+            size: 12,
+            weight: 'bold'
+          },
+          bodyFont: {
+            family: "'Inter', sans-serif",
+            size: 11.5
+          },
+          boxPadding: 4,
+          usePointStyle: true,
+          callbacks: {
+            label: function(context) {
+              const label = context.dataset.label || '';
+              const val = context.parsed.y;
+              return ' ' + label + ': ' + formatBRL(val);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              size: 10.5,
+              family: "'Inter', sans-serif"
+            },
+            color: '#64748b'
+          }
+        },
+        y: {
+          grid: {
+            color: 'rgba(148, 163, 184, 0.12)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              size: 10,
+              family: "'Inter', sans-serif"
+            },
+            color: '#64748b',
+            callback: function(val) {
+              if (val >= 1000) {
+                return 'R$ ' + (val / 1000).toFixed(0) + 'k';
+              }
+              return 'R$ ' + val;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* --- updateChartRange --- */
+function updateChartRange(range, btn) {
+  const container = document.getElementById('acc-chart-range-group');
+  if (container) {
+    container.querySelectorAll('button').forEach(b => {
+      b.classList.remove('active', 'btn-primary', 'text-white');
+      b.classList.add('btn-outline-secondary');
+    });
+  }
+  if (btn) {
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('active', 'btn-primary', 'text-white');
+  }
+
+  renderFinancialEvolutionChart(range);
+
+  if (typeof logAudit === 'function') {
+    logAudit('Dashboard Contábil', 'Filtro Evolução', 'Alternou período do gráfico para ' + range);
+  }
 }
 
 /* --- exportAccountingPDF --- */
@@ -7302,6 +7536,7 @@ function exportarExtratoEventos() {
 
 /* --- renderAccountingDashboard --- */
 function renderAccountingDashboard() {
+  renderFinancialEvolutionChart(currentEvolutionRange || '30d');
   applyAccountingFilters().catch(error=>{console.error('Dashboard Contábil:',error);setAccountingNoDataState('Falha ao consultar a fonte oficial.');});
 }
 
@@ -7784,6 +8019,7 @@ window.concluirEtapaFechamento = concluirEtapaFechamento;
 window.exportarExtratoEventos = exportarExtratoEventos;
 
 window.updateChartRange = updateChartRange;
+window.renderFinancialEvolutionChart = renderFinancialEvolutionChart;
 window.exportAccountingPDF = exportAccountingPDF;
 window.runApiConsoleRequest = runApiConsoleRequest;
 

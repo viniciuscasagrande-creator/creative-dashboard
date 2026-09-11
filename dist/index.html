@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-Bv-yWxLa.js"></script>
+      <script type="module" crossorigin src="./assets/index-IiYQW33q.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
     </head>
 <body>
@@ -13498,11 +13498,14 @@ Como podemos te ajudar hoje?
 
                                 <!-- ROW 2: EVOLUÇÃO FINANCEIRA (50%), RECURSOS DE TERCEIROS (25%), ÍNDICE DE CONCILIAÇÃO (25%) -->
                                 <div class="row g-3 mb-4">
-                                    <!-- Evolução Financeira e Resultado -->
+                                                                        <!-- Evolução Financeira e Resultado -->
                                     <div class="col-12 col-xl-6">
                                         <div class="card border-0 shadow-xs h-100 p-3 bg-white" style="border-radius: 14px; border: 1px solid #eef2f6 !important;">
-                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
-                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Evolu&ccedil;&atilde;o Financeira e Resultado</h6>
+                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-2">
+                                                <div>
+                                                    <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">Evolu&ccedil;&atilde;o Financeira e Resultado</h6>
+                                                    <span class="fs-xs text-muted" id="acc-evolution-period-subtitle">Consolidado dos &uacute;ltimos 30 dias</span>
+                                                </div>
                                                 <div class="btn-group btn-group-sm font-monospace" role="group" id="acc-chart-range-group">
                                                     <button type="button" class="btn btn-xs btn-outline-secondary" onclick="window.updateChartRange('hoje', this)">Hoje</button>
                                                     <button type="button" class="btn btn-xs btn-outline-secondary" onclick="window.updateChartRange('7d', this)">7 dias</button>
@@ -13513,80 +13516,37 @@ Como podemos te ajudar hoje?
                                             </div>
 
                                             <!-- Legend Items -->
-                                            <div class="d-flex align-items-center gap-3 flex-wrap fs-xxs text-muted mb-2">
-                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #3b82f6; display: inline-block;"></span> Receita Disk</span>
-                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; display: inline-block;"></span> Repasse Produtores</span>
-                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #f97316; display: inline-block;"></span> Taxas Gateway</span>
-                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; display: inline-block;"></span> Tributos</span>
-                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: #8b5cf6; display: inline-block;"></span> Resultado</span>
+                                            <div class="d-flex align-items-center gap-3 flex-wrap fs-xxs text-muted mb-2 pt-1 border-top">
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: #3b82f6; display: inline-block;"></span> <strong>Receita Disk</strong></span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: #10b981; display: inline-block;"></span> <strong>Repasses</strong></span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: #f97316; display: inline-block;"></span> Taxas Gateway</span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: #ef4444; display: inline-block;"></span> Tributos</span>
+                                                <span class="d-flex align-items-center gap-1.5"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: #8b5cf6; display: inline-block;"></span> <strong>Resultado L&iacute;quido</strong></span>
                                             </div>
 
-                                            <!-- Chart SVG Evolution Area Visualizer -->
-                                            <div class="position-relative pt-2" style="height: 250px;" id="dashboard-evolution-chart-container">
-                                                <svg viewBox="0 0 540 220" class="w-100 h-100" preserveAspectRatio="none">
-                                                    <defs>
-                                                        <linearGradient id="gradRepasse" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
-                                                            <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
-                                                        </linearGradient>
-                                                        <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
-                                                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
-                                                        </linearGradient>
-                                                    </defs>
+                                            <!-- Chart Canvas Container -->
+                                            <div class="position-relative w-100 my-1" style="height: 250px;" id="dashboard-evolution-chart-container">
+                                                <canvas id="acc-evolution-chart-canvas"></canvas>
+                                            </div>
 
-                                                    <!-- Horizontal Gridlines & Y-Axis Labels -->
-                                                    <line x1="45" y1="20" x2="530" y2="20" stroke="#f1f5f9" stroke-width="1"/>
-                                                    <text x="5" y="24" fill="#94a3b8" font-size="9" font-family="monospace">R$ 1.2M</text>
-
-                                                    <line x1="45" y1="65" x2="530" y2="65" stroke="#f1f5f9" stroke-width="1"/>
-                                                    <text x="5" y="69" fill="#94a3b8" font-size="9" font-family="monospace">R$ 900k</text>
-
-                                                    <line x1="45" y1="110" x2="530" y2="110" stroke="#f1f5f9" stroke-width="1"/>
-                                                    <text x="5" y="114" fill="#94a3b8" font-size="9" font-family="monospace">R$ 600k</text>
-
-                                                    <line x1="45" y1="155" x2="530" y2="155" stroke="#f1f5f9" stroke-width="1"/>
-                                                    <text x="5" y="159" fill="#94a3b8" font-size="9" font-family="monospace">R$ 300k</text>
-
-                                                    <line x1="45" y1="190" x2="530" y2="190" stroke="#e2e8f0" stroke-width="1"/>
-                                                    <text x="18" y="194" fill="#94a3b8" font-size="9" font-family="monospace">R$ 0</text>
-
-                                                    <!-- X-Axis Labels -->
-                                                    <text x="45" y="208" fill="#94a3b8" font-size="9" font-family="monospace">01/09</text>
-                                                    <text x="125" y="208" fill="#94a3b8" font-size="9" font-family="monospace">05/09</text>
-                                                    <text x="205" y="208" fill="#94a3b8" font-size="9" font-family="monospace">10/09</text>
-                                                    <text x="285" y="208" fill="#94a3b8" font-size="9" font-family="monospace">15/09</text>
-                                                    <text x="365" y="208" fill="#94a3b8" font-size="9" font-family="monospace">20/09</text>
-                                                    <text x="445" y="208" fill="#94a3b8" font-size="9" font-family="monospace">25/09</text>
-                                                    <text x="505" y="208" fill="#94a3b8" font-size="9" font-family="monospace">30/09</text>
-
-                                                    <!-- Area 1: Repasse Produtores (Green curve) -->
-                                                    <path d="M 45 190 Q 60 110 80 125 T 130 90 T 170 145 T 220 70 T 260 130 T 310 95 T 350 145 T 390 75 T 440 135 T 480 50 T 525 80 L 525 190 Z" fill="url(#gradRepasse)" />
-                                                    <path d="M 45 190 Q 60 110 80 125 T 130 90 T 170 145 T 220 70 T 260 130 T 310 95 T 350 145 T 390 75 T 440 135 T 480 50 T 525 80" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/>
-
-                                                    <!-- Area 2: Receita Disk (Blue curve) -->
-                                                    <path d="M 45 190 Q 65 170 85 160 T 130 155 T 175 168 T 220 140 T 265 160 T 310 130 T 355 155 T 390 120 T 435 145 T 480 135 T 525 150 L 525 190 Z" fill="url(#gradReceita)" />
-                                                    <path d="M 45 190 Q 65 170 85 160 T 130 155 T 175 168 T 220 140 T 265 160 T 310 130 T 355 155 T 390 120 T 435 145 T 480 135 T 525 150" fill="none" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round"/>
-
-                                                    <!-- Line 3: Taxas Gateway (Orange curve) -->
-                                                    <path d="M 45 190 Q 70 180 130 178 T 220 172 T 310 168 T 390 165 T 480 160 T 525 165" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round"/>
-
-                                                    <!-- Bar accents at bottom: Resultado Líquido & Tributos -->
-                                                    <rect x="210" y="172" width="10" height="18" fill="#8b5cf6" opacity="0.8" rx="2"/>
-                                                    <rect x="222" y="176" width="10" height="14" fill="#ef4444" opacity="0.8" rx="2"/>
-
-                                                    <rect x="300" y="168" width="10" height="22" fill="#8b5cf6" opacity="0.8" rx="2"/>
-                                                    <rect x="312" y="173" width="10" height="17" fill="#ef4444" opacity="0.8" rx="2"/>
-
-                                                    <rect x="380" y="164" width="10" height="26" fill="#8b5cf6" opacity="0.8" rx="2"/>
-                                                    <rect x="392" y="170" width="10" height="20" fill="#ef4444" opacity="0.8" rx="2"/>
-
-                                                    <rect x="470" y="160" width="10" height="30" fill="#8b5cf6" opacity="0.8" rx="2"/>
-                                                    <rect x="482" y="166" width="10" height="24" fill="#ef4444" opacity="0.8" rx="2"/>
-
-                                                    <rect x="510" y="165" width="10" height="25" fill="#8b5cf6" opacity="0.8" rx="2"/>
-                                                    <rect x="522" y="171" width="10" height="19" fill="#ef4444" opacity="0.8" rx="2"/>
-                                                </svg>
+                                            <!-- Resumo Rápido no Rodapé do Gráfico -->
+                                            <div class="row g-2 pt-2 border-top text-center fs-xxs">
+                                                <div class="col-3">
+                                                    <span class="text-muted d-block">Receita Disk</span>
+                                                    <strong class="font-monospace text-primary" id="acc-evo-stat-receita">R$ 48.981,00</strong>
+                                                </div>
+                                                <div class="col-3">
+                                                    <span class="text-muted d-block">Repasses</span>
+                                                    <strong class="font-monospace text-success" id="acc-evo-stat-repasses">R$ 138.450,00</strong>
+                                                </div>
+                                                <div class="col-3">
+                                                    <span class="text-muted d-block">Custos/Taxas</span>
+                                                    <strong class="font-monospace text-warning" id="acc-evo-stat-custos">R$ 14.820,00</strong>
+                                                </div>
+                                                <div class="col-3">
+                                                    <span class="text-muted d-block">Resultado</span>
+                                                    <strong class="font-monospace" id="acc-evo-stat-resultado" style="color: #8b5cf6;">R$ 34.161,00</strong>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
