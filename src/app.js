@@ -16,6 +16,7 @@ import { initTreasuryView, switchTreasuryTab } from './controllers/treasuryContr
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 import { AppRouter } from './navigation/router.js';
+import { MenuStateManager } from './navigation/menu-state.js';
 import { ROUTES, LEGACY_ROUTE_ALIASES, resolveRoute } from './navigation/routes.js';
 
 // Global state for events
@@ -4286,25 +4287,11 @@ function initAiAssistant() {
 
       // Execute auto-navigation action!
       if (actionView) {
-        // Sync active link highlight in sidebar
-        const subLinks = document.querySelectorAll('.submenu-link');
-        subLinks.forEach(link => {
-          if (link.getAttribute('data-view') === actionView) {
-            subLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            
-            // Expand parents
-            const parentLi = link.closest('.nav-item-submenu');
-            if (parentLi) {
-              document.querySelectorAll('.nav-item-submenu').forEach(p => {
-                if (p !== parentLi) p.classList.remove('nav-item-open');
-              });
-              parentLi.classList.add('nav-item-open');
-            }
-          }
-        });
-        
-        switchActiveView(actionView);
+        if (window.AppRouter) {
+          window.AppRouter.navigateLegacy(actionView);
+        } else {
+          switchActiveView(actionView);
+        }
       }
     }, 1000);
   }
@@ -6456,17 +6443,16 @@ function switchAccountingTab(tabName, e = null) {
     backBtnContainer.style.display = (actualTabToDisplay === 'dashboard') ? 'none' : 'block';
   }
 
-  // 2. Sync Sidebar Menu Active State
-  document.querySelectorAll('.nav-group-sub .submenu-link[data-view="accounting-disk"]').forEach(link => {
-    const dt = link.getAttribute('data-tab');
-    const oc = link.getAttribute('onclick') || '';
-    const isThisTab = (dt && dt === tabName) || oc.includes(`'${tabName}'`) || oc.includes(`"${tabName}"`) || (tabName === 'dashboard' && (dt === 'dashboard' || oc.includes("'dashboard'")));
-    if (isThisTab) {
-      link.classList.add('active', 'text-primary', 'fw-bold');
-    } else {
-      link.classList.remove('active', 'text-primary', 'fw-bold');
-    }
-  });
+  // 2. Sync Sidebar Menu Active State via MenuStateManager (Fase 28.15.2)
+  if (window.MenuStateManager) {
+    const clickedMenuKey = (e && e.target) ? e.target.closest('[data-menu-key]')?.dataset.menuKey : null;
+    window.MenuStateManager.sync({
+      view: 'accounting-disk',
+      tab: actualTabToDisplay,
+      module: 'contabilidade',
+      menuKey: clickedMenuKey
+    });
+  }
 
   // 3. Sync category pillar buttons & pills (fallback for safety)
   const catButtons = document.querySelectorAll('#accounting-category-nav .accounting-pillar-btn, #accounting-category-nav .nav-link');

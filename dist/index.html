@@ -22,8 +22,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-DTJlD9yj.js"></script>
-      <link rel="stylesheet" crossorigin href="./assets/index-NLS51lyS.css">
+      <script type="module" crossorigin src="./assets/index-CtNsP1Vd.js"></script>
+      <link rel="stylesheet" crossorigin href="./assets/index-CdfODmdt.css">
     </head>
 <body>
 
@@ -137,39 +137,39 @@
                         
                         <!-- TODOS OS EVENTOS standalone menu item -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link submenu-link" data-view="events-list" title="Todos os Eventos">
+                            <a href="#" class="nav-link submenu-link" data-view="events-list" data-menu-key="events-list-root" data-route="/eventos" title="Todos os Eventos">
                                 <i class="ph-calendar"></i>
                                 <span>Todos os Eventos</span>
                             </a>
                         </li>
                         
                         <!-- Painel Geral Submenu accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Painel Geral">
+                        <li class="nav-item nav-item-submenu" data-menu-group="dashboard">
+                            <a href="#" class="nav-link" id="menu-trigger-dashboard" aria-expanded="false" aria-controls="menu-sub-dashboard" title="Menu Painel Geral">
                                 <i class="ph-gauge"></i>
                                 <span>Painel Geral</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
+                            <ul class="nav-group-sub collapse" id="menu-sub-dashboard">
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link submenu-link" data-view="dashboard-main">Dashboard</a>
+                                    <a href="#" class="nav-link submenu-link" data-view="dashboard-main" data-menu-key="dashboard-main" data-route="/dashboard">Dashboard</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link submenu-link" data-view="dashboard-agenda">Agenda</a>
+                                    <a href="#" class="nav-link submenu-link" data-view="dashboard-agenda" data-menu-key="dashboard-agenda" data-route="/agenda">Agenda</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link submenu-link" data-view="dashboard-indicators">Indicadores</a>
+                                    <a href="#" class="nav-link submenu-link" data-view="dashboard-indicators" data-menu-key="dashboard-indicators" data-route="/indicadores">Indicadores</a>
                                 </li>
                             </ul>
                         </li>
                         <!-- Meus Eventos accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Meus Eventos">
+                        <li class="nav-item nav-item-submenu" data-menu-group="eventos">
+                            <a href="#" class="nav-link" id="menu-trigger-eventos" aria-expanded="false" aria-controls="menu-sub-eventos" title="Menu Meus Eventos">
                                 <i class="ph-calendar"></i>
                                 <span>Meus Eventos</span>
                                 <span class="badge align-self-center rounded-pill ms-auto" style="background-color: #f38d4f; color: #fff;">2</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="events-list">Todos Eventos</a></li>
+                            <ul class="nav-group-sub collapse" id="menu-sub-eventos">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="events-list" data-menu-key="events-list-sub" data-route="/eventos">Todos Eventos</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="events-new">Novo Evento</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="events-lotes">Lotes</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="events-cupons">Cupons</a></li>
@@ -180,14 +180,14 @@
                         </li>
                         <!-- CONSULTA DE INGRESSOS menu item -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link submenu-link" data-view="global-consult-ticket" title="Consulta de Ingressos">
+                            <a href="#" class="nav-link submenu-link" data-view="global-consult-ticket" data-menu-key="global-consult-ticket" data-route="/consulta-ingressos" title="Consulta de Ingressos">
                                 <i class="ph-ticket"></i>
                                 <span>Consulta de Ingressos</span>
                             </a>
                         </li>
                         <!-- MARKETING accordion group (Fase 23.2 Hub) -->
-                        <li class="nav-item nav-item-submenu" id="nav-item-marketing">
-                            <a href="#" class="nav-link" title="Menu Marketing">
+                        <li class="nav-item nav-item-submenu" id="nav-item-marketing" data-menu-group="marketing">
+                            <a href="#" class="nav-link" id="menu-trigger-marketing" aria-expanded="false" aria-controls="marketing-submenu-ul" title="Menu Marketing">
                                 <i class="ph-megaphone"></i>
                                 <span>Marketing</span>
                                 <span class="badge bg-primary align-self-center rounded-pill ms-auto">Hub</span>
@@ -209,20 +209,20 @@
                             </ul>
                         </li>
                         <!-- Financeiro accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Financeiro">
+                        <li class="nav-item nav-item-submenu" data-menu-group="financeiro">
+                            <a href="#" class="nav-link" id="menu-trigger-financeiro" aria-expanded="false" aria-controls="menu-sub-financeiro" title="Menu Financeiro">
                                 <i class="ph-wallet"></i>
                                 <span>Financeiro</span>
                                 <span class="badge bg-success align-self-center rounded-pill ms-auto">24</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
+                            <ul class="nav-group-sub collapse" id="menu-sub-financeiro">
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-event-transfers"><i class="ph-arrows-left-right me-2"></i> Gestão de Saldos</a></li>
                                                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury"><i class="ph-vault me-2 text-primary"></i> Tesouraria &amp; Bancos</a></li>
 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-balance"><i class="ph-bank me-2"></i> Conta Financeira</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-repass"><i class="ph-arrow-up-right me-2"></i> Contas a Receber</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-expenses"><i class="ph-trend-down me-2"></i> Contas a Pagar</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance" data-menu-key="fin-cashflow-performance" data-route="/financeiro/fluxo-caixa"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
 
                                 <!-- Central de Aprovações Unificada -->
                                 <li class="nav-item">
@@ -255,7 +255,7 @@
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Gestão Orçamentária</li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-costcenters"><i class="ph-flag me-2"></i> Centro de Custos</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="management-budgets"><i class="ph-target me-2"></i> Orçamentos por Evento</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre"><i class="ph-presentation-chart me-2"></i> DRE do Evento</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre" data-menu-key="fin-cashflow-dre" data-route="/financeiro/dre-evento"><i class="ph-presentation-chart me-2"></i> DRE do Evento</a></li>
 
                                 <!-- MENUS CLÁSSICOS PRESERVADOS -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" style="list-style-type: none;">Operações Financeiras</li>
@@ -273,48 +273,48 @@
                         </li>
 
                         <!-- Contabilidade accordion group (Design Oficial ChatGPT Image) -->
-                        <li class="nav-item nav-item-submenu">
-                                <a href="#" class="nav-link" title="Menu Contabilidade Disk">
+                        <li class="nav-item nav-item-submenu" data-menu-group="contabilidade">
+                            <a href="#" class="nav-link" id="menu-trigger-contabilidade" aria-expanded="false" aria-controls="menu-sub-contabilidade" title="Menu Contabilidade Disk">
                                 <i class="ph-book-open"></i>
                                 <span>Contabilidade</span>
                                 <span class="badge bg-primary align-self-center rounded-pill ms-auto">Enterprise</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="dashboard"><i class="ph-chart-pie-slice me-2"></i> Vis&atilde;o Geral</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="inteligencia-contabil"><i class="ph-brain me-2"></i> Intelig&ecirc;ncia Cont&aacute;bil</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="conciliacao"><i class="ph-arrows-left-right me-2"></i> Centro de Concilia&ccedil;&atilde;o</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="lancamentos"><i class="ph-crosshair me-2"></i> Rastreabilidade</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-dre"><i class="ph-presentation me-2"></i> DRE Gerencial</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-balanco"><i class="ph-scales me-2"></i> Balan&ccedil;o Patrimonial</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="cont-fechamento"><i class="ph-lock-key me-2"></i> Fechamento Mensal</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="lancamentos"><i class="ph-pencil me-2"></i> Lan&ccedil;amentos</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="plano-contas"><i class="ph-list-bullets me-2"></i> Plano de Contas</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-dre"><i class="ph-file-text me-2"></i> Relat&oacute;rios</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="auditoria"><i class="ph-shield-check me-2"></i> Auditoria</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="config-plano"><i class="ph-gear me-2"></i> Configura&ccedil;&otilde;es</a></li>
+                            <ul class="nav-group-sub collapse" id="menu-sub-contabilidade">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="dashboard" data-menu-key="accounting-overview" data-route="/contabilidade/dashboard"><i class="ph-chart-pie-slice me-2"></i> Vis&atilde;o Geral</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="inteligencia-contabil" data-menu-key="accounting-intelligence" data-route="/contabilidade/inteligencia"><i class="ph-brain me-2"></i> Intelig&ecirc;ncia Cont&aacute;bil</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="conciliacao" data-menu-key="accounting-reconciliation" data-route="/contabilidade/conciliacao"><i class="ph-arrows-left-right me-2"></i> Centro de Concilia&ccedil;&atilde;o</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="lancamentos" data-menu-key="accounting-traceability" data-route="/contabilidade/rastreabilidade"><i class="ph-crosshair me-2"></i> Rastreabilidade</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-dre" data-menu-key="accounting-dre" data-route="/contabilidade/dre"><i class="ph-presentation me-2"></i> DRE Gerencial</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-balanco" data-menu-key="accounting-balance" data-route="/contabilidade/balanco"><i class="ph-scales me-2"></i> Balan&ccedil;o Patrimonial</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="cont-fechamento" data-menu-key="accounting-closing" data-route="/contabilidade/fechamento"><i class="ph-lock-key me-2"></i> Fechamento Mensal</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="lancamentos" data-menu-key="accounting-journal" data-route="/contabilidade/lancamentos"><i class="ph-pencil me-2"></i> Lan&ccedil;amentos</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="plano-contas" data-menu-key="accounting-chart" data-route="/contabilidade/plano-de-contas"><i class="ph-list-bullets me-2"></i> Plano de Contas</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="relatorios-dre" data-menu-key="accounting-reports" data-route="/contabilidade/relatorios"><i class="ph-file-text me-2"></i> Relat&oacute;rios</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="auditoria" data-menu-key="accounting-audit" data-route="/contabilidade/auditoria"><i class="ph-shield-check me-2"></i> Auditoria</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="accounting-disk" data-tab="config-plano" data-menu-key="accounting-config" data-route="/contabilidade/configuracoes"><i class="ph-gear me-2"></i> Configura&ccedil;&otilde;es</a></li>
                             </ul>
                         </li>
                         <!-- Fluxo de Caixa accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Fluxo de Caixa">
+                        <li class="nav-item nav-item-submenu" data-menu-group="fluxo-caixa">
+                            <a href="#" class="nav-link" id="menu-trigger-fluxo-caixa" aria-expanded="false" aria-controls="menu-sub-fluxo-caixa" title="Menu Fluxo de Caixa">
                                 <i class="ph-chart-line-up"></i>
                                 <span>Fluxo de Caixa</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance"><i class="ph-activity me-2"></i> Performance Mensal</a></li>
+                            <ul class="nav-group-sub collapse" id="menu-sub-fluxo-caixa">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance" data-menu-key="cf-performance" data-route="/fluxo-caixa/performance"><i class="ph-activity me-2"></i> Performance Mensal</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-statement"><i class="ph-file-text me-2"></i> Extrato de Caixa</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-flow"><i class="ph-trend-up me-2"></i> Evolução de Caixa</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre"><i class="ph-presentation-chart me-2"></i> Demonstrativo (DRE)</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre" data-menu-key="cf-dre" data-route="/fluxo-caixa/dre"><i class="ph-presentation-chart me-2"></i> Demonstrativo (DRE)</a></li>
                             </ul>
                         </li>
 
                         <!-- Receitas Detalhadas accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Receitas Detalhadas">
+                        <li class="nav-item nav-item-submenu" data-menu-group="receitas">
+                            <a href="#" class="nav-link" id="menu-trigger-receitas" aria-expanded="false" aria-controls="menu-sub-receitas" title="Menu Receitas Detalhadas">
                                 <i class="ph-coins"></i>
                                 <span>Receitas Detalhadas</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
+                            <ul class="nav-group-sub collapse" id="menu-sub-receitas">
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="revenues-desc"><i class="ph-pencil me-2"></i> Por Descrição</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="revenues-day"><i class="ph-calendar me-2"></i> Por Dia</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="revenues-type"><i class="ph-tag me-2"></i> Por Tipo</a></li>
@@ -327,12 +327,12 @@
                         </li>
 
                         <!-- Despesas Detalhadas accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Despesas Detalhadas">
+                        <li class="nav-item nav-item-submenu" data-menu-group="despesas">
+                            <a href="#" class="nav-link" id="menu-trigger-despesas" aria-expanded="false" aria-controls="menu-sub-despesas" title="Menu Despesas Detalhadas">
                                 <i class="ph-receipt"></i>
                                 <span>Despesas Detalhadas</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
+                            <ul class="nav-group-sub collapse" id="menu-sub-despesas">
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="expenses-desc"><i class="ph-tag me-2"></i> Por Descrição</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="expenses-category"><i class="ph-chart-pie-slice me-2"></i> Por Categoria</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="expenses-event"><i class="ph-calendar-check me-2"></i> Por Evento</a></li>
@@ -340,24 +340,24 @@
                         </li>
                         <!-- Relatórios menu item (MATCHES SCREENSHOT) -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link submenu-link" data-view="reports-sales" title="Relatórios">
+                            <a href="#" class="nav-link submenu-link" data-view="reports-sales" data-menu-key="reports-sales" data-route="/relatorios" title="Relatórios">
                                 <i class="ph-file-text"></i>
                                 <span>Relatórios</span>
                             </a>
                         </li>
                         <!-- Configurações accordion group -->
-                        <li class="nav-item nav-item-submenu">
-                            <a href="#" class="nav-link" title="Menu Configurações">
+                        <li class="nav-item nav-item-submenu" data-menu-group="configuracoes">
+                            <a href="#" class="nav-link" id="menu-trigger-configuracoes" aria-expanded="false" aria-controls="menu-sub-configuracoes" title="Menu Configurações">
                                 <i class="ph-gear"></i>
                                 <span>Configurações</span>
                             </a>
-                            <ul class="nav-group-sub collapse">
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile">Perfil</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile">Empresa</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile">Usuários</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile">Integrações</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile">Notificações</a></li>
-                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile">Segurança</a></li>
+                            <ul class="nav-group-sub collapse" id="menu-sub-configuracoes">
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile" data-menu-key="settings-profile" data-route="/configuracoes/perfil">Perfil</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile" data-menu-key="settings-company" data-route="/configuracoes/empresa">Empresa</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile" data-menu-key="settings-users" data-route="/configuracoes/usuarios">Usuários</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile" data-menu-key="settings-integrations" data-route="/configuracoes/integracoes">Integrações</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile" data-menu-key="settings-notifications" data-route="/configuracoes/notificacoes">Notificações</a></li>
+                                <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="settings-profile" data-menu-key="settings-security" data-route="/configuracoes/seguranca">Segurança</a></li>
                             </ul>
                         </li>
                     </ul>

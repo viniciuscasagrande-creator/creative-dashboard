@@ -2671,3 +2671,32 @@ div:has(> canvas),
   line-height: 1.2;
   border-radius: 4px;
 }
+
+/* ==========================================================================
+   Fase 28.15.2 — Estados Visuais e Acessibilidade da Sidebar Principal
+   ========================================================================== */
+#main-sidebar-nav .nav-link.active {
+  color: var(--primary-color, #2a75d3);
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+#main-sidebar-nav .nav-link[aria-current="page"] {
+  position: relative;
+}
+
+#main-sidebar-nav .nav-link[aria-current="page"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  background-color: var(--primary-color, #2a75d3);
+  border-radius: 0 2px 2px 0;
+}
+
+#main-sidebar-nav .nav-item-submenu.nav-item-open > .nav-link {
+  color: #ffffff;
+}
+

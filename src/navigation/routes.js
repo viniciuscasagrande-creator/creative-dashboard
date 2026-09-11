@@ -1,14 +1,17 @@
 /**
  * ==========================================================================
- * FASE 28.15.1 — MAPA CANÔNICO DE ROTAS E ALIASES (src/navigation/routes.js)
+ * FASE 28.15.2 — MAPA CANÔNICO DE ROTAS E ALIASES (src/navigation/routes.js)
+ * Enriquecido com data-menu-key, grupos de menu e resolução contábil
  * ==========================================================================
  */
 
 export const ROUTES = {
+  // Painel Geral
   '/dashboard': {
     path: '/dashboard',
     view: 'dashboard-main',
     module: 'dashboard',
+    menuKey: 'dashboard-main',
     title: 'Painel Geral',
     sub: 'Métricas operacionais consolidadas e resumo de vendas.'
   },
@@ -16,6 +19,7 @@ export const ROUTES = {
     path: '/agenda',
     view: 'dashboard-agenda',
     module: 'dashboard',
+    menuKey: 'dashboard-agenda',
     title: 'Agenda de Eventos',
     sub: 'Calendário e programação de eventos da plataforma.'
   },
@@ -23,13 +27,17 @@ export const ROUTES = {
     path: '/indicadores',
     view: 'dashboard-indicators',
     module: 'dashboard',
+    menuKey: 'dashboard-indicators',
     title: 'Indicadores de Performance',
     sub: 'Metas e indicadores consolidados de bilheteria.'
   },
+
+  // Eventos
   '/eventos': {
     path: '/eventos',
     view: 'events-list',
     module: 'eventos',
+    menuKey: 'events-list-root',
     title: 'Todos os Eventos',
     sub: 'Gestão, acompanhamento e status em tempo real de eventos.'
   },
@@ -37,6 +45,7 @@ export const ROUTES = {
     path: '/eventos/novo',
     view: 'events-new',
     module: 'eventos',
+    menuKey: 'events-new',
     title: 'Novo Evento',
     sub: 'Cadastro e configuração de eventos, lotes e ingressos.'
   },
@@ -44,6 +53,7 @@ export const ROUTES = {
     path: '/eventos/lotes',
     view: 'events-lotes',
     module: 'eventos',
+    menuKey: 'events-lotes',
     title: 'Lotes de Ingressos',
     sub: 'Gestão de lotes, disponibilidade e precificação.'
   },
@@ -51,6 +61,7 @@ export const ROUTES = {
     path: '/eventos/cupons',
     view: 'events-cupons',
     module: 'eventos',
+    menuKey: 'events-cupons',
     title: 'Cupons de Desconto',
     sub: 'Criação e gestão de cupons promocionais para eventos.'
   },
@@ -58,6 +69,7 @@ export const ROUTES = {
     path: '/eventos/checkin',
     view: 'events-checkin',
     module: 'eventos',
+    menuKey: 'events-checkin',
     title: 'Validador de Portaria',
     sub: 'Controle de acesso e leitura de ingressos na portaria.'
   },
@@ -65,6 +77,7 @@ export const ROUTES = {
     path: '/eventos/participantes',
     view: 'events-attendees',
     module: 'eventos',
+    menuKey: 'events-attendees',
     title: 'Lista de Participantes',
     sub: 'Lista consolidada de compradores e participantes.'
   },
@@ -72,6 +85,7 @@ export const ROUTES = {
     path: '/eventos/pagina',
     view: 'events-page',
     module: 'eventos',
+    menuKey: 'events-page',
     title: 'Página do Evento',
     sub: 'Link público de vendas e QR Code de divulgação.'
   },
@@ -79,13 +93,17 @@ export const ROUTES = {
     path: '/consulta-ingressos',
     view: 'global-consult-ticket',
     module: 'eventos',
+    menuKey: 'global-consult-ticket',
     title: 'Consulta de Ingressos',
     sub: 'Busca unificada por pedido, código, CPF ou comprador.'
   },
+
+  // Financeiro
   '/financeiro/dashboard': {
     path: '/financeiro/dashboard',
     view: 'financial-dashboard',
     module: 'financeiro',
+    menuKey: 'financial-dashboard',
     title: 'Painel Financeiro',
     sub: 'Resumo financeiro, conciliação e fluxo de caixa.'
   },
@@ -93,6 +111,7 @@ export const ROUTES = {
     path: '/financeiro/gestao-saldos',
     view: 'financial-event-transfers',
     module: 'financeiro',
+    menuKey: 'financial-event-transfers',
     title: 'Gestão de Saldos & Transferência entre Eventos',
     sub: 'Painel consolidado, saldos disponíveis reais por evento e transferência atômica.'
   },
@@ -101,92 +120,110 @@ export const ROUTES = {
     view: 'financial-event-transfers',
     module: 'financeiro',
     tab: 'schedule',
-    title: 'Agenda Financeira & Repasses',
-    sub: 'Agendamentos futuros, motor de regras de repasses e lotes bancários.'
+    menuKey: 'financial-event-transfers',
+    title: 'Agenda Financeira & Lotes',
+    sub: 'Agendamentos de repasses, lotes homologados e liquidação bancária.'
   },
   '/financeiro/tesouraria': {
     path: '/financeiro/tesouraria',
     view: 'treasury',
     module: 'financeiro',
+    menuKey: 'treasury',
     title: 'Tesouraria Operacional & Bancos',
-    sub: 'Posição consolidada de caixa, contas bancárias, PIX e remessa CNAB 240.'
+    sub: 'Gestão de contas, pagamentos PIX, remessa e retorno bancário CNAB 240.'
   },
   '/financeiro/saldo': {
     path: '/financeiro/saldo',
     view: 'financial-balance',
     module: 'financeiro',
-    title: 'Saldo Consolidado',
-    sub: 'Saldos disponíveis, repasses e fechamento financeiro.'
+    title: 'Conta Financeira',
+    sub: 'Saldo disponível, bloqueado e visão bancária.'
   },
   '/financeiro/repasses': {
     path: '/financeiro/repasses',
     view: 'financial-repass',
     module: 'financeiro',
-    title: 'Solicitações de Repasse',
-    sub: 'Gestão e histórico de transferências a produtores.'
+    title: 'Contas a Receber & Repasses',
+    sub: 'Repasses a produtores, histórico e controle de depósitos.'
   },
   '/financeiro/antecipacoes': {
     path: '/financeiro/antecipacoes',
     view: 'financial-advance',
     module: 'financeiro',
     title: 'Antecipações',
-    sub: 'Simulação e contratação de antecipação de recebíveis.'
-  },
-  '/financeiro/negociacoes': {
-    path: '/financeiro/negociacoes',
-    view: 'financial-negotiations',
-    module: 'financeiro',
-    title: 'Negociações Financeiras',
-    sub: 'Taxas de serviço, conveniência e comissões por evento.'
-  },
-  '/financeiro/extrato': {
-    path: '/financeiro/extrato',
-    view: 'financial-statement',
-    module: 'financeiro',
-    title: 'Extrato Financeiro',
-    sub: 'Histórico detalhado de transações e movimentações.'
+    sub: 'Solicitações de antecipação de recebíveis.'
   },
   '/financeiro/despesas': {
     path: '/financeiro/despesas',
     view: 'financial-expenses',
     module: 'financeiro',
-    title: 'Despesas Financeiras',
-    sub: 'Controle e lançamentos de custos operacionais.'
+    title: 'Contas a Pagar',
+    sub: 'Contas pendentes, pagas e agendadas.'
+  },
+  '/financeiro/fluxo-caixa': {
+    path: '/financeiro/fluxo-caixa',
+    view: 'cashflow-performance',
+    module: 'financeiro',
+    menuKey: 'fin-cashflow-performance',
+    title: 'Fluxo de Caixa Financeiro',
+    sub: 'Projeção e controle consolidado de entradas e saídas.'
+  },
+  '/financeiro/dre-evento': {
+    path: '/financeiro/dre-evento',
+    view: 'cashflow-dre',
+    module: 'financeiro',
+    menuKey: 'fin-cashflow-dre',
+    title: 'DRE do Evento',
+    sub: 'Demonstrativo de resultado gerencial por evento.'
+  },
+  '/financeiro/extrato': {
+    path: '/financeiro/extrato',
+    view: 'financial-statement',
+    module: 'financeiro',
+    title: 'Extrato Detalhado',
+    sub: 'Extrato consolidado de movimentações financeiras.'
   },
   '/financeiro/contas-bancarias': {
     path: '/financeiro/contas-bancarias',
     view: 'financial-accounts',
     module: 'financeiro',
     title: 'Contas Bancárias',
-    sub: 'Cadastro e gestão de contas de produtores e parceiros.'
+    sub: 'Contas cadastradas para repasses e conciliação.'
   },
   '/financeiro/bordero': {
     path: '/financeiro/bordero',
     view: 'financial-bordero',
     module: 'financeiro',
     title: 'Borderô Financeiro',
-    sub: 'Demonstrativo consolidado de fechamento de eventos.'
+    sub: 'Borderô detalhado por evento e fechamento.'
   },
   '/financeiro/pdv': {
     path: '/financeiro/pdv',
     view: 'financial-pdv',
     module: 'financeiro',
     title: 'Pontos de Venda (PDV)',
-    sub: 'Monitoramento em tempo real de caixas físicos e operadores.'
+    sub: 'Fechamento de caixa e conciliação de PDV físico.'
   },
   '/financeiro/metodos-pagamento': {
     path: '/financeiro/metodos-pagamento',
     view: 'financial-paymethods',
     module: 'financeiro',
     title: 'Métodos de Pagamento',
-    sub: 'Taxas, adquirentes e regras de parcelamento.'
+    sub: 'Configurações de taxas por meio de pagamento.'
   },
   '/financeiro/pagamentos-customizados': {
     path: '/financeiro/pagamentos-customizados',
     view: 'financial-custompay',
     module: 'financeiro',
     title: 'Pagamentos Customizados',
-    sub: 'Condições especiais e formas personalizadas de recebimento.'
+    sub: 'Condições especiais, permutas e cortesias.'
+  },
+  '/financeiro/negociacoes': {
+    path: '/financeiro/negociacoes',
+    view: 'financial-negotiations',
+    module: 'financeiro',
+    title: 'Negociações Financeiras',
+    sub: 'Acordos comerciais, prazos e taxas especiais.'
   },
   '/financeiro/estornos': {
     path: '/financeiro/estornos',
@@ -217,11 +254,14 @@ export const ROUTES = {
     title: 'Procure-to-Pay & Compras',
     sub: 'Fornecedor 360°, cotações, pedidos, contratos e centro de custos.'
   },
+
+  // Contabilidade (12 subitens com menuKey dedicado)
   '/contabilidade/dashboard': {
     path: '/contabilidade/dashboard',
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'dashboard',
+    menuKey: 'accounting-overview',
     title: 'Contabilidade Disk Enterprise',
     sub: 'Plano de contas, livro diário, razão, DRE e conciliação contábil.'
   },
@@ -230,6 +270,7 @@ export const ROUTES = {
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'inteligencia-contabil',
+    menuKey: 'accounting-intelligence',
     title: 'Inteligência Contábil',
     sub: 'Alertas preditivos, conformidade contábil e conformidade fiscal.'
   },
@@ -238,6 +279,7 @@ export const ROUTES = {
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'conciliacao',
+    menuKey: 'accounting-reconciliation',
     title: 'Centro de Conciliação',
     sub: 'Batimento automático, conferência de extratos e divergências.'
   },
@@ -246,6 +288,7 @@ export const ROUTES = {
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'lancamentos',
+    menuKey: 'accounting-traceability',
     title: 'Rastreabilidade 360°',
     sub: 'Trilha de auditoria ponta a ponta: do pedido ao balanço contábil.'
   },
@@ -254,6 +297,7 @@ export const ROUTES = {
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'relatorios-dre',
+    menuKey: 'accounting-dre',
     title: 'DRE Gerencial',
     sub: 'Demonstração do Resultado do Exercício consolidada por período e evento.'
   },
@@ -262,6 +306,7 @@ export const ROUTES = {
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'relatorios-balanco',
+    menuKey: 'accounting-balance',
     title: 'Balanço Patrimonial',
     sub: 'Ativos, passivos, patrimônio líquido e estrutura de capital.'
   },
@@ -270,122 +315,313 @@ export const ROUTES = {
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'cont-fechamento',
+    menuKey: 'accounting-closing',
     title: 'Fechamento Mensal',
     sub: 'Etapas de fechamento contábil, apropriação e encerramento de exercício.'
-  },
-  '/contabilidade/plano-de-contas': {
-    path: '/contabilidade/plano-de-contas',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'plano-contas',
-    title: 'Plano de Contas',
-    sub: 'Estrutura hierárquica das contas contábeis padrão CPC/IFRS.'
   },
   '/contabilidade/lancamentos': {
     path: '/contabilidade/lancamentos',
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'lancamentos',
+    menuKey: 'accounting-journal',
     title: 'Livro de Lançamentos',
     sub: 'Partidas dobradas, histórico contábil e diário de operações.'
+  },
+  '/contabilidade/plano-de-contas': {
+    path: '/contabilidade/plano-de-contas',
+    view: 'accounting-disk',
+    module: 'contabilidade',
+    tab: 'plano-contas',
+    menuKey: 'accounting-chart',
+    title: 'Plano de Contas',
+    sub: 'Estrutura hierárquica das contas contábeis padrão CPC/IFRS.'
+  },
+  '/contabilidade/relatorios': {
+    path: '/contabilidade/relatorios',
+    view: 'accounting-disk',
+    module: 'contabilidade',
+    tab: 'relatorios-dre',
+    menuKey: 'accounting-reports',
+    title: 'Relatórios Contábeis',
+    sub: 'Relatórios gerenciais, balancetes e demonstrações contábeis.'
   },
   '/contabilidade/auditoria': {
     path: '/contabilidade/auditoria',
     view: 'accounting-disk',
     module: 'contabilidade',
     tab: 'auditoria',
+    menuKey: 'accounting-audit',
     title: 'Auditoria & Compliance',
     sub: 'Logs imutáveis de trilha de auditoria e conformidade fiscal.'
   },
+  '/contabilidade/configuracoes': {
+    path: '/contabilidade/configuracoes',
+    view: 'accounting-disk',
+    module: 'contabilidade',
+    tab: 'config-plano',
+    menuKey: 'accounting-config',
+    title: 'Configurações Contábeis',
+    sub: 'Parâmetros contábeis, contas padrão e regras de integração.'
+  },
+
+  // Marketing
   '/marketing/dashboard': {
     path: '/marketing/dashboard',
     view: 'marketing-overview',
     module: 'marketing',
-    title: 'Marketing Hub',
-    sub: 'Visão geral 360° de campanhas, públicos e conversões.'
+    title: 'Hub de Marketing DiskIngressos',
+    sub: 'Métricas gerais de conversão, ROI de campanhas e canais de aquisição.'
   },
   '/marketing/campanhas': {
     path: '/marketing/campanhas',
     view: 'marketing-campaigns',
     module: 'marketing',
-    title: 'Central de Campanhas',
-    sub: 'Planeje, dispare e acompanhe campanhas multicanal.'
+    title: 'Gestão de Campanhas',
+    sub: 'Disparos multicanal, agendamentos e acompanhamento de taxa de abertura.'
   },
   '/marketing/whatsapp': {
     path: '/marketing/whatsapp',
     view: 'marketing-whatsapp',
     module: 'marketing',
-    title: 'WhatsApp Marketing',
-    sub: 'Disparos e automação de mensagens em massa via WhatsApp.'
+    title: 'WhatsApp Marketing Oficial',
+    sub: 'Disparos via WhatsApp Business Cloud API, templates e mensagens ativas.'
   },
   '/marketing/email': {
     path: '/marketing/email',
     view: 'marketing-email',
     module: 'marketing',
     title: 'E-mail Marketing',
-    sub: 'Gestão de campanhas de e-mail e métricas de engajamento.'
+    sub: 'Automação de e-mails transacionais e promocionais com alta entregabilidade.'
   },
   '/marketing/sms': {
     path: '/marketing/sms',
     view: 'marketing-sms',
     module: 'marketing',
     title: 'SMS Marketing',
-    sub: 'Disparo de SMS direto com alta taxa de entrega e abertura.'
+    sub: 'Disparo de alertas e lembretes de eventos via SMS.'
   },
   '/marketing/automacao': {
     path: '/marketing/automacao',
     view: 'marketing-automation',
     module: 'marketing',
     title: 'Automações de Marketing',
-    sub: 'Fluxos automáticos de régua de relacionamento.'
+    sub: 'Fluxos automatizados de pós-venda, abandono de carrinho e retenção.'
   },
   '/marketing/pixel': {
     path: '/marketing/pixel',
     view: 'marketing-pixel',
     module: 'marketing',
-    title: 'Pixels & Tracking Central',
-    sub: 'Meta Pixel, Google Tag, TikTok e Spotify Conversions.'
+    title: 'Pixels & Meta CAPI',
+    sub: 'Rastreamento server-side, Pixel Meta, Google Analytics 4 e TikTok Ads.'
   },
+
+  // Fluxo de Caixa
+  '/fluxo-caixa/performance': {
+    path: '/fluxo-caixa/performance',
+    view: 'cashflow-performance',
+    module: 'fluxo-caixa',
+    menuKey: 'cf-performance',
+    title: 'Performance Mensal de Caixa',
+    sub: 'Acompanhamento do fluxo de caixa e conciliação por período.'
+  },
+  '/fluxo-caixa/extrato': {
+    path: '/fluxo-caixa/extrato',
+    view: 'cashflow-statement',
+    module: 'fluxo-caixa',
+    title: 'Extrato de Caixa',
+    sub: 'Movimentações detalhadas da conta gráfica.'
+  },
+  '/fluxo-caixa/evolucao': {
+    path: '/fluxo-caixa/evolucao',
+    view: 'cashflow-flow',
+    module: 'fluxo-caixa',
+    title: 'Evolução de Caixa',
+    sub: 'Gráficos preditivos de saldo e liquidez.'
+  },
+  '/fluxo-caixa/dre': {
+    path: '/fluxo-caixa/dre',
+    view: 'cashflow-dre',
+    module: 'fluxo-caixa',
+    menuKey: 'cf-dre',
+    title: 'Demonstrativo de Fluxo (DRE)',
+    sub: 'Demonstrativo gerencial por regime de caixa.'
+  },
+
+  // Receitas
+  '/receitas/descricao': {
+    path: '/receitas/descricao',
+    view: 'revenues-desc',
+    module: 'receitas',
+    title: 'Receitas por Descrição',
+    sub: 'Detalhamento analítico por item de venda.'
+  },
+  '/receitas/dia': {
+    path: '/receitas/dia',
+    view: 'revenues-day',
+    module: 'receitas',
+    title: 'Receitas por Dia',
+    sub: 'Série temporal diária de entradas.'
+  },
+  '/receitas/tipo': {
+    path: '/receitas/tipo',
+    view: 'revenues-type',
+    module: 'receitas',
+    title: 'Receitas por Tipo de Ingresso',
+    sub: 'Ingressos inteiros, meia-entrada e cortesias.'
+  },
+  '/receitas/categoria': {
+    path: '/receitas/categoria',
+    view: 'revenues-category',
+    module: 'receitas',
+    title: 'Receitas por Categoria',
+    sub: 'Agrupamentos e setores do evento.'
+  },
+  '/receitas/evento': {
+    path: '/receitas/evento',
+    view: 'revenues-event',
+    module: 'receitas',
+    title: 'Receitas por Evento',
+    sub: 'Desempenho comparativo por evento.'
+  },
+  '/receitas/etiquetas': {
+    path: '/receitas/etiquetas',
+    view: 'revenues-tags-event',
+    module: 'receitas',
+    title: 'Receitas por Etiquetas de Eventos',
+    sub: 'Filtro por tags e tags de classificação.'
+  },
+  '/receitas/centro-de-custo': {
+    path: '/receitas/centro-de-custo',
+    view: 'revenues-costcenter',
+    module: 'receitas',
+    title: 'Receitas por Centro de Custo',
+    sub: 'Alocação gerencial de receitas.'
+  },
+  '/receitas/marcacoes': {
+    path: '/receitas/marcacoes',
+    view: 'revenues-tags-label',
+    module: 'receitas',
+    title: 'Receitas por Marcações',
+    sub: 'Segmentação avançada por tags personalizadas.'
+  },
+
+  // Despesas
+  '/despesas/descricao': {
+    path: '/despesas/descricao',
+    view: 'expenses-desc',
+    module: 'despesas',
+    title: 'Despesas por Descrição',
+    sub: 'Detalhamento de gastos operacionais.'
+  },
+  '/despesas/categoria': {
+    path: '/despesas/categoria',
+    view: 'expenses-category',
+    module: 'despesas',
+    title: 'Despesas por Categoria',
+    sub: 'Categorização analítica de despesas.'
+  },
+  '/despesas/evento': {
+    path: '/despesas/evento',
+    view: 'expenses-event',
+    module: 'despesas',
+    title: 'Despesas por Evento',
+    sub: 'Custos diretos por produção.'
+  },
+
+  // Relatórios e Configurações
   '/relatorios': {
     path: '/relatorios',
     view: 'reports-sales',
     module: 'relatorios',
-    title: 'Relatórios e Métricas',
-    sub: 'Relatórios consolidados de vendas e participantes.'
+    menuKey: 'reports-sales',
+    title: 'Relatórios Gerenciais',
+    sub: 'Exportação de relatórios analíticos em PDF e Excel.'
   },
   '/configuracoes': {
     path: '/configuracoes',
     view: 'settings-profile',
     module: 'configuracoes',
-    title: 'Configurações',
-    sub: 'Perfil, preferências e configurações da conta.'
+    menuKey: 'settings-profile',
+    title: 'Configurações do Sistema',
+    sub: 'Parâmetros da conta, integrações e segurança.'
+  },
+  '/configuracoes/perfil': {
+    path: '/configuracoes/perfil',
+    view: 'settings-profile',
+    module: 'configuracoes',
+    menuKey: 'settings-profile',
+    title: 'Perfil do Usuário',
+    sub: 'Dados de identificação e credenciais.'
+  },
+  '/configuracoes/empresa': {
+    path: '/configuracoes/empresa',
+    view: 'settings-profile',
+    module: 'configuracoes',
+    menuKey: 'settings-company',
+    title: 'Dados da Empresa',
+    sub: 'Razão social, CNPJ e domicílio fiscal.'
+  },
+  '/configuracoes/usuarios': {
+    path: '/configuracoes/usuarios',
+    view: 'settings-profile',
+    module: 'configuracoes',
+    menuKey: 'settings-users',
+    title: 'Gestão de Usuários',
+    sub: 'Controle de acessos, papéis e permissões.'
+  },
+  '/configuracoes/integracoes': {
+    path: '/configuracoes/integracoes',
+    view: 'settings-profile',
+    module: 'configuracoes',
+    menuKey: 'settings-integrations',
+    title: 'Integrações Externas',
+    sub: 'Webhooks, APIs e serviços conectados.'
+  },
+  '/configuracoes/notificacoes': {
+    path: '/configuracoes/notificacoes',
+    view: 'settings-profile',
+    module: 'configuracoes',
+    menuKey: 'settings-notifications',
+    title: 'Preferências de Notificação',
+    sub: 'Alertas por e-mail, push e sistema.'
+  },
+  '/configuracoes/seguranca': {
+    path: '/configuracoes/seguranca',
+    view: 'settings-profile',
+    module: 'configuracoes',
+    menuKey: 'settings-security',
+    title: 'Segurança & Auditoria',
+    sub: 'Sessões ativas, logs e autenticação de dois fatores.'
   }
 };
 
+/**
+ * Tabela de compatibilidade de aliases legados
+ */
 export const LEGACY_ROUTE_ALIASES = {
-  '': '/dashboard',
+  // Gerais
   'dashboard': '/dashboard',
   'dashboard-main': '/dashboard',
   'agenda': '/agenda',
+  'dashboard-agenda': '/agenda',
   'indicadores': '/indicadores',
+  'dashboard-indicators': '/indicadores',
+
+  // Eventos
   'eventos': '/eventos',
-  'events': '/eventos',
   'events-list': '/eventos',
-  'novo-evento': '/eventos/novo',
   'events-new': '/eventos/novo',
-  'lotes': '/eventos/lotes',
   'events-lotes': '/eventos/lotes',
-  'cupons': '/eventos/cupons',
   'events-cupons': '/eventos/cupons',
-  'checkin': '/eventos/checkin',
   'events-checkin': '/eventos/checkin',
-  'participantes': '/eventos/participantes',
   'events-attendees': '/eventos/participantes',
   'events-page': '/eventos/pagina',
-  'consulta': '/consulta-ingressos',
   'global-consult-ticket': '/consulta-ingressos',
+  'consulta-ingressos': '/consulta-ingressos',
+
+  // Marketing
   'marketing': '/marketing/dashboard',
-  'marketing-dashboard': '/marketing/dashboard',
   'marketing-overview': '/marketing/dashboard',
   'campanhas': '/marketing/campanhas',
   'marketing-campaigns': '/marketing/campanhas',
@@ -406,6 +642,8 @@ export const LEGACY_ROUTE_ALIASES = {
   'marketing-config': '/marketing/pixel',
   'marketing-ads': '/marketing/dashboard',
   'marketing-reports': '/marketing/dashboard',
+
+  // Financeiro
   'financeiro': '/financeiro/dashboard',
   'financial-dashboard': '/financeiro/dashboard',
   'saldo': '/financeiro/saldo',
@@ -434,6 +672,8 @@ export const LEGACY_ROUTE_ALIASES = {
   'contas-bancarias': '/financeiro/tesouraria',
   'cnab': '/financeiro/tesouraria',
   'pix': '/financeiro/tesouraria',
+
+  // Compras & P2P
   'procure-to-pay': '/financeiro/compras',
   'approvals-inbox': '/financeiro/compras',
   'purchases-requests': '/financeiro/compras',
@@ -448,34 +688,75 @@ export const LEGACY_ROUTE_ALIASES = {
   'contracts-expirations': '/financeiro/compras',
   'management-costcenters': '/financeiro/compras',
   'management-budgets': '/financeiro/compras',
+
+  // Contabilidade
   'contabilidade': '/contabilidade/dashboard',
   'accounting-disk': '/contabilidade/dashboard',
+
+  // Fluxo de Caixa
+  'cashflow-performance': '/fluxo-caixa/performance',
+  'cashflow-statement': '/fluxo-caixa/extrato',
+  'cashflow-flow': '/fluxo-caixa/evolucao',
+  'cashflow-dre': '/fluxo-caixa/dre',
+
+  // Receitas
+  'revenues-desc': '/receitas/descricao',
+  'revenues-day': '/receitas/dia',
+  'revenues-type': '/receitas/tipo',
+  'revenues-category': '/receitas/categoria',
+  'revenues-event': '/receitas/evento',
+  'revenues-tags-event': '/receitas/etiquetas',
+  'revenues-costcenter': '/receitas/centro-de-custo',
+  'revenues-tags-label': '/receitas/marcacoes',
+
+  // Despesas
+  'expenses-desc': '/despesas/descricao',
+  'expenses-category': '/despesas/categoria',
+  'expenses-event': '/despesas/evento',
+
+  // Relatórios & Configurações
   'relatorios': '/relatorios',
   'reports-sales': '/relatorios',
   'configuracoes': '/configuracoes',
   'settings-profile': '/configuracoes'
 };
 
+const CONTABILIDADE_TAB_TO_MENU_KEY = {
+  'dashboard': 'accounting-overview',
+  'inteligencia-contabil': 'accounting-intelligence',
+  'conciliacao': 'accounting-reconciliation',
+  'lancamentos': 'accounting-journal',
+  'rastreabilidade': 'accounting-traceability',
+  'relatorios-dre': 'accounting-dre',
+  'relatorios-balanco': 'accounting-balance',
+  'cont-fechamento': 'accounting-closing',
+  'plano-contas': 'accounting-chart',
+  'relatorios': 'accounting-reports',
+  'auditoria': 'accounting-audit',
+  'config-plano': 'accounting-config'
+};
+
 /**
  * Resolve uma entrada de rota (canônica ou legada) para o contrato canônico
  * @param {string} input - Rota, hash ou view legado
+ * @param {string|null} [subTab=null] - Aba opcional para subnavegação
  * @returns {object} Contrato de rota resolvido
  */
-export function resolveRoute(input) {
+export function resolveRoute(input, subTab = null) {
   if (!input) input = '/dashboard';
 
   let raw = String(input).trim();
   if (raw.startsWith('#')) raw = raw.replace(/^#\/?/, '');
   if (raw.startsWith('view-')) raw = raw.replace(/^view-/, '');
 
-  let explicitSubTab = null;
+  let explicitSubTab = subTab;
 
   // Tratar rotas compostas ex: accounting-disk/conciliacao ou /contabilidade/conciliacao
   if (raw.includes('/')) {
     const parts = raw.split('/');
     if (!raw.startsWith('/')) {
       raw = parts[0];
-      explicitSubTab = parts[1] || null;
+      if (!explicitSubTab) explicitSubTab = parts[1] || null;
     }
   }
 
@@ -484,6 +765,9 @@ export function resolveRoute(input) {
   if (ROUTES[formattedPath]) {
     const route = { ...ROUTES[formattedPath] };
     if (explicitSubTab) route.tab = explicitSubTab;
+    if (route.view === 'accounting-disk' && !route.menuKey) {
+      route.menuKey = CONTABILIDADE_TAB_TO_MENU_KEY[route.tab] || 'accounting-overview';
+    }
     return route;
   }
 
@@ -493,6 +777,9 @@ export function resolveRoute(input) {
     const canonicalPath = LEGACY_ROUTE_ALIASES[normalizedKey];
     const route = { ...ROUTES[canonicalPath] };
     if (explicitSubTab) route.tab = explicitSubTab;
+    if (route.view === 'accounting-disk') {
+      route.menuKey = CONTABILIDADE_TAB_TO_MENU_KEY[route.tab] || 'accounting-overview';
+    }
     return route;
   }
 
@@ -502,7 +789,8 @@ export function resolveRoute(input) {
   return {
     path: formattedPath,
     view: fallbackView || 'dashboard-main',
-    module: 'geral',
+    module: 'dashboard',
+    menuKey: fallbackView || 'dashboard-main',
     title: 'Painel Geral',
     sub: 'Métricas operacionais consolidadas e resumo de vendas.'
   };
