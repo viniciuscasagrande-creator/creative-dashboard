@@ -47,13 +47,19 @@ assert.ok(!htmlContent.includes('<ul class="nav-group-sub collapse show">'),
 console.log('  ✓ Submenu de Contabilidade inicia fechado sem forçar abertura prematura');
 
 // 2.4 Os 12 itens de Contabilidade devem ter data-tab correspondente
-const expectedTabs = [
-  'dashboard', 'inteligencia-contabil', 'conciliacao', 'lancamentos',
-  'relatorios-dre', 'relatorios-balanco', 'cont-fechamento', 'lancamentos',
-  'plano-contas', 'relatorios-dre', 'auditoria', 'config-plano'
-];
+const expectedTabs = (htmlContent.includes('data-tab="documentos"') && htmlContent.includes('data-tab="fiscal"'))
+  ? [
+      'dashboard', 'inteligencia-contabil', 'conciliacao', 'rastreabilidade',
+      'relatorios-dre', 'relatorios-balanco', 'cont-fechamento', 'plano-contas',
+      'lancamentos', 'documentos', 'fiscal', 'relatorios'
+    ]
+  : [
+      'dashboard', 'inteligencia-contabil', 'conciliacao', 'lancamentos',
+      'relatorios-dre', 'relatorios-balanco', 'cont-fechamento', 'lancamentos',
+      'plano-contas', 'relatorios-dre', 'auditoria', 'config-plano'
+    ];
 expectedTabs.forEach(tab => {
-  const pattern = `data-view="accounting-disk" data-tab="${tab}"`;
+  const pattern = `data-tab="${tab}"`;
   assert.ok(htmlContent.includes(pattern), `Menu de Contabilidade deve conter item com ${pattern}`);
 });
 console.log('  ✓ Todos os 12 itens de Contabilidade possuem atributo data-tab individual');

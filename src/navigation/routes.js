@@ -1,9 +1,16 @@
 /**
  * ==========================================================================
- * FASE 28.15.2 — MAPA CANÔNICO DE ROTAS E ALIASES (src/navigation/routes.js)
- * Enriquecido com data-menu-key, grupos de menu e resolução contábil
+ * FASE 28.15.4 — MAPA CANÔNICO DE ROTAS E ALIASES (src/navigation/routes.js)
+ * Enriquecido com subrotas contábeis independentes sobre view-accounting-disk
  * ==========================================================================
  */
+
+import {
+  ACCOUNTING_ROUTES,
+  ACCOUNTING_TAB_TO_ROUTE,
+  ACCOUNTING_ROUTE_TO_TAB,
+  CONTABILIDADE_TAB_TO_MENU_KEY
+} from './accounting-routes.js';
 
 export const ROUTES = {
   // Painel Geral
@@ -519,115 +526,8 @@ export const ROUTES = {
     sub: 'Relatórios analíticos e consolidados de faturamento e vendas.'
   },
 
-  // Contabilidade (12 subitens com menuKey dedicado)
-  '/contabilidade/dashboard': {
-    path: '/contabilidade/dashboard',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'dashboard',
-    menuKey: 'accounting-overview',
-    title: 'Contabilidade Disk Enterprise',
-    sub: 'Plano de contas, livro diário, razão, DRE e conciliação contábil.'
-  },
-  '/contabilidade/inteligencia': {
-    path: '/contabilidade/inteligencia',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'inteligencia-contabil',
-    menuKey: 'accounting-intelligence',
-    title: 'Inteligência Contábil',
-    sub: 'Alertas preditivos, conformidade contábil e conformidade fiscal.'
-  },
-  '/contabilidade/conciliacao': {
-    path: '/contabilidade/conciliacao',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'conciliacao',
-    menuKey: 'accounting-reconciliation',
-    title: 'Centro de Conciliação',
-    sub: 'Batimento automático, conferência de extratos e divergências.'
-  },
-  '/contabilidade/rastreabilidade': {
-    path: '/contabilidade/rastreabilidade',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'lancamentos',
-    menuKey: 'accounting-traceability',
-    title: 'Rastreabilidade 360°',
-    sub: 'Trilha de auditoria ponta a ponta: do pedido ao balanço contábil.'
-  },
-  '/contabilidade/dre': {
-    path: '/contabilidade/dre',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'relatorios-dre',
-    menuKey: 'accounting-dre',
-    title: 'DRE Gerencial',
-    sub: 'Demonstração do Resultado do Exercício consolidada por período e evento.'
-  },
-  '/contabilidade/balanco': {
-    path: '/contabilidade/balanco',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'relatorios-balanco',
-    menuKey: 'accounting-balance',
-    title: 'Balanço Patrimonial',
-    sub: 'Ativos, passivos, patrimônio líquido e estrutura de capital.'
-  },
-  '/contabilidade/fechamento': {
-    path: '/contabilidade/fechamento',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'cont-fechamento',
-    menuKey: 'accounting-closing',
-    title: 'Fechamento Mensal',
-    sub: 'Etapas de fechamento contábil, apropriação e encerramento de exercício.'
-  },
-  '/contabilidade/lancamentos': {
-    path: '/contabilidade/lancamentos',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'lancamentos',
-    menuKey: 'accounting-journal',
-    title: 'Livro de Lançamentos',
-    sub: 'Partidas dobradas, histórico contábil e diário de operações.'
-  },
-  '/contabilidade/plano-de-contas': {
-    path: '/contabilidade/plano-de-contas',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'plano-contas',
-    menuKey: 'accounting-chart',
-    title: 'Plano de Contas',
-    sub: 'Estrutura hierárquica das contas contábeis padrão CPC/IFRS.'
-  },
-  '/contabilidade/relatorios': {
-    path: '/contabilidade/relatorios',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'relatorios-dre',
-    menuKey: 'accounting-reports',
-    title: 'Relatórios Contábeis',
-    sub: 'Relatórios gerenciais, balancetes e demonstrações contábeis.'
-  },
-  '/contabilidade/auditoria': {
-    path: '/contabilidade/auditoria',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'auditoria',
-    menuKey: 'accounting-audit',
-    title: 'Auditoria & Compliance',
-    sub: 'Logs imutáveis de trilha de auditoria e conformidade fiscal.'
-  },
-  '/contabilidade/configuracoes': {
-    path: '/contabilidade/configuracoes',
-    view: 'accounting-disk',
-    module: 'contabilidade',
-    tab: 'config-plano',
-    menuKey: 'accounting-config',
-    title: 'Configurações Contábeis',
-    sub: 'Parâmetros contábeis, contas padrão e regras de integração.'
-  },
+  // Contabilidade (12 subrotas canônicas via ACCOUNTING_ROUTES da Fase 28.15.4)
+  ...ACCOUNTING_ROUTES,
 
   // Marketing
   '/marketing/dashboard': {
@@ -983,6 +883,20 @@ export const LEGACY_ROUTE_ALIASES = {
   // Contabilidade
   'contabilidade': '/contabilidade/dashboard',
   'accounting-disk': '/contabilidade/dashboard',
+  'accounting-overview': '/contabilidade/dashboard',
+  'accounting-intelligence': '/contabilidade/inteligencia',
+  'accounting-reconciliation': '/contabilidade/conciliacao',
+  'accounting-traceability': '/contabilidade/rastreabilidade',
+  'accounting-dre': '/contabilidade/dre',
+  'accounting-balance': '/contabilidade/balanco',
+  'accounting-closing': '/contabilidade/fechamento',
+  'accounting-chart': '/contabilidade/plano-de-contas',
+  'accounting-journal': '/contabilidade/lancamentos',
+  'accounting-documents': '/contabilidade/documentos',
+  'accounting-fiscal': '/contabilidade/fiscal',
+  'accounting-reports': '/contabilidade/relatorios',
+  'accounting-audit': '/contabilidade/auditoria',
+  'accounting-config': '/contabilidade/configuracoes',
 
   // Fluxo de Caixa (Consolidado em Financeiro > Controladoria)
   'fluxo-caixa': '/financeiro/fluxo-caixa',
@@ -1016,21 +930,6 @@ export const LEGACY_ROUTE_ALIASES = {
   'settings-profile': '/configuracoes'
 };
 
-const CONTABILIDADE_TAB_TO_MENU_KEY = {
-  'dashboard': 'accounting-overview',
-  'inteligencia-contabil': 'accounting-intelligence',
-  'conciliacao': 'accounting-reconciliation',
-  'lancamentos': 'accounting-journal',
-  'rastreabilidade': 'accounting-traceability',
-  'relatorios-dre': 'accounting-dre',
-  'relatorios-balanco': 'accounting-balance',
-  'cont-fechamento': 'accounting-closing',
-  'plano-contas': 'accounting-chart',
-  'relatorios': 'accounting-reports',
-  'auditoria': 'accounting-audit',
-  'config-plano': 'accounting-config'
-};
-
 /**
  * Resolve uma entrada de rota (canônica ou legada) para o contrato canônico
  * @param {string} input - Rota, hash ou view legado
@@ -1046,17 +945,10 @@ export function resolveRoute(input, subTab = null) {
 
   let explicitSubTab = subTab;
 
-  // Tratar rotas compostas ex: accounting-disk/conciliacao ou /contabilidade/conciliacao
-  if (raw.includes('/')) {
-    const parts = raw.split('/');
-    if (!raw.startsWith('/')) {
-      raw = parts[0];
-      if (!explicitSubTab) explicitSubTab = parts[1] || null;
-    }
-  }
-
-  // 1. Verificar correspondência exata em ROUTES (com ou sem barra)
+  // 1. Garantir formato de caminho canônico com barra inicial
   const formattedPath = raw.startsWith('/') ? raw : '/' + raw;
+
+  // 2. Verificar correspondência exata em ROUTES (ex: /contabilidade/dre, /contabilidade/dashboard)
   if (ROUTES[formattedPath]) {
     const route = { ...ROUTES[formattedPath] };
     if (explicitSubTab) route.tab = explicitSubTab;
@@ -1066,19 +958,49 @@ export function resolveRoute(input, subTab = null) {
     return route;
   }
 
-  // 2. Verificar correspondência em aliases legados
+  // 3. Se for rota composta legada (ex: accounting-disk/conciliacao), extrair view e subTab
+  if (raw.includes('/') && !raw.startsWith('/')) {
+    const parts = raw.split('/');
+    raw = parts[0];
+    if (!explicitSubTab) explicitSubTab = parts[1] || null;
+  }
+
   const normalizedKey = raw.replace(/^\//, '').toLowerCase();
+
+  // 4. Se for navegação contábil legada com subTab (ex: /contabilidade ou accounting-disk com subTab="dre")
+  if ((normalizedKey === 'contabilidade' || normalizedKey === 'accounting-disk') && explicitSubTab) {
+    const canonicalSubRoute = ACCOUNTING_TAB_TO_ROUTE[explicitSubTab];
+    if (canonicalSubRoute && ROUTES[canonicalSubRoute]) {
+      return { ...ROUTES[canonicalSubRoute] };
+    }
+  }
+
+  // 5. Verificar correspondência em aliases legados
   if (LEGACY_ROUTE_ALIASES[normalizedKey]) {
     const canonicalPath = LEGACY_ROUTE_ALIASES[normalizedKey];
+    if (explicitSubTab && (normalizedKey === 'contabilidade' || normalizedKey === 'accounting-disk')) {
+      const canonicalSubRoute = ACCOUNTING_TAB_TO_ROUTE[explicitSubTab];
+      if (canonicalSubRoute && ROUTES[canonicalSubRoute]) {
+        return { ...ROUTES[canonicalSubRoute] };
+      }
+    }
     const route = { ...ROUTES[canonicalPath] };
     if (explicitSubTab) route.tab = explicitSubTab;
     if (route.view === 'accounting-disk') {
-      route.menuKey = CONTABILIDADE_TAB_TO_MENU_KEY[route.tab] || 'accounting-overview';
+      route.menuKey = CONTABILIDADE_TAB_TO_MENU_KEY[route.tab] || route.menuKey || 'accounting-overview';
     }
     return route;
   }
 
-  // 3. Fallback inteligente para garantir zero telas brancas
+  // 6. Se o input for diretamente uma tab contábil conhecida (ex: 'dre', 'conciliacao', 'rastreabilidade')
+  if (ACCOUNTING_TAB_TO_ROUTE[normalizedKey]) {
+    const canonicalSubRoute = ACCOUNTING_TAB_TO_ROUTE[normalizedKey];
+    if (ROUTES[canonicalSubRoute]) {
+      return { ...ROUTES[canonicalSubRoute] };
+    }
+  }
+
+  // 7. Fallback inteligente para garantir zero telas brancas
   console.warn(`[resolveRoute] Rota não catalogada: "${input}". Aplicando fallback seguro.`);
   const fallbackView = normalizedKey.replace(/^view-/, '');
   return {

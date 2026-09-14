@@ -80,9 +80,7 @@ class AppRouter {
 
       // 2. Atualizar URL e histórico do navegador
       if (!options.skipHistory && typeof window !== 'undefined' && window.history) {
-        const hashTarget = routeState.tab && routeState.view === 'accounting-disk'
-          ? `${routeState.path}?tab=${routeState.tab}`
-          : routeState.path;
+        const hashTarget = routeState.path;
 
         if (options.replace) {
           window.history.replaceState({ route: routeState.path, tab: routeState.tab, menuKey: routeState.menuKey }, '', '#' + hashTarget);

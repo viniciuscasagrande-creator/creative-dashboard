@@ -18,6 +18,8 @@ import { createUiCard, createUiTable, createUiModal, createUiChart } from './com
 import { AppRouter } from './navigation/router.js';
 import { MenuStateManager } from './navigation/menu-state.js';
 import { ROUTES, LEGACY_ROUTE_ALIASES, resolveRoute } from './navigation/routes.js';
+import { AccountingController } from './accounting/accounting-controller.js';
+import { ACCOUNTING_TAB_TO_ROUTE, ACCOUNTING_ROUTE_TO_TAB } from './navigation/accounting-routes.js';
 
 // Global state for events
 let EVENTS_DATA = [
@@ -353,8 +355,11 @@ function initApp() {
     });
 
     AppRouter.registerHook('accounting-disk', (route) => {
-      if (typeof switchAccountingTab === 'function') {
-        switchAccountingTab(route.tab || 'dashboard');
+      const targetTab = route.tab || 'dashboard';
+      if (AccountingController && typeof AccountingController.activateTab === 'function') {
+        AccountingController.activateTab(targetTab);
+      } else if (typeof switchAccountingTab === 'function') {
+        switchAccountingTab(targetTab);
       }
     });
   }
@@ -6416,198 +6421,37 @@ function switchAccountingCategory(category, defaultTab) {
   switchAccountingTab(null, targetTab);
 }
 
-/* --- switchAccountingTab --- */
+/* --- switchAccountingTab (Adaptador Fase 28.15.4 para Router Único) --- */
 function switchAccountingTab(tabName, e = null) {
-  // Tratamento robusto para inversão de argumentos legados (ex: event, tabName)
-  if (typeof tabName === 'object' && tabName !== null && typeof e === 'string') {
+  // Tratamento robusto para inversão de argumentos legados (ex: event, tabName ou null, tabName)
+  if ((typeof tabName === 'object' || tabName === null) && typeof e === 'string') {
     const temp = tabName;
     tabName = e;
     e = temp;
   }
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
-  // Tratamento de alias de rastreabilidade para lancamentos
-  if (tabName === 'rastreabilidade') tabName = 'lancamentos';
-  if (!tabName) tabName = 'dashboard';
-  if (e && typeof e.preventDefault === 'function') e.preventDefault();
-
-  // Ensure view-accounting-disk is visible if hidden
-  const viewSec = document.getElementById('view-accounting-disk');
-  if (viewSec && viewSec.style.display === 'none') {
-    document.querySelectorAll('.page-section').forEach(section => {
-      section.style.display = 'none';
-    });
-    viewSec.style.display = 'block';
+  // Sanitizar tabName para evitar undefined ou null
+  let cleanTab = String(tabName || 'dashboard').trim();
+  if (!cleanTab || cleanTab === 'undefined' || cleanTab === 'null') {
+    cleanTab = 'dashboard';
   }
 
-  // Fase 26.17.9.1: Inteligência Contábil possui pane real.
-  let actualTabToDisplay = tabName;
-  let scrollToIntelligence = false;
-
-  currentAccountingTab = actualTabToDisplay;
-  const category = ACCOUNTING_CATEGORY_MAP[tabName] || ACCOUNTING_CATEGORY_MAP[actualTabToDisplay] || 'visao-geral';
-
-  // 1. Update Breadcrumb Label & Subpane Back Button
-  const breadcrumbLabel = document.getElementById('acc-breadcrumb-current-label');
-  const backBtnContainer = document.getElementById('acc-subpane-back-btn-container');
-  const tabTitles = {
-    'dashboard': 'Visão Geral',
-    'inteligencia-contabil': 'Inteligência Contábil',
-    'conciliacao': 'Centro de Conciliação',
-    'lancamentos': 'Rastreabilidade 360º',
-    'relatorios-dre': 'DRE Gerencial',
-    'relatorios-balanco': 'Balanço Patrimonial',
-    'cont-fechamento': 'Fechamento Mensal',
-    'plano-contas': 'Plano de Contas',
-    'diario': 'Livro Diário',
-    'razao': 'Livro Razão',
-    'custos': 'Centros de Custos',
-    'receber': 'Contas a Receber',
-    'pagar': 'Contas a Pagar',
-    'caixa': 'Fluxo de Caixa',
-    'repasses': 'Repasses a Produtores',
-    'impostos': 'Gestão Fiscal & Tributos',
-    'demonstracoes': 'Demonstrações Contábeis',
-    'auditoria': 'Auditoria Contábil',
-    'simulador': 'Simulador de Ciclo'
-  };
-
-  if (breadcrumbLabel) {
-    breadcrumbLabel.textContent = tabTitles[tabName] || tabTitles[actualTabToDisplay] || 'Visão Geral';
-  }
-  if (backBtnContainer) {
-    backBtnContainer.style.display = (actualTabToDisplay === 'dashboard') ? 'none' : 'block';
-  }
-
-  // 2. Sync Sidebar Menu Active State via MenuStateManager (Fase 28.15.2)
-  if (window.MenuStateManager) {
-    const clickedMenuKey = (e && e.target) ? e.target.closest('[data-menu-key]')?.dataset.menuKey : null;
-    window.MenuStateManager.sync({
-      view: 'accounting-disk',
-      tab: actualTabToDisplay,
-      module: 'contabilidade',
-      menuKey: clickedMenuKey
-    });
-  }
-
-  // 3. Sync category pillar buttons & pills (fallback for safety)
-  const catButtons = document.querySelectorAll('#accounting-category-nav .accounting-pillar-btn, #accounting-category-nav .nav-link');
-  catButtons.forEach(btn => {
-    if (btn.getAttribute('data-category') === category) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
+  // Se já estamos dentro do fluxo de navegação do AppRouter, delega diretamente para AccountingController
+  if (window.AppRouter && window.AppRouter.isNavigating) {
+    if (AccountingController && typeof AccountingController.activateTab === 'function') {
+      AccountingController.activateTab(cleanTab);
     }
-  });
-
-  // 4. Sync contextual subnav groups (fallback for safety)
-  const subnavGroups = document.querySelectorAll('.accounting-subnav-group');
-  subnavGroups.forEach(grp => {
-    if (grp.id === `subnav-group-${category}`) {
-      grp.classList.remove('d-none');
-      grp.classList.add('d-flex');
-    } else {
-      grp.classList.remove('d-flex');
-      grp.classList.add('d-none');
-    }
-  });
-
-  // 5. Highlight the active subnav button
-  document.querySelectorAll('.accounting-subnav-group button[data-tab]').forEach(btn => {
-    if (btn.getAttribute('data-tab') === tabName || btn.getAttribute('data-tab') === actualTabToDisplay) {
-      btn.classList.remove('btn-outline-secondary', 'btn-light');
-      btn.classList.add('btn-primary', 'text-white', 'shadow-xs');
-    } else {
-      btn.classList.remove('btn-primary', 'text-white', 'shadow-xs');
-      btn.classList.add('btn-outline-secondary');
-    }
-  });
-
-  // 6. Sync legacy navigation links
-  const legacyLinks = document.querySelectorAll('#accounting-nav-pills .nav-link');
-  legacyLinks.forEach(link => {
-    const oc = link.getAttribute('onclick') || '';
-    if (oc.includes(`'${actualTabToDisplay}'`) || oc.includes(`"${actualTabToDisplay}"`)) {
-      link.classList.add('active');
-    } else {
-      link.classList.remove('active');
-    }
-  });
-
-  // 7. Smooth scroll to intelligence if requested
-  if (scrollToIntelligence) {
-    setTimeout(() => {
-      const intelEl = document.getElementById('acc-intelligence-alerts-container') || document.querySelector('[id*="intelligence"]') || document.getElementById('acc-intelligence-card');
-      if (intelEl) {
-        intelEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 120);
+    return;
   }
 
-  // 8. Switch visible accounting-pane
-  document.querySelectorAll('.accounting-pane').forEach(pane => {
-    pane.style.display = 'none';
-  });
-  const activePane = document.getElementById(`accpane-${actualTabToDisplay}`);
-  if (activePane) {
-    activePane.style.display = 'block';
-  }
-
-  // 9. Invoke pane render functions
-  if (actualTabToDisplay === 'dashboard') {
-    renderAccountingDashboard();
-  } else if (actualTabToDisplay === 'inteligencia-contabil') {
-    if (typeof renderAccountingIntelligence === 'function') renderAccountingIntelligence();
-  } else if (actualTabToDisplay === 'simulador') {
-    const simIngressos = document.getElementById('sim-res-rec-ingressos');
-    if (!simIngressos || simIngressos.textContent === 'R$ 0,00' || simIngressos.textContent === '-') {
-      if (typeof runAccountingSimulation === 'function') runAccountingSimulation();
-    }
-  } else if (actualTabToDisplay === 'plano-contas') {
-    renderPlanoContas();
-  } else if (actualTabToDisplay === 'diario') {
-    renderDiario();
-  } else if (actualTabToDisplay === 'razao') {
-    renderRazao();
-  } else if (actualTabToDisplay === 'lancamentos') {
-    renderLancamentos();
-    if (typeof renderTraceability === 'function') renderTraceability();
-  } else if (actualTabToDisplay === 'custos') {
-    renderCustos();
-  } else if (actualTabToDisplay === 'relatorios-dre') {
-    if (typeof renderDre === 'function') renderDre();
-  } else if (actualTabToDisplay === 'relatorios-balanco') {
-    if (typeof renderBalanceSheet === 'function') renderBalanceSheet();
-  } else if (actualTabToDisplay === 'cont-fechamento') {
-    if (typeof renderClosing === 'function') renderClosing();
-    renderCustos();
-  } else if (actualTabToDisplay === 'conciliacao') {
-    renderConciliacao();
-  } else if (actualTabToDisplay === 'receber') {
-    renderContasReceber();
-  } else if (actualTabToDisplay === 'pagar') {
-    renderContasPagar();
-  } else if (actualTabToDisplay === 'repasses') {
-    renderRepasses();
-  } else if (actualTabToDisplay === 'impostos') {
-    if (typeof renderImpostos === 'function') renderImpostos();
-  } else if (actualTabToDisplay === 'nfe') {
-    if (typeof renderNfe === 'function') renderNfe();
-  } else if (actualTabToDisplay === 'auditoria') {
-    if (typeof renderAuditCompliance === 'function') renderAuditCompliance();
-    if (typeof renderAudit === 'function') renderAudit();
-  }
-
-  if (actualTabToDisplay === 'demonstracoes') {
-    const isExp = currentAccountingMode === 'expert';
-    const divider = document.getElementById('acc-demo-actions-divider');
-    const expertActions = document.getElementById('acc-demo-expert-actions');
-    if (divider) divider.style.display = isExp ? 'block' : 'none';
-    if (expertActions) expertActions.style.display = isExp ? 'flex' : 'none';
-  }
-
-  if (typeof logAudit === 'function') {
-    logAudit('Navegação Contábil', 'Mudar Aba', `Acessou aba ${actualTabToDisplay} (Pilar: ${category})`);
+  // Chamada externa (ex: onclick inline, botão de subpainel):
+  // Resolve a subrota canônica e delega a navegação ao AppRouter central
+  const targetRoute = (ACCOUNTING_TAB_TO_ROUTE && ACCOUNTING_TAB_TO_ROUTE[cleanTab]) || `/contabilidade/${cleanTab}`;
+  if (window.AppRouter && typeof window.AppRouter.navigate === 'function') {
+    window.AppRouter.navigate(targetRoute, { tab: cleanTab });
+  } else if (AccountingController && typeof AccountingController.activateTab === 'function') {
+    AccountingController.activateTab(cleanTab);
   }
 }
 
@@ -7810,6 +7654,7 @@ window.renderAuditCompliance = renderAuditCompliance;
 window.auditComplianceService = auditComplianceService;
 window.accountingIntelligenceService = accountingIntelligenceService;
 
+window.AccountingController = AccountingController;
 window.switchAccountingTab = switchAccountingTab;
 window.switchAccountingCategory = switchAccountingCategory;
 window.setAccountingFilter = setAccountingFilter;
