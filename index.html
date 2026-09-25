@@ -3961,8 +3961,20 @@
 
                     <section id="view-financial-repass" class="page-section"  style="display:none;">
                         <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-0" style="border-radius: 6px;">
-                            <h5 class="fw-bold mb-0">Financeiro</h5>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Repasses &amp; Liquidações Financeiras</h5>
+                                <div class="text-muted fs-xs" id="payout-view-subtitle">Portal do Produtor &bull; Visualização de Repasses e Liquidações</div>
+                            </div>
                             <div class="d-flex flex-wrap gap-2 align-items-center w-100 w-md-auto">
+                                <!-- Switcher de Perfil / Modo de Visualização -->
+                                <div class="btn-group shadow-sm" role="group" id="payout-role-view-toggle">
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1" id="btn-payout-role-producer" onclick="window.switchPayoutRoleView('PRODUCER')">
+                                        <i class="ph-user"></i> Visão Produtor
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1" id="btn-payout-role-financeiro" onclick="window.switchPayoutRoleView('FINANCEIRO')">
+                                        <i class="ph-shield-check"></i> Visão Financeiro Disk (Opção A + B)
+                                    </button>
+                                </div>
                                 <button class="btn btn-outline-light text-dark border fw-bold d-flex align-items-center gap-1" id="financial-export-csv-btn-2" style="height: 36px; padding: 6px 12px; border-radius: 6px; font-size: 13px;">
                                     <i class="ph-file-csv"></i> Exportar CSV
                                 </button>
@@ -3981,247 +3993,469 @@
                             <div class="card-header bg-transparent border-bottom p-0">
                                 <div class="d-flex justify-content-between align-items-center px-3 py-2">
                                     <ul class="nav nav-tabs border-0 mb-0" id="financial-sub-tabs-repass" style="gap: 4px;">
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0  py-2" data-view="financial-balance">Saldo Consolidado</a></li>
+                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 py-2" data-view="financial-balance">Saldo Consolidado</a></li>
                                         <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 active py-2" data-view="financial-repass">Solicitações de Repasse</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0  py-2" data-view="financial-advance">Antecipações</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0  py-2" data-view="financial-statement">Extrato Detalhado</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0  py-2" data-view="financial-expenses">Despesas</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0  py-2" data-view="financial-accounts">Contas Bancárias</a></li>
-                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0  py-2" data-view="financial-bordero">Borderô</a></li>
+                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 py-2" data-view="financial-advance">Antecipações</a></li>
+                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 py-2" data-view="financial-statement">Extrato Detalhado</a></li>
+                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 py-2" data-view="financial-expenses">Despesas</a></li>
+                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 py-2" data-view="financial-accounts">Contas Bancárias</a></li>
+                                        <li class="nav-item"><a href="#" class="nav-link submenu-link tab border-0 py-2" data-view="financial-bordero">Borderô</a></li>
                                     </ul>
                                 </div>
                             </div>
                             <!-- SUBTAB 3.2: Solicitações de Repasse pane -->
                             <div class="financial-subpane" id="subpane-repasses" style="padding: 20px;">
-                                <!-- Financial Summary stats widgets -->
-                                <div class="row g-3 mb-4">
-                                    <div class="col-sm-6 col-xl-3">
-                                        <div class="card card-body border shadow-sm mb-0">
-                                            <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Saldo Disponível</h6>
-                                            <h4 class="fw-bold mb-0 text-success" id="payout-summary-available">R$ 248,96</h4>
-                                            <span class="text-muted fs-xs mt-1">Liberado para transferência</span>
+                                
+                                <!-- ================================================================= -->
+                                <!-- MODO 1: VISÃO PRODUTOR (RESULTADOS, VALORES REPASSADOS & RECIBOS) -->
+                                <!-- ================================================================= -->
+                                <div id="payout-producer-container">
+                                    <!-- Banner Exclusivo Produtor -->
+                                    <div class="alert alert-info border-0 shadow-sm d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4 py-2 px-3 gap-2" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7 !important;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="p-2 rounded bg-white text-primary shadow-sm d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; color: #0284c7 !important;">
+                                                <i class="ph-user-check fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="text-dark fs-xs d-block">Área Exclusiva do Produtor &bull; Transparência Financeira</strong>
+                                                <span class="text-muted fs-xxs">Consulte o status das suas solicitações, valores líquidos repassados e emita seus comprovantes bancários com autenticação eletrônica.</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-white text-primary border fs-xxs fw-semibold px-2 py-1 shadow-sm">Modo Produtor Ativo</span>
+                                    </div>
+
+                                    <!-- 4 Cards de Métricas para o Produtor -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #10b981 !important;">
+                                                <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Total Já Repassado</h6>
+                                                <h4 class="fw-bold mb-0 text-success" id="prod-kpi-total-repassado">R$ 5.700,00</h4>
+                                                <span class="text-muted fs-xs mt-1" id="prod-kpi-count-concluido">Repasses liquidados</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #0284c7 !important;">
+                                                <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Repasses Aprovados</h6>
+                                                <h4 class="fw-bold mb-0 text-primary" id="prod-kpi-aprovados">R$ 3.500,00</h4>
+                                                <span class="text-muted fs-xs mt-1">Liberados para liquidação bancária</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #f59e0b !important;">
+                                                <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Em Análise / Pendentes</h6>
+                                                <h4 class="fw-bold mb-0 text-warning" id="prod-kpi-em-analise">R$ 248,96</h4>
+                                                <span class="text-muted fs-xs mt-1">Sob validação da controladoria</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #64748b !important;">
+                                                <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Saldo Disponível p/ Saque</h6>
+                                                <h4 class="fw-bold mb-0 text-dark" id="payout-summary-available">R$ 248,96</h4>
+                                                <span class="text-muted fs-xs mt-1">Liberado para transferência</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6 col-xl-3">
-                                        <div class="card card-body border shadow-sm mb-0">
-                                            <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Valor Bloqueado</h6>
-                                            <h4 class="fw-bold mb-0 text-muted" id="payout-summary-blocked">R$ 0,00</h4>
-                                            <span class="text-muted fs-xs mt-1">Eventos em andamento</span>
+
+                                    <!-- Form de Solicitação de Repasse do Produtor -->
+                                    <div class="card border shadow-sm mb-4">
+                                        <div class="card-header bg-light bg-opacity-20 border-bottom py-3">
+                                            <h6 class="card-title fw-bold mb-0"><i class="ph-hand-coins text-green me-2"></i> Solicitar Novo Repasse Bancário</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <form id="page-repasse-form">
+                                                <div class="row g-4">
+                                                    <!-- Coluna 1: Eventos Elegíveis e Contas -->
+                                                    <div class="col-lg-7 border-end-lg">
+                                                        <!-- Eventos Elegíveis -->
+                                                        <div class="mb-4">
+                                                            <h6 class="fw-bold text-dark mb-2 fs-sm">Eventos Elegíveis</h6>
+                                                            <div class="table-responsive border rounded bg-white">
+                                                                <table class="table table-hover align-middle mb-0" style="width: 100%;">
+                                                                    <thead>
+                                                                        <tr class="table-light">
+                                                                            <th style="padding: 6px 10px; width: 40px;"></th>
+                                                                            <th style="padding: 6px 10px;">Evento</th>
+                                                                            <th style="padding: 6px 10px;">Data</th>
+                                                                            <th style="padding: 6px 10px;" class="text-right">Valor Disponível</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="financial-eligible-events-rows">
+                                                                        <!-- Preenchido dinamicamente via JS -->
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Conta Bancária -->
+                                                        <div class="mb-0">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <h6 class="fw-bold text-dark mb-0 fs-sm">Conta Bancária Favorecida</h6>
+                                                                <span style="font-size: 11px; color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="alert('Funcionalidade de alteração de contas em desenvolvimento')">(Alterar Conta)</span>
+                                                            </div>
+                                                            <div class="row g-2">
+                                                                <div class="col-md-6">
+                                                                    <div class="bank-account-card-option selected" id="bank-opt-inter" onclick="selectRepasseBankCard('inter')">
+                                                                        <input type="radio" name="repasse-bank" id="rad-bank-inter" value="inter" checked>
+                                                                        <div style="flex: 1;">
+                                                                            <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Banco Inter</strong>
+                                                                            <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 0001 | CC ********3456</span>
+                                                                            <span style="font-size: 9px; display: block; color: var(--color-dashboard); font-weight: 500;">PIX: financeiro@empresa.com.br</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="bank-account-card-option" id="bank-opt-bb" onclick="selectRepasseBankCard('bb')">
+                                                                        <input type="radio" name="repasse-bank" id="rad-bank-bb" value="bb">
+                                                                        <div style="flex: 1;">
+                                                                            <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Banco do Brasil</strong>
+                                                                            <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 1234 | CC 98765-4</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="bank-account-card-option" id="bank-opt-itau" onclick="selectRepasseBankCard('itau')">
+                                                                        <input type="radio" name="repasse-bank" id="rad-bank-itau" value="itau">
+                                                                        <div style="flex: 1;">
+                                                                            <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Itaú</strong>
+                                                                            <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 5678 | CC 12345-6</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="bank-account-card-option" id="bank-opt-nubank" onclick="selectRepasseBankCard('nubank')">
+                                                                        <input type="radio" name="repasse-bank" id="rad-bank-nubank" value="nubank">
+                                                                        <div style="flex: 1;">
+                                                                            <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Nubank</strong>
+                                                                            <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 0001 | CC 76543-2</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-12">
+                                                                    <div class="bank-account-card-option" id="bank-opt-pix" onclick="selectRepasseBankCard('pix')">
+                                                                        <input type="radio" name="repasse-bank" id="rad-bank-pix" value="pix">
+                                                                        <div style="flex: 1;">
+                                                                            <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">PIX Instantâneo</strong>
+                                                                            <span style="font-size: 10px; color: var(--text-muted); display: block;">Chave PIX: financeiro@empresa.com.br</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Coluna 2: Valores, Resumo e Submissão -->
+                                                    <div class="col-lg-5">
+                                                        <div class="mb-4">
+                                                            <h6 class="fw-bold text-dark mb-2 fs-sm">Valor do Repasse</h6>
+                                                            <div class="payout-card-summary mb-2">
+                                                                <div class="payout-sum-row">
+                                                                    <span>Valor disponível:</span>
+                                                                    <strong id="payout-calc-available" class="text-success">R$ 248,96</strong>
+                                                                </div>
+                                                                <div class="payout-sum-row">
+                                                                    <span>Saldo restante:</span>
+                                                                    <span id="payout-calc-remaining" class="text-muted">R$ 0,00</span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group mb-0">
+                                                                <label class="form-label fw-bold fs-xs text-muted text-uppercase">Valor solicitado</label>
+                                                                <div class="d-flex gap-2">
+                                                                    <input type="number" id="payout-amount-input" class="form-control" step="0.01" value="248.96" oninput="updatePayoutCalcRemaining()">
+                                                                    <button type="button" class="btn btn-light border text-dark btn-sm fw-bold text-nowrap" onclick="setPayoutMaxAmount()">Solicitar Valor Total</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-4">
+                                                            <h6 class="fw-bold text-dark mb-2 fs-sm">Forma de Recebimento</h6>
+                                                            <div class="d-flex gap-3" id="payout-method-options-list">
+                                                                <label class="form-check d-flex align-items-center gap-1 mb-0 cursor-pointer">
+                                                                    <input type="radio" name="payout-method" value="PIX" class="form-check-input" checked onchange="updatePayoutMethodState()">
+                                                                    <span class="form-check-label fs-sm">PIX</span>
+                                                                </label>
+                                                                <label class="form-check d-flex align-items-center gap-1 mb-0 cursor-pointer">
+                                                                    <input type="radio" name="payout-method" value="TED" class="form-check-input" onchange="updatePayoutMethodState()">
+                                                                    <span class="form-check-label fs-sm">TED</span>
+                                                                </label>
+                                                                <label class="form-check d-flex align-items-center gap-1 mb-0 cursor-pointer">
+                                                                    <input type="radio" name="payout-method" value="Conta Corrente" class="form-check-input" onchange="updatePayoutMethodState()">
+                                                                    <span class="form-check-label fs-sm">Conta Corrente</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-4">
+                                                            <h6 class="fw-bold text-dark mb-2 fs-sm">Resumo da Operação</h6>
+                                                            <div class="payout-card-summary">
+                                                                <div class="payout-sum-row">
+                                                                    <span>Valor Bruto Solicitado:</span>
+                                                                    <span id="payout-summary-gross">R$ 248,96</span>
+                                                                </div>
+                                                                <div class="payout-sum-row">
+                                                                    <span>Taxas de Repasse:</span>
+                                                                    <span class="text-success fw-semibold">R$ 0,00 (Isento)</span>
+                                                                </div>
+                                                                <div class="payout-sum-row total">
+                                                                    <span>Valor Líquido Previsto:</span>
+                                                                    <span id="payout-summary-net" class="fw-bold text-success">R$ 248,96</span>
+                                                                </div>
+                                                                <div class="payout-sum-row mt-2" style="border-top: 1px dashed var(--border-light); padding-top: 8px;">
+                                                                    <span>Prazo Estimado:</span>
+                                                                    <span class="fw-semibold text-dark" id="payout-summary-period">Instantâneo (Até 10 min)</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-4">
+                                                            <div class="d-flex flex-column gap-2">
+                                                                <label class="form-check d-flex gap-2 mb-0 cursor-pointer">
+                                                                    <input type="checkbox" id="chk-payout-terms-1" class="form-check-input" style="margin-top: 2px;" onchange="validatePayoutTermsAcceptance()">
+                                                                    <span class="form-check-label fs-xs text-muted">Declaro que as informações bancárias estão corretas.</span>
+                                                                </label>
+                                                                <label class="form-check d-flex gap-2 mb-0 cursor-pointer">
+                                                                    <input type="checkbox" id="chk-payout-terms-2" class="form-check-input" style="margin-top: 2px;" onchange="validatePayoutTermsAcceptance()">
+                                                                    <span class="form-check-label fs-xs text-muted">Concordo com as diretrizes e prazos de repasse.</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <button type="button" class="btn btn-light me-2 btn-sm fw-bold" onclick="activateFinancialSubtab('saldo')">Cancelar</button>
+                                                            <button type="submit" class="btn btn-success btn-sm fw-bold" id="btn-submit-repasse-form" disabled>Solicitar Repasse</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6 col-xl-3">
-                                        <div class="card card-body border shadow-sm mb-0">
-                                            <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Próximo Payout</h6>
-                                            <h4 class="fw-bold mb-0 text-dark">08/07/2026</h4>
-                                            <span class="text-muted fs-xs mt-1">Repasse automático programado</span>
+
+                                    <!-- Tabela do Produtor: Extrato de Repasses Concluídos e Aprovados -->
+                                    <div class="card shadow-sm border mb-4">
+                                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="fw-bold mb-0 text-dark"><i class="ph-receipt text-primary me-2"></i>Histórico &amp; Extrato de Repasses (Visão Produtor)</h6>
+                                                <span class="fs-xs text-muted">Acompanhamento transparente de valores solicitados, valores líquidos repassados e comprovantes oficiais</span>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-secondary fw-bold d-flex align-items-center gap-1" onclick="window.refreshUnifiedPayoutsDashboard()">
+                                                <i class="ph-arrows-clockwise"></i> Atualizar
+                                            </button>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0 fs-sm" id="table-producer-payouts">
+                                                <thead class="table-light fs-xs text-uppercase text-muted">
+                                                    <tr>
+                                                        <th>Nº Protocolo</th>
+                                                        <th>Data Solicitação</th>
+                                                        <th>Evento Vinculado</th>
+                                                        <th>Valor Bruto</th>
+                                                        <th class="text-success fw-bold">Valor Líquido Repassado</th>
+                                                        <th>Conta / Chave Favorecida</th>
+                                                        <th>Status Oficial</th>
+                                                        <th>Data da Liquidação</th>
+                                                        <th class="text-end pe-3">Comprovante Oficial</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="table-producer-payouts-body">
+                                                    <!-- Renderizado dinamicamente via JS -->
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6 col-xl-3">
-                                        <div class="card card-body border shadow-sm mb-0">
-                                            <h6 class="text-uppercase text-muted fs-xs fw-bold mb-1">Solicitações Pendentes</h6>
-                                            <h4 class="fw-bold mb-0 text-warning" id="payout-summary-pending">1</h4>
-                                            <span class="text-muted fs-xs mt-1">Sob análise financeira</span>
-                                        </div>
+
+                                    <!-- Elementos legados mantidos para integridade de scripts externos -->
+                                    <div style="display: none;">
+                                        <span id="payout-summary-blocked">R$ 0,00</span>
+                                        <span id="payout-summary-pending">0</span>
+                                        <table><tbody id="table-payouts-history-body"></tbody></table>
                                     </div>
                                 </div>
-                                <!-- Form de Solicitação de Repasse (Incorporado na Página) -->
-                                <div class="card border shadow-sm mb-4">
-                                    <div class="card-header bg-light bg-opacity-20 border-bottom py-3">
-                                        <h6 class="card-title fw-bold mb-0"><i class="ph-hand-coins text-green me-2"></i> Solicitar Novo Repasse Bancário</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="page-repasse-form">
-                                            <div class="row g-4">
-                                                
-                                                <!-- Coluna 1: Eventos Elegíveis e Contas -->
-                                                <div class="col-lg-7 border-end-lg">
-                                                    
-                                                    <!-- Eventos Elegíveis -->
-                                                    <div class="mb-4">
-                                                        <h6 class="fw-bold text-dark mb-2 fs-sm">Eventos Elegíveis</h6>
-                                                        <div class="table-responsive border rounded bg-white">
-                                                            <table class="table table-hover align-middle mb-0" style="width: 100%;">
-                                                                <thead>
-                                                                    <tr class="table-light">
-                                                                        <th style="padding: 6px 10px; width: 40px;"></th>
-                                                                        <th style="padding: 6px 10px;">Evento</th>
-                                                                        <th style="padding: 6px 10px;">Data</th>
-                                                                        <th style="padding: 6px 10px;" class="text-right">Valor Disponível</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="financial-eligible-events-rows">
-                                                                    <!-- Loaded dynamically by JS -->
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                    <!-- Conta Bancária -->
-                                                    <div class="mb-0">
-                                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                                            <h6 class="fw-bold text-dark mb-0 fs-sm">Conta Bancária</h6>
-                                                            <span style="font-size: 11px; color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="alert('Funcionalidade de alteração de contas em desenvolvimento')">(Alterar Conta)</span>
-                                                        </div>
-                                                        
-                                                        <div class="row g-2">
-                                                            <div class="col-md-6">
-                                                                <div class="bank-account-card-option selected" id="bank-opt-inter" onclick="selectRepasseBankCard('inter')">
-                                                                    <input type="radio" name="repasse-bank" id="rad-bank-inter" value="inter" checked>
-                                                                    <div style="flex: 1;">
-                                                                        <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Banco Inter</strong>
-                                                                        <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 0001 | CC ********3456</span>
-                                                                        <span style="font-size: 9px; display: block; color: var(--color-dashboard); font-weight: 500;">PIX: financeiro@empresa.com.br</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="bank-account-card-option" id="bank-opt-bb" onclick="selectRepasseBankCard('bb')">
-                                                                    <input type="radio" name="repasse-bank" id="rad-bank-bb" value="bb">
-                                                                    <div style="flex: 1;">
-                                                                        <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Banco do Brasil</strong>
-                                                                        <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 1234 | CC 98765-4</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="bank-account-card-option" id="bank-opt-itau" onclick="selectRepasseBankCard('itau')">
-                                                                    <input type="radio" name="repasse-bank" id="rad-bank-itau" value="itau">
-                                                                    <div style="flex: 1;">
-                                                                        <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Itaú</strong>
-                                                                        <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 5678 | CC 12345-6</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="bank-account-card-option" id="bank-opt-nubank" onclick="selectRepasseBankCard('nubank')">
-                                                                    <input type="radio" name="repasse-bank" id="rad-bank-nubank" value="nubank">
-                                                                    <div style="flex: 1;">
-                                                                        <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">Nubank</strong>
-                                                                        <span style="font-size: 10px; color: var(--text-muted); display: block;">Ag. 0001 | CC 76543-2</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <div class="bank-account-card-option" id="bank-opt-pix" onclick="selectRepasseBankCard('pix')">
-                                                                    <input type="radio" name="repasse-bank" id="rad-bank-pix" value="pix">
-                                                                    <div style="flex: 1;">
-                                                                        <strong style="font-size: 12px; display: block; color: var(--neutral-dark);">PIX</strong>
-                                                                        <span style="font-size: 10px; color: var(--text-muted); display: block;">Chave PIX: financeiro@empresa.com.br</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
+
+                                <!-- ================================================================= -->
+                                <!-- MODO 2: VISÃO FINANCEIRO DISK INGRESSOS (OPÇÃO A + OPÇÃO B JUNTAS) -->
+                                <!-- ================================================================= -->
+                                <div id="payout-financeiro-container" style="display: none;">
+                                    <!-- Banner Executivo de Governança Integrada -->
+                                    <div class="card shadow-sm border-0 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff;">
+                                        <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <div class="rounded-circle bg-primary bg-opacity-25 p-2 text-primary d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; color: #38bdf8 !important;">
+                                                    <i class="ph-shield-check fs-3"></i>
                                                 </div>
-                                                
-                                                <!-- Coluna 2: Valores, Resumo e Submissão -->
-                                                <div class="col-lg-5">
-                                                    
-                                                    <!-- Valor do Repasse -->
-                                                    <div class="mb-4">
-                                                        <h6 class="fw-bold text-dark mb-2 fs-sm">Valor do Repasse</h6>
-                                                        <div class="payout-card-summary mb-2">
-                                                            <div class="payout-sum-row">
-                                                                <span>Valor disponível:</span>
-                                                                <strong id="payout-calc-available" class="text-success">R$ 248,96</strong>
-                                                            </div>
-                                                            <div class="payout-sum-row">
-                                                                <span>Saldo restante:</span>
-                                                                <span id="payout-calc-remaining" class="text-muted">R$ 0,00</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group mb-0">
-                                                            <label class="form-label fw-bold fs-xs text-muted text-uppercase">Valor solicitado</label>
-                                                            <div class="d-flex gap-2">
-                                                                <input type="number" id="payout-amount-input" class="form-control" step="0.01" value="248.96" oninput="updatePayoutCalcRemaining()">
-                                                                <button type="button" class="btn btn-light border text-dark btn-sm fw-bold text-nowrap" onclick="setPayoutMaxAmount()">Solicitar Valor Total</button>
-                                                            </div>
-                                                        </div>
+                                                <div>
+                                                    <div class="fw-bold fs-sm d-flex align-items-center gap-2">
+                                                        Central Unificada de Aprovação &amp; Liquidação de Repasses
+                                                        <span class="badge bg-success text-white fs-xs">Opção A + Opção B Integradas</span>
+                                                        <span class="badge bg-light text-dark border fs-xs">Maker / Checker &bull; Alçadas</span>
                                                     </div>
-                                                    <!-- Forma de Recebimento -->
-                                                    <div class="mb-4">
-                                                        <h6 class="fw-bold text-dark mb-2 fs-sm">Forma de Recebimento</h6>
-                                                        <div class="d-flex gap-3" id="payout-method-options-list">
-                                                            <label class="form-check d-flex align-items-center gap-1 mb-0 cursor-pointer">
-                                                                <input type="radio" name="payout-method" value="PIX" class="form-check-input" checked onchange="updatePayoutMethodState()">
-                                                                <span class="form-check-label fs-sm">PIX</span>
-                                                            </label>
-                                                            <label class="form-check d-flex align-items-center gap-1 mb-0 cursor-pointer">
-                                                                <input type="radio" name="payout-method" value="TED" class="form-check-input" onchange="updatePayoutMethodState()">
-                                                                <span class="form-check-label fs-sm">TED</span>
-                                                            </label>
-                                                            <label class="form-check d-flex align-items-center gap-1 mb-0 cursor-pointer">
-                                                                <input type="radio" name="payout-method" value="Conta Corrente" class="form-check-input" onchange="updatePayoutMethodState()">
-                                                                <span class="form-check-label fs-sm">Conta Corrente</span>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <!-- Resumo da Operação -->
-                                                    <div class="mb-4">
-                                                        <h6 class="fw-bold text-dark mb-2 fs-sm">Resumo da Operação</h6>
-                                                        <div class="payout-card-summary">
-                                                            <div class="payout-sum-row">
-                                                                <span>Valor Bruto:</span>
-                                                                <span id="payout-summary-gross">R$ 248,96</span>
-                                                            </div>
-                                                            <div class="payout-sum-row">
-                                                                <span>Taxas:</span>
-                                                                <span>R$ 0,00</span>
-                                                            </div>
-                                                            <div class="payout-sum-row total">
-                                                                <span>Valor Líquido:</span>
-                                                                <span id="payout-summary-net">R$ 248,96</span>
-                                                            </div>
-                                                            <div class="payout-sum-row mt-2" style="border-top: 1px dashed var(--border-light); padding-top: 8px;">
-                                                                <span>Prazo:</span>
-                                                                <span class="fw-semibold text-dark" id="payout-summary-period">Até 1 dia útil</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- Termos -->
-                                                    <div class="mb-4">
-                                                        <div class="d-flex flex-column gap-2">
-                                                            <label class="form-check d-flex gap-2 mb-0 cursor-pointer">
-                                                                <input type="checkbox" id="chk-payout-terms-1" class="form-check-input" style="margin-top: 2px;" onchange="validatePayoutTermsAcceptance()">
-                                                                <span class="form-check-label fs-xs text-muted">Declaro que as informações bancárias estão corretas.</span>
-                                                            </label>
-                                                            <label class="form-check d-flex gap-2 mb-0 cursor-pointer">
-                                                                <input type="checkbox" id="chk-payout-terms-2" class="form-check-input" style="margin-top: 2px;" onchange="validatePayoutTermsAcceptance()">
-                                                                <span class="form-check-label fs-xs text-muted">Concordo com os termos de repasse.</span>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <!-- Botões de Ação do Form -->
-                                                    <div class="text-end">
-                                                        <button type="button" class="btn btn-light me-2 btn-sm fw-bold" onclick="activateFinancialSubtab('saldo')">Cancelar</button>
-                                                        <button type="submit" class="btn btn-success btn-sm fw-bold" id="btn-submit-repasse-form" disabled>Solicitar Repasse</button>
+                                                    <div class="text-white-50 fs-xs mt-1">
+                                                        Aprovações Individuais por Alçada (Opção B) &bull; Homologação em Lotes Maker/Checker &bull; Liquidação Bancária Instantânea PIX e CNAB 240 (Opção A).
                                                     </div>
                                                 </div>
                                             </div>
-                                        </form>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <button class="btn btn-sm btn-outline-light text-white fw-bold d-flex align-items-center gap-1" onclick="window.refreshUnifiedPayoutsDashboard()">
+                                                    <i class="ph-arrows-clockwise"></i> Atualizar Fila
+                                                </button>
+                                                <button class="btn btn-sm btn-info text-white fw-bold d-flex align-items-center gap-1" onclick="window.openCreatePayoutBatchModal()" style="background-color: #0284c7; border-color: #0284c7;">
+                                                    <i class="ph-stack"></i> Criar Lote Bancário
+                                                </button>
+                                                <button class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1" onclick="window.openSchedulePayoutModal()" style="background-color: #00a65a; border-color: #008d4c;">
+                                                    <i class="ph-calendar-plus"></i> Novo Agendamento
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4 Cards de Métricas do Financeiro -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #f59e0b !important;">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="text-uppercase text-muted fs-xs fw-bold mb-0">Solicitações Pendentes (Opção B)</h6>
+                                                    <span class="badge bg-warning-subtle text-dark fs-xs" id="fin-kpi-pending-count">0</span>
+                                                </div>
+                                                <h4 class="fw-bold mb-0 mt-2 text-warning" id="fin-kpi-pending-amount">R$ 0,00</h4>
+                                                <span class="text-muted fs-xs mt-1">Aguardando decisão de alçada</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #0284c7 !important;">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="text-uppercase text-muted fs-xs fw-bold mb-0">Aprovados Aguardando Envio</h6>
+                                                    <span class="badge bg-primary-subtle text-primary fs-xs" id="fin-kpi-approved-count">0 prontos</span>
+                                                </div>
+                                                <h4 class="fw-bold mb-0 mt-2 text-primary" id="fin-kpi-approved-amount">R$ 0,00</h4>
+                                                <span class="text-muted fs-xs mt-1">Homologados prontos p/ PIX/Lote</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #8b5cf6 !important;">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="text-uppercase text-muted fs-xs fw-bold mb-0">Lotes em Aberto (Opção A)</h6>
+                                                    <span class="badge bg-purple-subtle text-purple fs-xs">Maker/Checker</span>
+                                                </div>
+                                                <h4 class="fw-bold mb-0 mt-2 text-purple" id="fin-kpi-batches-count" style="color: #7c3aed;">0</h4>
+                                                <span class="text-muted fs-xs mt-1">Lotes de repasse em validação</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-xl-3">
+                                            <div class="card card-body border shadow-sm mb-0 bg-white" style="border-top: 3px solid #10b981 !important;">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="text-uppercase text-muted fs-xs fw-bold mb-0">Total Liquidado / Repassado</h6>
+                                                    <span class="badge bg-success-subtle text-success fs-xs">Banco OK</span>
+                                                </div>
+                                                <h4 class="fw-bold mb-0 mt-2 text-success" id="fin-kpi-settled-total">R$ 0,00</h4>
+                                                <span class="text-muted fs-xs mt-1">Volume creditado aos produtores</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Navegação das Sub-abas Internas do Financeiro -->
+                                    <div class="card shadow-sm border-0 mb-3">
+                                        <div class="card-body p-2 d-flex flex-wrap gap-2 bg-light rounded">
+                                            <button class="btn btn-sm btn-white border fw-bold text-dark active" id="btn-fin-subtab-alcadas" onclick="window.switchFinanceiroSubTab('alcadas')">
+                                                <i class="ph-scales text-warning me-1"></i> Fila de Alçadas Individuais (Opção B)
+                                            </button>
+                                            <button class="btn btn-sm btn-white border fw-bold text-dark" id="btn-fin-subtab-lotes" onclick="window.switchFinanceiroSubTab('lotes')">
+                                                <i class="ph-stack text-primary me-1"></i> Gestão de Lotes Bancários (Opção A)
+                                            </button>
+                                            <button class="btn btn-sm btn-white border fw-bold text-dark" id="btn-fin-subtab-auditoria" onclick="window.switchFinanceiroSubTab('auditoria')">
+                                                <i class="ph-shield-check text-secondary me-1"></i> Trilha de Auditoria &amp; Compliance
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- SUB-PANE 1: FILA DE ALÇADAS INDIVIDUAIS (OPÇÃO B) -->
+                                    <div id="fin-subpane-alcadas" class="fin-subpane">
+                                        <div class="card shadow-sm border mb-4">
+                                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="fw-bold mb-0 text-dark"><i class="ph-scales text-warning me-2"></i>Aprovações Individuais por Alçada &bull; Governança SoD</h6>
+                                                    <span class="fs-xs text-muted">Aprove por alçada direta (Automática, Controladoria N1 ou Diretoria N2), liquide via PIX imediato ou agrupe em lote</span>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle mb-0 fs-sm" id="table-financeiro-alcadas">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th>Protocolo</th>
+                                                            <th>Produtor / Evento</th>
+                                                            <th>Data Vencimento</th>
+                                                            <th>Valor Solicitado</th>
+                                                            <th>Alçada Exigida</th>
+                                                            <th>Destino Bancário</th>
+                                                            <th>Status</th>
+                                                            <th>Aprovador</th>
+                                                            <th class="text-end pe-3">Ações de Decisão</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="table-financeiro-alcadas-body">
+                                                        <!-- Preenchido dinamicamente via JS -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- SUB-PANE 2: GESTÃO DE LOTES BANCÁRIOS (OPÇÃO A) -->
+                                    <div id="fin-subpane-lotes" class="fin-subpane" style="display: none;">
+                                        <div class="card shadow-sm border mb-4">
+                                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="fw-bold mb-0 text-dark"><i class="ph-stack text-primary me-2"></i>Lotes de Repasse Bancário &bull; Ciclo Completo</h6>
+                                                    <span class="fs-xs text-muted">Reavaliação no motor de regras, homologação Maker/Checker e transmissão PIX / CNAB 240</span>
+                                                </div>
+                                                <button class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1" onclick="window.openCreatePayoutBatchModal()">
+                                                    <i class="ph-plus-circle"></i> Criar Novo Lote
+                                                </button>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle mb-0 fs-sm" id="table-financeiro-lotes">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th>ID Lote</th>
+                                                            <th>Título / Produtor</th>
+                                                            <th>Data Prevista</th>
+                                                            <th>Valor Total</th>
+                                                            <th>Valor Aprovado</th>
+                                                            <th>Status do Lote</th>
+                                                            <th>Homologado Por</th>
+                                                            <th class="text-end pe-3">Ações de Lote</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="table-financeiro-lotes-body">
+                                                        <!-- Preenchido dinamicamente via JS -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- SUB-PANE 3: TRILHA DE AUDITORIA & COMPLIANCE -->
+                                    <div id="fin-subpane-auditoria" class="fin-subpane" style="display: none;">
+                                        <div class="card shadow-sm border mb-4">
+                                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="fw-bold mb-0 text-dark"><i class="ph-shield-check text-secondary me-2"></i>Trilha Append-Only de Decisões e Liquidações</h6>
+                                                    <span class="fs-xs text-muted">Logs imutáveis com ator, alçada, correlationId e autenticação eletrônica</span>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0 fs-xs" id="table-financeiro-audit">
+                                                    <thead class="table-light text-uppercase text-muted">
+                                                        <tr>
+                                                            <th>Data / Hora</th>
+                                                            <th>Ator / Perfil</th>
+                                                            <th>Entidade</th>
+                                                            <th>Ação</th>
+                                                            <th>Resumo do Evento</th>
+                                                            <th>Correlation ID</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="table-financeiro-audit-body">
+                                                        <!-- Preenchido dinamicamente via JS -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="fw-bold mb-0">Histórico de Solicitações</h5>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-striped align-middle mb-0">
-                                        <thead>
-                                            <tr class="table-light">
-                                                <th>Nº</th>
-                                                <th>Data</th>
-                                                <th>Valor</th>
-                                                <th>Conta</th>
-                                                <th>Status</th>
-                                                <th class="text-right">Comprovante</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="table-payouts-history-body">
-                                            <!-- Managed dynamically via app.js -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                        </div>
+                            </div>
                     </section>
 
                     <!-- VIEW: Financeiro - Antecipações -->
@@ -18705,6 +18939,100 @@ Como podemos te ajudar hoje?
                             <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
                             <button type="submit" class="btn btn-sm btn-primary fw-bold" style="background-color: #0284c7; border-color: #0284c7;">
                                 <i class="ph-check-circle me-1"></i> Criar Lote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <!-- ================================================================= -->
+    <!-- MODAIS DO MÓDULO UNIFICADO DE REPASSES (PRODUTOR & FINANCEIRO)    -->
+    <!-- ================================================================= -->
+
+    <!-- MODAL 1: Comprovante Oficial de Repasse (Produtor & Financeiro) -->
+    <div class="modal fade" id="modal-payout-receipt-view" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold fs-sm d-flex align-items-center gap-2">
+                        <i class="ph-receipt text-success fs-5"></i> Comprovante Oficial de Repasse DiskIngressos
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3 bg-light" id="modal-payout-receipt-content">
+                    <!-- Preenchido dinamicamente via window.openPayoutReceiptModal() -->
+                </div>
+                <div class="modal-footer bg-white py-2 px-3 d-flex justify-content-between">
+                    <span class="fs-xs text-muted"><i class="ph-shield-check text-success me-1"></i> Autenticação Criptografada Homologada</span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1" onclick="window.printPayoutReceipt()">
+                            <i class="ph-printer"></i> Imprimir / Salvar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Aprovação por Alçada Individual (Opção B - Financeiro) -->
+    <div class="modal fade" id="modal-approve-single-payout" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white py-2 px-3" style="background-color: #00a65a !important;">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-check-circle me-1"></i> Aprovação Formal por Alçada &bull; Repasse Individual</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div id="approve-single-payout-details">
+                        <!-- Carregado via JS -->
+                    </div>
+                    <form onsubmit="event.preventDefault(); window.confirmApproveSinglePayout();">
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-bold">Aprovador Responsável (Checker) *</label>
+                            <input type="text" class="form-control form-control-sm fw-semibold" id="approve-single-checker-name" value="Controladoria SafeSaff" required>
+                            <span class="fs-xxs text-muted">Princípio Maker/Checker: O usuário solicitante não pode aprovar.</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Parecer Formal / Justificativa de Alçada</label>
+                            <textarea class="form-control form-control-sm" id="approve-single-notes" rows="2" placeholder="Reserva mínima conferida e alçada hierárquica respeitada. Aprovado para liquidação bancária."></textarea>
+                        </div>
+                        <div class="alert alert-info py-2 px-3 fs-xs mb-3">
+                            <i class="ph-info me-1"></i> Ao confirmar a aprovação, o status do repasse mudará para <strong>Aprovado</strong> tanto no painel interno quanto na visão transparente do Produtor.
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                <i class="ph-check me-1"></i> Confirmar Aprovação de Alçada
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Rejeição de Solicitação de Repasse com Motivo (Financeiro) -->
+    <div class="modal fade" id="modal-reject-single-payout" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="ph-x-circle me-1"></i> Rejeitar Solicitação de Repasse</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <form onsubmit="event.preventDefault(); window.confirmRejectSinglePayout();">
+                        <div class="mb-3">
+                            <label class="form-label fs-xs fw-bold">Motivo Documentado da Rejeição *</label>
+                            <textarea class="form-control form-control-sm" id="reject-single-reason" rows="3" required placeholder="Informe detalhadamente o motivo que será exibido para o produtor (ex: divergência cadastral, retenção por disputa ou saldo bloqueado)..."></textarea>
+                        </div>
+                        <div class="alert alert-warning py-2 px-3 fs-xs mb-3">
+                            <i class="ph-warning me-1"></i> A rejeição devolverá o valor ao saldo disponível do produtor e registrará a não-conformidade na auditoria.
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-danger fw-bold">
+                                <i class="ph-x me-1"></i> Confirmar Rejeição
                             </button>
                         </div>
                     </form>

@@ -13,6 +13,7 @@ import { accountingIntelligenceService } from './services/accountingIntelligence
 import { initFinancialEventTransfersView, switchTransferTab } from './controllers/financialEventTransfersController.js';
 import { initProcureToPayView, switchP2PTab } from './controllers/procureToPayController.js';
 import { initTreasuryView, switchTreasuryTab } from './controllers/treasuryController.js';
+import { initUnifiedPayoutsModule, handleProducerRepasseSubmitConfirmed, refreshUnifiedPayoutsDashboard } from './controllers/unifiedPayoutsController.js';
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 import { AppRouter } from './navigation/router.js';
@@ -2938,6 +2939,7 @@ function initFinanceModule() {
   renderPayoutHistory();
   calculateAnticipationSimPage();
   resetRepasseWizard();
+  if (typeof initUnifiedPayoutsModule === 'function') initUnifiedPayoutsModule();
 
   // Render new Ticketera modules
   if (typeof renderPDVs === 'function') renderPDVs();
@@ -3336,6 +3338,9 @@ function navigateRepasseWizard(direction) {
       renderPayoutHistory();
       if (typeof renderFinancialBalanceRows === 'function') renderFinancialBalanceRows();
       if (typeof renderFinancialEligibleEvents === 'function') renderFinancialEligibleEvents();
+      if (typeof handleProducerRepasseSubmitConfirmed === 'function') {
+        handleProducerRepasseSubmitConfirmed(payoutRequestedBalance, payoutSelectedBank, payoutSelectedMethod);
+      }
 
       // Simulated platform and email notification trigger on status change
       console.log(`[Sistema de Notificação] E-mail enviado para vinicius.casagrande@diskingressos.com.br notificando a criação do repasse #${newPayoutId}.`);

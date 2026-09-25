@@ -138,5 +138,71 @@ export const payoutScheduleGateway = {
   // 5. Trilha de Auditoria
   async getScheduleAuditLog() {
     return { ok: true, data: payoutScheduleService.getScheduleAuditLog() };
+  },
+
+  // 6. Aprovação por Alçada Individual (Opção B Unificada)
+  async approveIndividualPayout(scheduleId, actor, notes) {
+    try {
+      const res = await fetch(`${BASE_API_URL}/schedule/${scheduleId}/approve-individual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actor, notes })
+      });
+      if (res.ok) return { ok: true, isLiveApi: true, data: await res.json() };
+    } catch (_) {}
+    try {
+      return await payoutScheduleService.approveIndividualPayout(scheduleId, actor, notes);
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  async settleIndividualPayout(scheduleId, actor, options) {
+    try {
+      const res = await fetch(`${BASE_API_URL}/schedule/${scheduleId}/settle-individual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actor, options })
+      });
+      if (res.ok) return { ok: true, isLiveApi: true, data: await res.json() };
+    } catch (_) {}
+    try {
+      return await payoutScheduleService.settleIndividualPayout(scheduleId, actor, options);
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  async rejectIndividualPayout(scheduleId, actor, reason) {
+    try {
+      const res = await fetch(`${BASE_API_URL}/schedule/${scheduleId}/reject-individual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actor, reason })
+      });
+      if (res.ok) return { ok: true, isLiveApi: true, data: await res.json() };
+    } catch (_) {}
+    try {
+      return await payoutScheduleService.rejectIndividualPayout(scheduleId, actor, reason);
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  // 7. Visão do Produtor & Comprovante Oficial
+  async getProducerPayoutsView(producerId) {
+    try {
+      const res = await fetch(`${BASE_API_URL}/producer-view?producerId=${producerId || 'prod-1'}`);
+      if (res.ok) return { ok: true, isLiveApi: true, data: await res.json() };
+    } catch (_) {}
+    return payoutScheduleService.getProducerPayoutsView(producerId);
+  },
+
+  async getPayoutReceipt(payoutId) {
+    try {
+      const res = await fetch(`${BASE_API_URL}/receipts/${payoutId}`);
+      if (res.ok) return { ok: true, isLiveApi: true, data: await res.json() };
+    } catch (_) {}
+    return payoutScheduleService.getPayoutReceipt(payoutId);
   }
 };

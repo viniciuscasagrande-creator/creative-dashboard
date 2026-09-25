@@ -245,6 +245,8 @@ export const payoutScheduleService = {
       approvalStatus: data.amount > 10000 ? 'PENDENTE' : 'DISPENSADO',
       correlationId,
       beneficiaryAccount: data.beneficiaryAccount || { pixKey: '08123456000199', bankCode: '001', agency: '1502-4', account: '99201-0' },
+      createdBy: actor?.name || 'Produtor',
+      createdById: actor?.id || null,
       createdAt: new Date().toISOString()
     };
 
@@ -745,9 +747,307 @@ export const payoutScheduleService = {
   },
 
   // =========================================================================
-  // 7. AUDITORIA
+  // 7. APROVAÇÕES INDIVIDUAIS POR ALÇADA (OPÇÃO B UNIFICADA)
+  // =========================================================================
+  async approveIndividualPayout(scheduleId, actor = { name: 'Controladoria SafeSaff', role: 'CONTROLADORIA' }, notes = '') {
+    const item = LOCAL_SCHEDULE.find(i => i.id === scheduleId);
+    if (!item) throw new Error(`Repasse ${scheduleId} não encontrado na agenda.`);
+
+    // Segregação de Funções (Maker/Checker)
+    if (actor && actor.name && item.createdBy && actor.name.toLowerCase() === item.createdBy.toLowerCase()) {
+      throw new Error(`Violação Maker/Checker: O usuário (${actor.name}) que solicitou o repasse não pode aprová-lo.`);
+    }
+
+    if (item.status === 'CONCLUIDO' || item.status === 'CANCELADO') {
+      throw new Error(`Repasse com status ${item.status} não pode ser aprovado.`);
+    }
+
+    // Determina a alçada com base no valor
+    let approvalLevel = 'AUTOMATICA';
+    if (item.amount > 50000) {
+      approvalLevel = 'DIRETORIA_NIVEL_2';
+    } else if (item.amount > 10000) {
+      approvalLevel = 'CONTROLADORIA_NIVEL_1';
+    }
+
+    item.status = 'APROVADO';
+    item.approvalStatus = 'APROVADO';
+    item.approvedBy = actor.name;
+    item.approvedAt = new Date().toISOString();
+    item.approvalLevel = approvalLevel;
+    item.approvalNotes = notes || 'Aprovação formal por alçada realizada pela equipe financeira.';
+
+    logScheduleAudit({
+      actor,
+      entityType: 'PAYOUT_APPROVAL',
+      entityId: scheduleId,
+      action: 'INDIVIDUAL_PAYOUT_APPROVED',
+      summary: `Repasse ${scheduleId} (R$ ${item.amount.toFixed(2)}) aprovado por alçada (${approvalLevel}) por ${actor.name}.`,
+      details: { item, notes, approvalLevel }
+    });
+
+    return { ok: true, data: item };
+  },
+
+  async settleIndividualPayout(scheduleId, actor = { name: 'Tesouraria DiskIngressos', role: 'TESOURARIA' }, { method = 'PIX', transactionId } = {}) {
+    const item = LOCAL_SCHEDULE.find(i => i.id === scheduleId);
+    if (!item) throw new Error(`Repasse ${scheduleId} não encontrado.`);
+
+    if (item.status === 'CONCLUIDO') {
+      return { ok: true, isAlreadySettled: true, data: item };
+    }
+
+    const trxId = transactionId || `BK-PIX-${Math.floor(100000 + Math.random() * 900000)}`;
+    const authCode = `AUTH-DK-${item.id.replace(/[^a-zA-Z0-9]/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const receiptId = `REC-${item.id.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+    // Debita do saldo do evento se o evento existir
+    const store = eventBalanceService.getLocalBalanceStore();
+    const ev = store.find(e => String(e.eventId) === String(item.eventId));
+    if (ev) {
+      ev.balances.availableBalance = Number(Math.max(0, ev.balances.availableBalance - item.amount).toFixed(2));
+      ev.balances.settledAmount = Number(Math.max(0, ev.balances.settledAmount - item.amount).toFixed(2));
+    }
+
+    item.status = 'CONCLUIDO';
+    item.approvalStatus = 'APROVADO';
+    item.bankStatus = 'PAGO';
+    item.settledAt = new Date().toISOString();
+    item.bankTransactionId = trxId;
+    item.authCode = authCode;
+    item.receiptId = receiptId;
+    item.settledBy = actor.name;
+    item.settlementMethod = method;
+
+    logScheduleAudit({
+      actor,
+      entityType: 'PAYOUT_SETTLEMENT',
+      entityId: scheduleId,
+      action: 'INDIVIDUAL_PAYOUT_SETTLED',
+      summary: `Repasse ${scheduleId} liquidado com sucesso (R$ ${item.amount.toFixed(2)} via ${method}). Autenticação: ${authCode}.`,
+      details: { item, authCode, trxId }
+    });
+
+    return { ok: true, data: item };
+  },
+
+  async rejectIndividualPayout(scheduleId, actor = { name: 'Controladoria SafeSaff', role: 'CONTROLADORIA' }, reason = '') {
+    const item = LOCAL_SCHEDULE.find(i => i.id === scheduleId);
+    if (!item) throw new Error(`Repasse ${scheduleId} não encontrado.`);
+
+    item.status = 'REJEITADO';
+    item.approvalStatus = 'REJEITADO';
+    item.rejectionReason = reason || 'Solicitação de repasse rejeitada pela auditoria financeira.';
+    item.rejectedBy = actor.name;
+    item.rejectedAt = new Date().toISOString();
+
+    logScheduleAudit({
+      actor,
+      entityType: 'PAYOUT_REJECTION',
+      entityId: scheduleId,
+      action: 'INDIVIDUAL_PAYOUT_REJECTED',
+      summary: `Repasse ${scheduleId} rejeitado por ${actor.name}. Motivo: ${item.rejectionReason}`,
+      details: { item, reason }
+    });
+
+    return { ok: true, data: item };
+  },
+
+  // =========================================================================
+  // 8. VISÃO DO PRODUTOR (RESULTADO, CONCLUÍDOS, APROVADOS E VALORES REPASSADOS)
+  // =========================================================================
+  getProducerPayoutsView(producerId = 'prod-1') {
+    // Filtra agendamentos do produtor
+    const scheduleItems = LOCAL_SCHEDULE.filter(i => !producerId || i.producerId === producerId);
+    
+    // Mapeia histórico e lotes concluídos
+    const resultList = [];
+
+    // Repasses prévios consolidados
+    const HISTORICAL_BASE = [
+      {
+        id: 'REP000401',
+        producerId: 'prod-1',
+        producerName: 'DiskIngressos Eventos Ltda',
+        eventName: 'Experiencia Música e Natureza - Julho',
+        eventId: '3368',
+        requestDate: '30/06/2026',
+        settledDate: '30/06/2026 15:42',
+        grossAmount: 1250.00,
+        feeAmount: 0.00,
+        netAmount: 1250.00,
+        status: 'CONCLUIDO',
+        statusLabel: 'Concluído / Repassado',
+        badgeClass: 'bg-success text-white',
+        account: 'Banco Inter (Ag. 0001 / CC 3456)',
+        method: 'TED',
+        authCode: 'AUTH-DK-REP000401-9982',
+        canViewReceipt: true
+      },
+      {
+        id: 'REP000380',
+        producerId: 'prod-1',
+        producerName: 'DiskIngressos Eventos Ltda',
+        eventName: 'Feijoada e Costela assada - PETFRIENDLY',
+        eventId: '3178',
+        requestDate: '20/06/2026',
+        settledDate: '20/06/2026 11:20',
+        grossAmount: 890.00,
+        feeAmount: 0.00,
+        netAmount: 890.00,
+        status: 'CONCLUIDO',
+        statusLabel: 'Concluído / Repassado',
+        badgeClass: 'bg-success text-white',
+        account: 'PIX (financeiro@empresa.com.br)',
+        method: 'PIX',
+        authCode: 'AUTH-DK-REP000380-4412',
+        canViewReceipt: true
+      }
+    ];
+
+    HISTORICAL_BASE.forEach(h => {
+      if (!producerId || h.producerId === producerId) {
+        resultList.push(h);
+      }
+    });
+
+    scheduleItems.forEach(item => {
+      const isConcluido = item.status === 'CONCLUIDO' || item.bankStatus === 'PAGO';
+      const isAprovado = item.status === 'APROVADO' || item.approvalStatus === 'APROVADO' || item.status === 'EM_LOTE' || item.status === 'ENVIADO_BANCO';
+      const isRejeitado = item.status === 'REJEITADO' || item.status === 'CANCELADO';
+      
+      let statusKey = 'EM_ANALISE';
+      let statusLabel = 'Em Análise pela Controladoria';
+      let badgeClass = 'bg-warning text-dark';
+
+      if (isConcluido) {
+        statusKey = 'CONCLUIDO';
+        statusLabel = 'Concluído / Repassado';
+        badgeClass = 'bg-success text-white';
+      } else if (isAprovado) {
+        statusKey = 'APROVADO';
+        statusLabel = 'Aprovado (Em Fila de Liquidação)';
+        badgeClass = 'bg-primary text-white';
+      } else if (isRejeitado) {
+        statusKey = 'REJEITADO';
+        statusLabel = 'Rejeitado / Devolvido';
+        badgeClass = 'bg-danger text-white';
+      }
+
+      const gross = Number(item.amount) || 0;
+      const fee = 0; // Taxa de repasse isenta no contrato padrão
+      const net = gross - fee;
+
+      const dateDisplay = item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : item.dueDate;
+      const settledDisplay = item.settledAt 
+        ? new Date(item.settledAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : (isConcluido ? `${item.dueDate} 10:00` : (isAprovado ? 'Previsto para hoje' : 'Aguardando Aprovação'));
+
+      const bankDesc = item.beneficiaryAccount?.pixKey
+        ? `PIX (${item.beneficiaryAccount.pixKey})`
+        : `Bco ${item.beneficiaryAccount?.bankCode || '001'} (Ag. ${item.beneficiaryAccount?.agency || '—'})`;
+
+      resultList.unshift({
+        id: item.id,
+        producerId: item.producerId,
+        producerName: item.producerName,
+        eventName: item.eventName,
+        eventId: item.eventId,
+        requestDate: dateDisplay,
+        settledDate: settledDisplay,
+        grossAmount: gross,
+        feeAmount: fee,
+        netAmount: net,
+        status: statusKey,
+        statusLabel,
+        badgeClass,
+        account: bankDesc,
+        method: item.type === 'PAYOUT_AUTOMATIC' ? 'Repasse Automático' : 'Solicitação Manual',
+        authCode: item.authCode || (isConcluido ? `AUTH-DK-${item.id.replace(/[^0-9]/g, '') || '984210'}` : '—'),
+        rejectionReason: item.rejectionReason || null,
+        canViewReceipt: isConcluido
+      });
+    });
+
+    // Totais calculados para o Produtor
+    const totalConcluido = resultList
+      .filter(r => r.status === 'CONCLUIDO')
+      .reduce((acc, r) => acc + r.netAmount, 0);
+
+    const totalAprovado = resultList
+      .filter(r => r.status === 'APROVADO')
+      .reduce((acc, r) => acc + r.netAmount, 0);
+
+    const totalEmAnalise = resultList
+      .filter(r => r.status === 'EM_ANALISE')
+      .reduce((acc, r) => acc + r.grossAmount, 0);
+
+    return {
+      ok: true,
+      data: resultList,
+      summary: {
+        totalConcluido,
+        totalAprovado,
+        totalEmAnalise,
+        countTotal: resultList.length,
+        countConcluido: resultList.filter(r => r.status === 'CONCLUIDO').length
+      }
+    };
+  },
+
+  // =========================================================================
+  // 9. COMPROVANTE OFICIAL DE REPASSE
+  // =========================================================================
+  getPayoutReceipt(payoutId) {
+    // Busca na agenda
+    let item = LOCAL_SCHEDULE.find(i => i.id === payoutId);
+    
+    // Busca nos lotes se não achou
+    if (!item) {
+      for (const b of LOCAL_BATCHES) {
+        const pit = b.items.find(i => i.id === payoutId || i.scheduleId === payoutId);
+        if (pit) {
+          item = pit;
+          break;
+        }
+      }
+    }
+
+    const gross = item ? (item.amount || item.authorizedAmount || 0) : 1250.00;
+    const fee = 0;
+    const net = gross - fee;
+    const eventName = item?.eventName || 'Experiencia Música e Natureza - Julho';
+    const producer = item?.producerName || 'DiskIngressos Eventos Ltda';
+    const authCode = item?.authCode || `AUTH-DK-${(payoutId || 'REP000401').replace(/[^a-zA-Z0-9]/g, '')}-2026`;
+    const bankDesc = item?.beneficiaryAccount?.pixKey
+      ? `Chave PIX: ${item.beneficiaryAccount.pixKey}`
+      : `Banco Inter S.A. | Agência: 0001 | Conta Corrente: 89412-3`;
+
+    return {
+      ok: true,
+      receiptNumber: `REC-${(payoutId || 'REP-001').replace(/[^a-zA-Z0-9]/g, '')}`,
+      authCode,
+      payoutId: payoutId || 'REP000401',
+      producerName: producer,
+      producerTaxId: '08.123.456/0001-99',
+      eventName,
+      issueDate: new Date().toLocaleDateString('pt-BR'),
+      settledAt: item?.settledAt || '10/09/2026 às 09:15:32',
+      grossAmount: gross,
+      feeAmount: fee,
+      netAmount: net,
+      bankAccount: bankDesc,
+      issuerName: 'DiskIngressos Pagamentos & Eventos S.A.',
+      issuerCnpj: '04.882.190/0001-44',
+      status: item?.status === 'APROVADO' ? 'APROVADO (AGUARDANDO COMPENSAÇÃO)' : 'LIQUIDADO E PAGO COM SUCESSO'
+    };
+  },
+
+  // =========================================================================
+  // 10. AUDITORIA
   // =========================================================================
   getScheduleAuditLog() {
     return [...LOCAL_SCHEDULE_AUDIT];
   }
 };
+
