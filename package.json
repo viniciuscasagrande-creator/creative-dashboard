@@ -5,6 +5,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node scripts/run_all_phase_tests.js",
     "deploy": "firebase deploy --only hosting"
   },
   "dependencies": {

@@ -27,9 +27,9 @@ import {
   getFinancialExceptions,
   getFinancialRulesAuditLog,
   createFinancialException
-} from './src/services/financialRulesService.js';
-import { eventBalanceService, getLocalBalanceStore, initLocalBalanceStore } from './src/services/eventBalanceService.js';
-import { balanceTransferService } from './src/services/balanceTransferService.js';
+} from '../../src/services/financialRulesService.js';
+import { eventBalanceService, getLocalBalanceStore, initLocalBalanceStore } from '../../src/services/eventBalanceService.js';
+import { balanceTransferService } from '../../src/services/balanceTransferService.js';
 
 let passed = 0;
 let total = 0;

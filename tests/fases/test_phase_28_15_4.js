@@ -16,10 +16,10 @@ import {
   ACCOUNTING_TAB_TO_ROUTE,
   ACCOUNTING_ROUTE_TO_TAB,
   CONTABILIDADE_TAB_TO_MENU_KEY
-} from './src/navigation/accounting-routes.js';
-import { AccountingController, TAB_PANE_MAP, TAB_TITLES } from './src/accounting/accounting-controller.js';
-import { MenuStateManager } from './src/navigation/menu-state.js';
-import { resolveRoute, ROUTES, LEGACY_ROUTE_ALIASES } from './src/navigation/routes.js';
+} from '../../src/navigation/accounting-routes.js';
+import { AccountingController, TAB_PANE_MAP, TAB_TITLES } from '../../src/accounting/accounting-controller.js';
+import { MenuStateManager } from '../../src/navigation/menu-state.js';
+import { resolveRoute, ROUTES, LEGACY_ROUTE_ALIASES } from '../../src/navigation/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,7 +45,7 @@ function it(desc, fn) {
 }
 
 // Carregar index.html real
-const indexHtmlContent = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf8');
+const indexHtmlContent = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf8');
 
 // Montar ambiente JSDOM
 const dom = new JSDOM(indexHtmlContent, {

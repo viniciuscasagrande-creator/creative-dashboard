@@ -4,8 +4,8 @@
  */
 
 import assert from 'node:assert';
-import { procureToPayService } from './src/services/procureToPayService.js';
-import { procureToPayGateway } from './src/services/procureToPayGateway.js';
+import { procureToPayService } from '../../src/services/procureToPayService.js';
+import { procureToPayGateway } from '../../src/services/procureToPayGateway.js';
 
 let passed = 0;
 let total = 0;

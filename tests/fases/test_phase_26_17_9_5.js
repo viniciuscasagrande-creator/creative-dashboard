@@ -1,18 +1,19 @@
+import path from 'path';
 /**
  * Testes Automatizados de Verificação: Fases 26.17.9.5.1, 26.17.9.5.2, 26.17.9.5.3 e 26.17.9.5.4
  */
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { calculateEventAvailableBalance } from './src/services/eventBalanceService.js';
-import { balanceTransferService } from './src/services/balanceTransferService.js';
-import { eventBalanceService } from './src/services/eventBalanceService.js';
+import { calculateEventAvailableBalance } from '../../src/services/eventBalanceService.js';
+import { balanceTransferService } from '../../src/services/balanceTransferService.js';
+import { eventBalanceService } from '../../src/services/eventBalanceService.js';
 
 console.log('--- INICIANDO BATERIA DE TESTES: GESTÃO DE SALDOS ENTERPRISE ---');
 
 // 1. Teste de DOM e Estrutura do index.html
 console.log('\n[TESTE 1] Verificando integridade do HTML...');
-const html = fs.readFileSync('index.html', 'utf8');
+const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
 const dom = new JSDOM(html);
 const doc = dom.window.document;
 

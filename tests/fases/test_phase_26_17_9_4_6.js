@@ -1,3 +1,4 @@
+import path from 'path';
 /**
  * Fase 26.17.9.4.6 — Suíte de Homologação Automatizada
  * Tesouraria Operacional, Contas Bancárias Reais, PIX, CNAB 240/400, Lotes, Idempotência e Auditoria.
@@ -5,8 +6,8 @@
 
 import assert from 'assert';
 import fs from 'fs';
-import { treasuryService } from './src/services/treasuryService.js';
-import { treasuryGateway } from './src/services/treasuryGateway.js';
+import { treasuryService } from '../../src/services/treasuryService.js';
+import { treasuryGateway } from '../../src/services/treasuryGateway.js';
 
 let passedTests = 0;
 let totalTests = 0;
@@ -47,13 +48,13 @@ console.log('================================================================\n'
 console.log('1. Verificação de Elementos no DOM (index.html):');
 
 it('Verifica se a seção #view-treasury e o item do menu existem no HTML', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="view-treasury"'), 'Seção #view-treasury deve existir');
   assert(html.includes('data-view="treasury"'), 'Menu item data-view="treasury" deve existir');
 });
 
 it('Verifica se os modais da tesouraria foram injetados no HTML', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="modal-treasury-account-create"'), 'Modal de nova conta bancária deve existir');
   assert(html.includes('id="modal-treasury-account-change"'), 'Modal de alteração de alto risco deve existir');
   assert(html.includes('id="modal-treasury-pix-create"'), 'Modal de pagamento PIX deve existir');

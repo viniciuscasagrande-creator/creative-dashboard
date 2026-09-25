@@ -6,10 +6,10 @@
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
-import { payoutScheduleService } from './src/services/payoutScheduleService.js';
-import { payoutScheduleGateway } from './src/services/payoutScheduleGateway.js';
-import { financialRulesEngine } from './src/services/financialRulesService.js';
-import { eventBalanceService } from './src/services/eventBalanceService.js';
+import { payoutScheduleService } from '../../src/services/payoutScheduleService.js';
+import { payoutScheduleGateway } from '../../src/services/payoutScheduleGateway.js';
+import { financialRulesEngine } from '../../src/services/financialRulesService.js';
+import { eventBalanceService } from '../../src/services/eventBalanceService.js';
 
 let passedTests = 0;
 let totalTests = 0;
@@ -50,14 +50,14 @@ console.log('================================================================\n'
 console.log('1. Verificação de Elementos no DOM (index.html):');
 
 it('Verifica se a 8ª aba #ft-tab-link-schedule e o painel #ft-pane-schedule existem no DOM', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="ft-tab-link-schedule"'), 'Aba #ft-tab-link-schedule deve existir no HTML');
   assert(html.includes('id="ft-pane-schedule"'), 'Painel #ft-pane-schedule deve existir no HTML');
   assert(html.includes('id="ft-schedule-count-badge"'), 'Badge de contagem deve existir');
 });
 
 it('Verifica se os 3 modais de governança da Fase 26.17.9.5.7 foram injetados', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="modal-schedule-payout"'), 'Modal #modal-schedule-payout deve existir');
   assert(html.includes('id="modal-create-payout-batch"'), 'Modal #modal-create-payout-batch deve existir');
   assert(html.includes('id="modal-payout-batch-details"'), 'Modal #modal-payout-batch-details deve existir');

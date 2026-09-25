@@ -1,3 +1,4 @@
+import path from 'path';
 /**
  * Testes Automatizados — Fase 26.17.9.5.5: Projeção de Caixa e Repasses por Evento
  * Cobre os 10 cenários obrigatórios especificados em 09_COMANDO_GEMINI_VSCODE.md
@@ -14,9 +15,9 @@ import {
   simulateCoverage,
   classifyForecastRisk,
   DEFAULT_RISK_POLICY
-} from './src/services/cashForecastService.js';
-import { eventBalanceService, getLocalBalanceStore } from './src/services/eventBalanceService.js';
-import { balanceTransferService } from './src/services/balanceTransferService.js';
+} from '../../src/services/cashForecastService.js';
+import { eventBalanceService, getLocalBalanceStore } from '../../src/services/eventBalanceService.js';
+import { balanceTransferService } from '../../src/services/balanceTransferService.js';
 
 let passed = 0;
 let total = 0;
@@ -196,7 +197,7 @@ async function run() {
 
   console.log('\n--- CENÁRIO 11: Validação do DOM de Projeção no index.html ---');
   await it('Deve conter todos os elementos de UI da Fase 26.17.9.5.5 no index.html', () => {
-    const html = fs.readFileSync('index.html', 'utf8');
+    const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
     const dom = new JSDOM(html);
     const doc = dom.window.document;
 

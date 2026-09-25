@@ -1,3 +1,4 @@
+import path from 'path';
 /**
  * Testes Automatizados — Sistema Unificado de Repasses (Opção A + Opção B)
  * Visão do Produtor (apenas resultados, valores repassados e comprovante)
@@ -6,8 +7,8 @@
 
 import assert from 'assert';
 import fs from 'fs';
-import { payoutScheduleService } from './src/services/payoutScheduleService.js';
-import { payoutScheduleGateway } from './src/services/payoutScheduleGateway.js';
+import { payoutScheduleService } from '../../src/services/payoutScheduleService.js';
+import { payoutScheduleGateway } from '../../src/services/payoutScheduleGateway.js';
 
 let passedTests = 0;
 let totalTests = 0;
@@ -48,14 +49,14 @@ console.log('===================================================================
 console.log('1. Verificação de Elementos de Interface no DOM (index.html):');
 
 it('Verifica container de alternância de perfis (Produtor vs Financeiro Disk)', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="payout-role-view-toggle"'), 'Container #payout-role-view-toggle deve existir');
   assert(html.includes('id="btn-payout-role-producer"'), 'Botão #btn-payout-role-producer deve existir');
   assert(html.includes('id="btn-payout-role-financeiro"'), 'Botão #btn-payout-role-financeiro deve existir');
 });
 
 it('Verifica container exclusivo do Produtor (apenas extrato, valores e status)', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="payout-producer-container"'), 'Container #payout-producer-container deve existir');
   assert(html.includes('id="table-producer-payouts-body"'), 'Tabela #table-producer-payouts-body deve existir');
   assert(html.includes('id="prod-kpi-total-repassado"'), 'KPI de total repassado deve existir');
@@ -63,7 +64,7 @@ it('Verifica container exclusivo do Produtor (apenas extrato, valores e status)'
 });
 
 it('Verifica container exclusivo do Financeiro Disk (Opção A + Opção B)', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="payout-financeiro-container"'), 'Container #payout-financeiro-container deve existir');
   assert(html.includes('id="table-financeiro-alcadas-body"'), 'Tabela de alçadas #table-financeiro-alcadas-body deve existir');
   assert(html.includes('id="table-financeiro-lotes-body"'), 'Tabela de lotes #table-financeiro-lotes-body deve existir');
@@ -71,7 +72,7 @@ it('Verifica container exclusivo do Financeiro Disk (Opção A + Opção B)', ()
 });
 
 it('Verifica os 3 novos modais de governança e comprovante', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8');
   assert(html.includes('id="modal-payout-receipt-view"'), 'Modal #modal-payout-receipt-view deve existir');
   assert(html.includes('id="modal-approve-single-payout"'), 'Modal #modal-approve-single-payout deve existir');
   assert(html.includes('id="modal-reject-single-payout"'), 'Modal #modal-reject-single-payout deve existir');

@@ -95,7 +95,7 @@ console.log('  ✓ Delegated listener suporta tanto data-route moderno quanto da
 // -------------------------------------------------------------
 console.log('\n4. Teste Funcional de Resolução de Rotas (routes.js):');
 
-import { resolveRoute, ROUTES, LEGACY_ROUTE_ALIASES } from './src/navigation/routes.js';
+import { resolveRoute, ROUTES, LEGACY_ROUTE_ALIASES } from '../../src/navigation/routes.js';
 
 // 4.1 Rota canônica exata
 const rDashboard = resolveRoute('/dashboard');
