@@ -498,6 +498,22 @@ export const gatewayFeeMatrixService = {
 
     GATEWAY_RULES_STORE.push(rule);
     return rule;
+  },
+
+  /**
+   * Adiciona nova operadora/adquirente no catálogo
+   */
+  createAcquirer(acquirerData) {
+    const id = (acquirerData.id || acquirerData.name || 'acq').toLowerCase().replace(/\s+/g, '-');
+    const acquirer = {
+      id,
+      name: acquirerData.name || 'Nova Adquirente',
+      status: acquirerData.status || 'ATIVO',
+      settlementDays: acquirerData.settlementDays || 'D+30',
+      activeTransactions: Number(acquirerData.activeTransactions) || 0
+    };
+    ACQUIRERS_CATALOG.push(acquirer);
+    return acquirer;
   }
 };
 

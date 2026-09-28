@@ -66,15 +66,62 @@ export const gatewayFeeMatrixController = {
     if (btnSaveVigency) {
       btnSaveVigency.addEventListener('click', () => this.handleSaveVigency());
     }
+
+    const btnSaveAcquirer = document.getElementById('btn-gw-save-acquirer');
+    if (btnSaveAcquirer) {
+      btnSaveAcquirer.addEventListener('click', () => this.handleSaveAcquirer());
+    }
+
+    const btnSaveRule = document.getElementById('btn-gw-save-rule');
+    if (btnSaveRule) {
+      btnSaveRule.addEventListener('click', () => this.handleSaveRule());
+    }
   },
 
   render() {
+    this.populateAcquirerSelects();
     this.renderVisaoGeral();
     this.renderTabOperadoras();
     this.renderTabBandeiras();
     this.renderTabComercial();
     this.renderTabHistorico();
     this.runSimulation();
+  },
+
+  populateAcquirerSelects() {
+    if (typeof document === 'undefined') return;
+    const acquirers = gatewayFeeMatrixService.getAcquirers();
+
+    // 1. Filtro na aba Bandeiras (#gw-filter-acquirer)
+    const selFilter = document.getElementById('gw-filter-acquirer');
+    if (selFilter) {
+      const currentVal = selFilter.value;
+      selFilter.innerHTML = `<option value="TODOS">Todas as Adquirentes</option>` +
+        acquirers.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+      if (currentVal && Array.from(selFilter.options).some(o => o.value === currentVal)) {
+        selFilter.value = currentVal;
+      }
+    }
+
+    // 2. Select no Simulador (#sim-gw-acquirer)
+    const selSim = document.getElementById('sim-gw-acquirer');
+    if (selSim) {
+      const currentVal = selSim.value;
+      selSim.innerHTML = acquirers.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+      if (currentVal && Array.from(selSim.options).some(o => o.value === currentVal)) {
+        selSim.value = currentVal;
+      }
+    }
+
+    // 3. Select no Modal de Nova Regra (#modal-rule-acquirer)
+    const selModal = document.getElementById('modal-rule-acquirer');
+    if (selModal) {
+      const currentVal = selModal.value;
+      selModal.innerHTML = acquirers.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+      if (currentVal && Array.from(selModal.options).some(o => o.value === currentVal)) {
+        selModal.value = currentVal;
+      }
+    }
   },
 
   renderVisaoGeral() {
@@ -120,6 +167,11 @@ export const gatewayFeeMatrixController = {
     if (!tbody) return;
 
     const acquirers = gatewayFeeMatrixService.getAcquirers();
+
+    const badgeCount = document.getElementById('gw-operadoras-badge-count');
+    if (badgeCount) {
+      badgeCount.textContent = `${acquirers.length} operadoras ativas`;
+    }
     tbody.innerHTML = acquirers.map(a => `
       <tr>
         <td>
@@ -315,6 +367,132 @@ export const gatewayFeeMatrixController = {
       alert('Nova vigência cadastrada com sucesso sem alterar o histórico anterior!');
     } catch (err) {
       alert(err.message);
+    }
+  },
+
+  openNewAcquirerModal() {
+    if (typeof document === 'undefined') return;
+    const nameInput = document.getElementById('modal-acquirer-name');
+    if (nameInput) nameInput.value = '';
+    const settInput = document.getElementById('modal-acquirer-settlement');
+    if (settInput) settInput.value = 'D+30 (Crédito) / D+1 (PIX)';
+    const statusInput = document.getElementById('modal-acquirer-status');
+    if (statusInput) statusInput.value = 'ATIVO';
+
+    const modalEl = document.getElementById('modal-gw-new-acquirer');
+    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+  },
+
+  handleSaveAcquirer() {
+    try {
+      const nameInput = document.getElementById('modal-acquirer-name');
+      const name = nameInput ? nameInput.value.trim() : '';
+      if (!name) {
+        alert('Por favor, informe o nome da operadora/adquirente.');
+        return;
+      }
+
+      const settlementDays = document.getElementById('modal-acquirer-settlement')?.value?.trim() || 'D+30';
+      const status = document.getElementById('modal-acquirer-status')?.value || 'ATIVO';
+
+      const newAcquirer = gatewayFeeMatrixService.createAcquirer({
+        name,
+        settlementDays,
+        status,
+        activeTransactions: 0
+      });
+
+      this.populateAcquirerSelects();
+
+      const modalEl = document.getElementById('modal-gw-new-acquirer');
+      if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+      }
+
+      this.render();
+      alert(`Adquirente "${newAcquirer.name}" cadastrada com sucesso! Agora você já pode configurar suas bandeiras e taxas.`);
+    } catch (err) {
+      alert('Erro ao salvar adquirente: ' + err.message);
+    }
+  },
+
+  openNewRuleModal(defaultAcquirer) {
+    if (typeof document === 'undefined') return;
+    this.populateAcquirerSelects();
+
+    const selAcq = document.getElementById('modal-rule-acquirer');
+    if (selAcq && defaultAcquirer) {
+      selAcq.value = defaultAcquirer;
+    }
+
+    const brandInput = document.getElementById('modal-rule-brand');
+    if (brandInput) brandInput.value = '';
+    const mdrInput = document.getElementById('modal-rule-acquirer-mdr');
+    if (mdrInput) mdrInput.value = '2.15';
+    const fixInput = document.getElementById('modal-rule-fixed-cost');
+    if (fixInput) fixInput.value = '0.00';
+    const comInput = document.getElementById('modal-rule-commercial-fee');
+    if (comInput) comInput.value = '2.99';
+    const dateInput = document.getElementById('modal-rule-effective-from');
+    if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+    const reasonInput = document.getElementById('modal-rule-reason');
+    if (reasonInput) reasonInput.value = '';
+
+    const modalEl = document.getElementById('modal-gw-new-rule');
+    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+  },
+
+  handleSaveRule() {
+    try {
+      const acquirer = document.getElementById('modal-rule-acquirer')?.value;
+      const brand = document.getElementById('modal-rule-brand')?.value?.trim();
+      const modality = document.getElementById('modal-rule-modality')?.value || 'CREDITO_1X';
+      const channel = document.getElementById('modal-rule-channel')?.value || 'ONLINE';
+      const scope = document.getElementById('modal-rule-scope')?.value || 'GLOBAL';
+      const acquirerMdr = Number(document.getElementById('modal-rule-acquirer-mdr')?.value || 0);
+      const fixedCost = Number(document.getElementById('modal-rule-fixed-cost')?.value || 0);
+      const commercialFee = Number(document.getElementById('modal-rule-commercial-fee')?.value || 0);
+      const feeBearer = document.getElementById('modal-rule-fee-bearer')?.value || 'PRODUTOR';
+      const effectiveFrom = document.getElementById('modal-rule-effective-from')?.value || new Date().toISOString().slice(0, 10);
+      const reason = document.getElementById('modal-rule-reason')?.value?.trim() || 'Cadastro de taxa por bandeira';
+
+      if (!acquirer) {
+        alert('Selecione uma adquirente.');
+        return;
+      }
+      if (!brand) {
+        alert('Informe a bandeira do cartão ou meio de pagamento (ex: Visa, Mastercard, Elo).');
+        return;
+      }
+
+      gatewayFeeMatrixService.createRule({
+        acquirer,
+        brand,
+        modality,
+        channel,
+        scope,
+        acquirerMdr,
+        fixedCost,
+        commercialFee,
+        feeBearer,
+        effectiveFrom,
+        reason,
+        actor: 'Carlos Lima (Financeiro Disk)'
+      });
+
+      const modalEl = document.getElementById('modal-gw-new-rule');
+      if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+      }
+
+      this.render();
+      alert(`Nova regra para ${acquirer} - ${brand} (${modality}) cadastrada com sucesso! Vigência iniciada em ${formatDate(effectiveFrom)}.`);
+    } catch (err) {
+      alert('Erro ao salvar regra: ' + err.message);
     }
   }
 };

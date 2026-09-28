@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-D0vEAxYA.js"></script>
+      <script type="module" crossorigin src="./assets/index-CsRhKktR.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-CNW2NMqO.css">
     </head>
 <body>
@@ -5454,6 +5454,12 @@
                                 <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onclick="window.gatewayFeeMatrixController.render()">
                                     <i class="ph-arrows-clockwise"></i> <span>Atualizar</span>
                                 </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btn-gw-open-acquirer-modal" onclick="window.gatewayFeeMatrixController.openNewAcquirerModal()">
+                                    <i class="ph-buildings"></i> <span>+ Adicionar Adquirente</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btn-gw-open-rule-modal" onclick="window.gatewayFeeMatrixController.openNewRuleModal()">
+                                    <i class="ph-plus-circle"></i> <span>+ Nova Bandeira / Taxa</span>
+                                </button>
                             </div>
                         </div>
 
@@ -5544,6 +5550,15 @@
 
                                     <!-- TAB 2: OPERADORAS -->
                                     <div class="tab-pane fade" id="pane-gw-operadoras" role="tabpanel">
+                                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2 bg-light p-2 rounded">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fs-xs fw-bold text-dark"><i class="ph-buildings text-primary me-1"></i> Operadoras e Adquirentes Homologadas</span>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="gw-operadoras-badge-count">4 operadoras ativas</span>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-primary d-flex align-items-center gap-1" id="btn-gw-tab2-open-acquirer-modal" onclick="window.gatewayFeeMatrixController.openNewAcquirerModal()">
+                                                <i class="ph-plus"></i> <span>Adicionar Operadora / Adquirente</span>
+                                            </button>
+                                        </div>
                                         <div class="table-responsive">
                                             <table class="table table-sm table-hover align-middle mb-0">
                                                 <thead class="table-light fs-xs text-uppercase text-muted">
@@ -5581,7 +5596,12 @@
                                                     <option value="AGENCIA_PDV">Agência / PDV</option>
                                                 </select>
                                             </div>
-                                            <span class="fs-xxs text-muted">Matriz de custos negociados por adquirente e bandeira.</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fs-xxs text-muted d-none d-md-inline">Matriz de custos negociados por adquirente e bandeira.</span>
+                                                <button type="button" class="btn btn-xs btn-primary d-flex align-items-center gap-1" id="btn-gw-tab3-open-rule-modal" onclick="window.gatewayFeeMatrixController.openNewRuleModal()">
+                                                    <i class="ph-plus-circle"></i> <span>+ Cadastrar Nova Bandeira / Taxa</span>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="table-responsive">
                                             <table class="table table-sm table-hover align-middle mb-0">
@@ -5748,6 +5768,177 @@
                                 <div class="modal-footer py-2 bg-light">
                                     <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                                     <button class="btn btn-sm btn-primary fw-bold" id="btn-gw-save-vigency">Salvar Nova Vigência</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL: NOVA ADQUIRENTE / OPERADORA (IMPLANTAÇÃO 5.4) -->
+                    <div class="modal fade" id="modal-gw-new-acquirer" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-2">
+                                    <div>
+                                        <h6 class="modal-title fw-bold text-dark mb-0"><i class="ph-buildings me-1 text-primary"></i> Cadastrar Nova Operadora / Adquirente</h6>
+                                        <div class="text-muted fs-xs">Adicionar adquirente, gateway ou intermediador de pagamento</div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Nome da Adquirente / Gateway *</label>
+                                        <input class="form-control form-control-sm" id="modal-acquirer-name" type="text" placeholder="Ex: SafraPay, Adyen, Getnet, Mercado Pago">
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Prazo de Liquidação</label>
+                                            <input class="form-control form-control-sm" id="modal-acquirer-settlement" type="text" placeholder="Ex: D+1, D+14, D+30" value="D+30 (Crédito) / D+1 (PIX)">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Status Operacional</label>
+                                            <select class="form-select form-select-sm" id="modal-acquirer-status">
+                                                <option value="ATIVO" selected>ATIVO / HOMOLOGADO</option>
+                                                <option value="EM_HOMOLOGACAO">EM HOMOLOGAÇÃO</option>
+                                                <option value="INATIVO">INATIVO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Ambiente / Canal Padrão</label>
+                                        <select class="form-select form-select-sm" id="modal-acquirer-channel">
+                                            <option value="ONLINE">Online (E-commerce / Web / App)</option>
+                                            <option value="POS_FISICO">Físico (Máquinas POS / Bilheteria)</option>
+                                            <option value="HIBRIDO" selected>Híbrido (Online + POS Bilheteria)</option>
+                                        </select>
+                                    </div>
+                                    <div class="alert alert-info py-2 mb-0 fs-xxs">
+                                        <i class="ph-info me-1"></i> A nova adquirente ficará disponível imediatamente para cadastro de taxas por bandeira, parametrização comercial e conciliação bancária.
+                                    </div>
+                                </div>
+                                <div class="modal-footer py-2 bg-light">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button class="btn btn-sm btn-primary fw-bold" id="btn-gw-save-acquirer" onclick="window.gatewayFeeMatrixController.handleSaveAcquirer()">Salvar Adquirente</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL: NOVA BANDEIRA / TAXA / REGRA COMERCIAL (IMPLANTAÇÃO 5.4) -->
+                    <div class="modal fade" id="modal-gw-new-rule" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-2">
+                                    <div>
+                                        <h6 class="modal-title fw-bold text-dark mb-0"><i class="ph-plus-circle me-1 text-primary"></i> Cadastrar Nova Bandeira, Modalidade e Taxa</h6>
+                                        <div class="text-muted fs-xs">Definição de Custo Disk (MDR), Taxa Comercial, Responsável e Vigência</div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Adquirente / Gateway *</label>
+                                            <select class="form-select form-select-sm" id="modal-rule-acquirer">
+                                                <!-- Preenchido dinamicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Bandeira do Cartão *</label>
+                                            <input class="form-control form-control-sm" id="modal-rule-brand" type="text" placeholder="Ex: Visa, Mastercard, Elo, Amex, PIX" list="brand-options-datalist">
+                                            <datalist id="brand-options-datalist">
+                                                <option value="Visa">
+                                                <option value="Mastercard">
+                                                <option value="Elo">
+                                                <option value="American Express">
+                                                <option value="Hipercard">
+                                                <option value="PIX">
+                                                <option value="Alelo / Sodexo">
+                                            </datalist>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Modalidade / Parcelas *</label>
+                                            <select class="form-select form-select-sm" id="modal-rule-modality">
+                                                <option value="DEBITO">Débito</option>
+                                                <option value="CREDITO_1X" selected>Crédito à Vista (1x)</option>
+                                                <option value="CREDITO_2X">Crédito 2x</option>
+                                                <option value="CREDITO_3X">Crédito 3x</option>
+                                                <option value="CREDITO_4X">Crédito 4x</option>
+                                                <option value="CREDITO_5X">Crédito 5x</option>
+                                                <option value="CREDITO_6X">Crédito 6x</option>
+                                                <option value="CREDITO_7_12X">Crédito Parcelado (7x a 12x)</option>
+                                                <option value="PIX">PIX Instantâneo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Canal de Venda</label>
+                                            <select class="form-select form-select-sm" id="modal-rule-channel">
+                                                <option value="ONLINE" selected>Online (Web / App)</option>
+                                                <option value="POS_FISICO">Bilheteria Física (POS)</option>
+                                                <option value="AGENCIA_PDV">Agência / PDV Credenciado</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Escopo de Aplicação</label>
+                                            <select class="form-select form-select-sm" id="modal-rule-scope">
+                                                <option value="GLOBAL" selected>Padrão Geral Disk</option>
+                                                <option value="PRODUCER">Específico por Produtor</option>
+                                                <option value="EVENT">Específico por Evento</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Início da Vigência *</label>
+                                            <input class="form-control form-control-sm" id="modal-rule-effective-from" type="date">
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 bg-light rounded border mb-3">
+                                        <div class="fw-bold fs-xs text-dark mb-2 text-uppercase d-flex align-items-center gap-1">
+                                            <i class="ph-calculator text-primary"></i> <span>Composição Financeira da Taxa</span>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-danger text-uppercase mb-1">Custo Disk (MDR %) *</label>
+                                                <input class="form-control form-control-sm font-monospace" id="modal-rule-acquirer-mdr" type="number" step="0.01" placeholder="Ex: 2.15" value="2.15">
+                                                <span class="fs-xxs text-muted">Retido pela operadora</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Tarifa Fixa (R$)</label>
+                                                <input class="form-control form-control-sm font-monospace" id="modal-rule-fixed-cost" type="number" step="0.01" placeholder="0.00" value="0.00">
+                                                <span class="fs-xxs text-muted">Por transação</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-success text-uppercase mb-1">Taxa Comercial (%) *</label>
+                                                <input class="form-control form-control-sm font-monospace" id="modal-rule-commercial-fee" type="number" step="0.01" placeholder="Ex: 2.99" value="2.99">
+                                                <span class="fs-xxs text-muted">Aplicada na operação</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Quem Suporta a Taxa *</label>
+                                                <select class="form-select form-select-sm" id="modal-rule-fee-bearer">
+                                                    <option value="PRODUTOR" selected>Produtor (deduz do evento)</option>
+                                                    <option value="CLIENTE_FINAL">Cliente Final (checkout)</option>
+                                                    <option value="DISK">Disk (absorvido)</option>
+                                                    <option value="DIVIDIDO">Dividido (Produtor + Cliente)</option>
+                                                </select>
+                                                <span class="fs-xxs text-muted">Fee Bearer</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Motivo / Justificativa do Cadastro</label>
+                                        <textarea class="form-control form-control-sm" id="modal-rule-reason" rows="2" placeholder="Ex: Tabela negociada para novas bandeiras 2026"></textarea>
+                                    </div>
+
+                                    <div class="alert alert-secondary py-2 mb-0 fs-xxs">
+                                        <i class="ph-shield-check me-1 text-primary"></i> <strong>Rastreabilidade Imutável:</strong> Esta regra gerará a versão 1.0 com histórico auditável. Alterações futuras deverão ser feitas via <em>Nova Vigência</em> para preservar as liquidações passadas.
+                                    </div>
+                                </div>
+                                <div class="modal-footer py-2 bg-light">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button class="btn btn-sm btn-primary fw-bold" id="btn-gw-save-rule" onclick="window.gatewayFeeMatrixController.handleSaveRule()">Salvar Bandeira / Taxa</button>
                                 </div>
                             </div>
                         </div>

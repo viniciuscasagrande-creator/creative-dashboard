@@ -234,6 +234,52 @@ it('Nova vigência versionada nunca sobrescreve histórico de taxas passadas', (
   assert.strictEqual(target.history[0].acquirerMdr, prevMdr, 'Vigência anterior deve guardar 1.79');
 });
 
+it('Criação dinâmica de nova operadora/adquirente cataloga corretamente no motor', () => {
+  const newAcq = gatewayFeeMatrixService.createAcquirer({
+    name: 'SafraPay Intermediações',
+    settlementDays: 'D+14 (Crédito)',
+    status: 'ATIVO'
+  });
+
+  assert.ok(newAcq.id, 'ID não gerado');
+  const allAcquirers = gatewayFeeMatrixService.getAcquirers();
+  const found = allAcquirers.find(a => a.name.includes('SafraPay'));
+  assert.ok(found, 'Nova adquirente não encontrada no catálogo');
+  assert.strictEqual(found.settlementDays, 'D+14 (Crédito)');
+});
+
+it('Criação dinâmica de nova bandeira/modalidade/taxa entra com versão 1.0 e vigência ativa', () => {
+  const createdRule = gatewayFeeMatrixService.createRule({
+    acquirer: 'SafraPay Intermediações',
+    brand: 'Mastercard',
+    modality: 'CREDITO_2X',
+    channel: 'ONLINE',
+    scope: 'GLOBAL',
+    acquirerMdr: 1.85,
+    fixedCost: 0.10,
+    commercialFee: 2.80,
+    feeBearer: 'CLIENTE_FINAL',
+    effectiveFrom: '2026-09-01',
+    reason: 'Acordo comercial SafraPay'
+  });
+
+  assert.ok(createdRule.id.startsWith('RULE-'), 'ID de regra fora do padrão');
+  assert.strictEqual(createdRule.version, 1);
+  assert.strictEqual(createdRule.active, true);
+  assert.strictEqual(createdRule.history.length, 1);
+
+  // Resolução da nova regra
+  const resolved = gatewayFeeMatrixService.resolvePricingRule({
+    acquirer: 'SafraPay Intermediações',
+    brand: 'Mastercard',
+    modality: 'CREDITO_2X'
+  });
+  assert.ok(resolved, 'Regra recém-criada não foi resolvida');
+  assert.strictEqual(resolved.acquirerMdr, 1.85);
+  assert.strictEqual(resolved.commercialFee, 2.80);
+  assert.strictEqual(resolved.operationalSpread, 0.95);
+});
+
 // ============================================================================
 // SUÍTE 4: ROTAS, NAVEGAÇÃO E REGRAS DE INTEGRIDADE DA SIDEBAR
 // ============================================================================
@@ -253,12 +299,24 @@ it('Rota /financeiro/gateways-adquirentes resolve estritamente com view financia
   assert.strictEqual(resolved.menuKey, 'fin-gateways-adquirentes');
 });
 
-it('index.html contém as seções de view #view-financial-fechamento e #view-financial-gateways-adquirentes', () => {
+it('index.html contém as seções de view e os modais/botões de Adicionar Adquirente e Nova Bandeira/Taxa', () => {
   const secClosing = document.getElementById('view-financial-fechamento');
   assert.ok(secClosing, 'Seção #view-financial-fechamento ausente em index.html');
 
   const secGw = document.getElementById('view-financial-gateways-adquirentes');
   assert.ok(secGw, 'Seção #view-financial-gateways-adquirentes ausente em index.html');
+
+  const btnOpenAcq = document.getElementById('btn-gw-open-acquirer-modal');
+  assert.ok(btnOpenAcq, 'Botão #btn-gw-open-acquirer-modal ausente');
+
+  const btnOpenRule = document.getElementById('btn-gw-open-rule-modal');
+  assert.ok(btnOpenRule, 'Botão #btn-gw-open-rule-modal ausente');
+
+  const modalAcq = document.getElementById('modal-gw-new-acquirer');
+  assert.ok(modalAcq, 'Modal #modal-gw-new-acquirer ausente');
+
+  const modalRule = document.getElementById('modal-gw-new-rule');
+  assert.ok(modalRule, 'Modal #modal-gw-new-rule ausente');
 });
 
 it('O número de .submenu-link no menu Financeiro permanece estritamente em 50 para conformidade com a Fase 28.15.3', () => {
