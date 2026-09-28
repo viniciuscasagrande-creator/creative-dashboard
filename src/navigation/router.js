@@ -5,7 +5,7 @@
  * ==========================================================================
  */
 
-import { ROUTES, LEGACY_ROUTE_ALIASES, resolveRoute } from './routes.js';
+import { ROUTES, LEGACY_ROUTE_ALIASES, resolveRoute, isDiskOnlyRoute, isUserProducer } from './routes.js';
 import { MenuStateManager } from './menu-state.js';
 import { accessControlService } from '../services/accessControlService.js';
 
@@ -66,10 +66,15 @@ class AppRouter {
       }
 
       // =========================================================================
-      // VALIDAÇÃO DE SEGURANÇA & RBAC (MEGA PACOTE 1)
+      // VALIDAÇÃO DE SEGURANÇA & RBAC (MEGA PACOTE 1 + SEGREGAÇÃO PRODUTOR)
       // Nenhuma tela sensível pode ser acessada apenas digitando a URL
       // =========================================================================
       if (route.path !== '/login' && route.path !== '/acesso-negado') {
+        if (isUserProducer() && isDiskOnlyRoute(route.path)) {
+          console.warn(`[AppRouter] Acesso Negado à rota "${route.path}". Acesso exclusivo ao Financeiro Disk.`);
+          this.isNavigating = false;
+          return this.navigate('/acesso-negado', { replace: true });
+        }
         const ROUTE_PERMISSIONS = {
           '/financeiro/aprovacoes': 'financeiro.aprovacoes.visualizar',
           '/financeiro/minhas-solicitacoes': 'financeiro.solicitacoes.visualizar',

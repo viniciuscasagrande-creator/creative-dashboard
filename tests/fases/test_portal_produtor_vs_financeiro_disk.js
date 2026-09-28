@@ -16,6 +16,8 @@ import { financialApprovalRulesService, OPERATION_CATEGORIES } from '../../src/s
 import { financialApprovalService } from '../../src/services/financialApprovalService.js';
 import { accessControlService } from '../../src/services/accessControlService.js';
 import { financialApprovalsController } from '../../src/controllers/financialApprovalsController.js';
+import { MenuStateManager } from '../../src/navigation/menu-state.js';
+import { resolveRoute, isDiskOnlyRoute } from '../../src/navigation/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -244,6 +246,127 @@ async function run() {
     assert(drawerFooter.innerHTML.includes('openReturnDecisionModal'), 'Financeiro possui botão Devolver');
     assert(drawerFooter.innerHTML.includes('openRejectDecisionModal'), 'Financeiro possui botão Reprovar');
     assert(drawerFooter.innerHTML.includes('openApproveDecisionModal'), 'Financeiro possui botão Aprovar');
+  });
+
+  // -------------------------------------------------------------------------
+  // 6. SEGREGAÇÃO DO MENU LATERAL E GUARDA DE ROTAS (PRODUTOR VS FINANCEIRO DISK)
+  // -------------------------------------------------------------------------
+  console.log('\n6. Segregação do Menu Lateral e Guarda de Rotas:');
+
+  await test('Sidebar contém exatamente os 8 itens canônicos do Portal do Produtor', () => {
+    const finGroup = document.querySelector('#main-sidebar-nav [data-menu-group="financeiro"]');
+    assert(finGroup, 'Grupo financeiro deve existir na sidebar');
+
+    const producerLinks = Array.from(finGroup.querySelectorAll('.producer-submenu-link'));
+    assert.strictEqual(producerLinks.length, 8, `Esperado exatamente 8 itens de produtor, encontrados ${producerLinks.length}`);
+
+    const expectedRoutes = [
+      '/financeiro/dashboard',
+      '/financeiro/meus-saldos',
+      '/financeiro/solicitar-repasse',
+      '/financeiro/solicitar-antecipacao',
+      '/financeiro/transferir-eventos',
+      '/financeiro/minhas-solicitacoes',
+      '/financeiro/extrato',
+      '/financeiro/dados-bancarios'
+    ];
+
+    expectedRoutes.forEach(route => {
+      const match = producerLinks.find(link => link.getAttribute('data-route') === route);
+      assert(match, `Item de rota "${route}" ausente no menu do produtor`);
+    });
+  });
+
+  await test('MenuStateManager.updateRole("PRODUTOR") exibe apenas os 8 itens próprios e oculta backoffice Disk', () => {
+    MenuStateManager.updateRole('PRODUTOR');
+
+    const finGroup = document.querySelector('#main-sidebar-nav [data-menu-group="financeiro"]');
+    const producerItems = finGroup.querySelectorAll('.menu-financeiro-produtor-item');
+    producerItems.forEach(el => {
+      assert.strictEqual(el.style.display, '', 'Itens do produtor devem estar visíveis');
+    });
+
+    const diskItems = finGroup.querySelectorAll('#menu-sub-financeiro > li:not(.menu-financeiro-produtor-item)');
+    assert(diskItems.length > 0, 'Itens da Disk devem existir');
+    diskItems.forEach(el => {
+      assert.strictEqual(el.style.display, 'none', 'Itens internos da Disk devem estar ocultos para o produtor');
+    });
+  });
+
+  await test('Guarda de Rota bloqueia todas as rotas exclusivas do Financeiro Disk quando usuário for PRODUTOR', () => {
+    global.window.currentRole = 'PRODUTOR';
+    global.window.isProducerRole = true;
+
+    const blockedRoutes = [
+      '/financeiro/aprovacoes',
+      '/financeiro/gateways-adquirentes',
+      '/financeiro/fechamento',
+      '/financeiro/posicao-geral',
+      '/financeiro/taxas-custos',
+      '/financeiro/tesouraria',
+      '/financeiro/conciliacao',
+      '/financeiro/cnab',
+      '/financeiro/pix',
+      '/contabilidade/dashboard'
+    ];
+
+    blockedRoutes.forEach(path => {
+      const resolved = resolveRoute(path);
+      assert.strictEqual(resolved.path, '/acesso-negado', `Produtor tentando acessar "${path}" deve ser redirecionado para /acesso-negado`);
+      assert.strictEqual(resolved.view, 'access-denied', `View da rota "${path}" deve ser access-denied`);
+    });
+  });
+
+  await test('Guarda de Rota permite acesso irrestrito às 8 rotas canônicas do PRODUTOR', () => {
+    global.window.currentRole = 'PRODUTOR';
+    global.window.isProducerRole = true;
+
+    const allowed = [
+      { path: '/financeiro/dashboard', view: 'financial-dashboard' },
+      { path: '/financeiro/meus-saldos', view: 'financial-saldos' },
+      { path: '/financeiro/solicitar-repasse', view: 'financial-repass' },
+      { path: '/financeiro/solicitar-antecipacao', view: 'financial-advance' },
+      { path: '/financeiro/transferir-eventos', view: 'financial-event-transfers' },
+      { path: '/financeiro/minhas-solicitacoes', view: 'financial-approvals' },
+      { path: '/financeiro/extrato', view: 'financial-statement' },
+      { path: '/financeiro/dados-bancarios', view: 'financial-accounts' }
+    ];
+
+    allowed.forEach(target => {
+      const resolved = resolveRoute(target.path);
+      assert.strictEqual(resolved.path, target.path, `Produtor deve acessar ${target.path}`);
+      assert.strictEqual(resolved.view, target.view, `View de ${target.path} deve ser ${target.view}`);
+    });
+  });
+
+  await test('Alternância para FINANCEIRO_DISK restaura o menu completo e libera rotas administrativas', () => {
+    global.window.currentRole = 'FINANCEIRO';
+    global.window.isProducerRole = false;
+    MenuStateManager.updateRole('FINANCEIRO');
+
+    const finGroup = document.querySelector('#main-sidebar-nav [data-menu-group="financeiro"]');
+    const producerItems = finGroup.querySelectorAll('.menu-financeiro-produtor-item');
+    producerItems.forEach(el => {
+      assert.strictEqual(el.style.display, 'none', 'Itens do produtor devem estar ocultos para financeiro disk');
+    });
+
+    const diskItems = finGroup.querySelectorAll('#menu-sub-financeiro > li:not(.menu-financeiro-produtor-item)');
+    diskItems.forEach(el => {
+      assert.strictEqual(el.style.display, '', 'Itens internos da Disk devem estar visíveis');
+    });
+
+    // Rotas liberadas
+    const resAprov = resolveRoute('/financeiro/aprovacoes');
+    assert.strictEqual(resAprov.path, '/financeiro/aprovacoes');
+    assert.strictEqual(resAprov.view, 'financial-approvals');
+
+    const resGw = resolveRoute('/financeiro/gateways-adquirentes');
+    assert.strictEqual(resGw.path, '/financeiro/gateways-adquirentes');
+    assert.strictEqual(resGw.view, 'financial-gateways-adquirentes');
+
+    const resFech = resolveRoute('/financeiro/fechamento');
+    assert.strictEqual(resFech.path, '/financeiro/fechamento');
+    assert.strictEqual(resFech.view, 'financial-fechamento');
   });
 
   console.log('\n====================================================================');

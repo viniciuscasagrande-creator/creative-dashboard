@@ -86,6 +86,14 @@ export const financialApprovalsController = {
     this.updateHeader();
     this.refreshDashboard();
     financialApprovalNotificationService.refreshNavbarBell(currentRole);
+
+    if (typeof window !== 'undefined') {
+      window.currentRole = role;
+      window.isProducerRole = role === 'PRODUTOR';
+      if (typeof window.updateSidebarRole === 'function') {
+        window.updateSidebarRole(role);
+      }
+    }
   },
 
   /**

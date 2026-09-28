@@ -94,6 +94,39 @@
                     </div>
                 </li>
 
+                <!-- Seletor de Perfil Global (Simulação: Produtor vs Financeiro Disk) -->
+                <li class="nav-item dropdown ms-lg-2" id="navbar-role-mode-selector">
+                    <button class="btn btn-xs rounded-pill d-flex align-items-center gap-1 border-0" id="navbar-role-badge-btn" data-bs-toggle="dropdown" style="background: rgba(255,255,255,0.12); color: white; padding: 5px 12px; font-size: 12px; font-weight: 600;" title="Alternar papel de simulação">
+                        <i class="ph-shield-check text-success" id="navbar-role-icon"></i>
+                        <span id="navbar-role-label">Financeiro Disk</span>
+                        <i class="ph-caret-down fs-xxs ms-1 opacity-50"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 8px; min-width: 230px;">
+                        <div class="px-3 py-2 text-muted fs-xxs fw-bold text-uppercase border-bottom">Alternar Perfil (Simulação)</div>
+                        <a href="#" class="dropdown-item d-flex align-items-center gap-2 py-2" id="nav-switch-role-disk" onclick="window.switchGlobalRole('FINANCEIRO')">
+                            <i class="ph-shield-check text-success fs-base"></i>
+                            <div>
+                                <div class="fw-bold fs-xs">Financeiro Disk</div>
+                                <div class="text-muted fs-xxs">Menu transversal &bull; Backoffice &bull; Aprovação</div>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item d-flex align-items-center gap-2 py-2" id="nav-switch-role-produtor" onclick="window.switchGlobalRole('PRODUTOR')">
+                            <i class="ph-user text-primary fs-base"></i>
+                            <div>
+                                <div class="fw-bold fs-xs">Produtor</div>
+                                <div class="text-muted fs-xxs">Menu reduzido (8 itens) &bull; Apenas próprios</div>
+                            </div>
+                        </a>
+                        <a href="#" class="dropdown-item d-flex align-items-center gap-2 py-2" id="nav-switch-role-admin" onclick="window.switchGlobalRole('ADMINISTRADOR')">
+                            <i class="ph-crown text-warning fs-base"></i>
+                            <div>
+                                <div class="fw-bold fs-xs">Administrador Master</div>
+                                <div class="text-muted fs-xxs">Acesso total irrestrito</div>
+                            </div>
+                        </a>
+                    </div>
+                </li>
+
                 <li class="nav-item nav-item-dropdown-lg dropdown ms-lg-2">
                     <a href="#" class="navbar-nav-link align-items-center rounded-pill p-1 text-white" data-bs-toggle="dropdown">
                         <div class="status-indicator-container d-inline-block" style="position: relative;">
@@ -218,7 +251,6 @@
                                 <span class="badge bg-success align-self-center rounded-pill ms-auto">Enterprise</span>
                             </a>
                             <ul class="nav-group-sub collapse" id="menu-sub-financeiro">
-                                
                                 <!-- Seção Operacional: Visão Financeira -->
                                 <li class="nav-item-section-divider"><i class="ph-chart-pie"></i> Visão Financeira</li>
 
@@ -371,6 +403,51 @@
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="revenues-category" data-menu-key="fin-revenues-cat" data-route="/receitas/categoria"><i class="ph-funnel me-2"></i> Receitas por Categoria</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="expenses-category" data-menu-key="fin-expenses-cat" data-route="/despesas/categoria"><i class="ph-receipt-x me-2"></i> Despesas por Categoria</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="expenses-event" data-menu-key="fin-expenses-event" data-route="/despesas/evento"><i class="ph-calendar-x me-2"></i> Despesas por Evento</a></li>
+
+                                <!-- ================================================================ -->
+                                <!-- PORTAL DO PRODUTOR: MENU FINANCEIRO REDUZIDO (8 ITENS CANÔNICOS) -->
+                                <!-- ================================================================ -->
+                                <li class="nav-item-section-divider menu-financeiro-produtor-item" style="display: none;"><i class="ph-user-circle"></i> Portal do Produtor</li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-dashboard" data-menu-key="fin-produtor-visao" data-route="/financeiro/dashboard" title="Visão Financeira">
+                                        <i class="ph-chart-pie-slice me-2 text-primary"></i> <span>Visão Financeira</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-saldos" data-menu-key="fin-produtor-saldos" data-route="/financeiro/meus-saldos" title="Meus Saldos">
+                                        <i class="ph-currency-circle-dollar me-2 text-success"></i> <span>Meus Saldos</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-repass" data-tab="payouts" data-menu-key="fin-produtor-solicitar-repasse" data-route="/financeiro/solicitar-repasse" title="Solicitar Repasse">
+                                        <i class="ph-hand-coins me-2 text-warning"></i> <span>Solicitar Repasse</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-advance" data-menu-key="fin-produtor-solicitar-antecipacao" data-route="/financeiro/solicitar-antecipacao" title="Solicitar Antecipação">
+                                        <i class="ph-trend-up me-2 text-info"></i> <span>Solicitar Antecipação</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-event-transfers" data-tab="transfer" data-menu-key="fin-produtor-transferir" data-route="/financeiro/transferir-eventos" title="Transferir entre Eventos">
+                                        <i class="ph-arrows-clockwise me-2 text-primary"></i> <span>Transferir entre Eventos</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-approvals" data-menu-key="fin-my-requests" data-route="/financeiro/minhas-solicitacoes" title="Minhas Solicitações">
+                                        <i class="ph-files me-2 text-success"></i> <span>Minhas Solicitações</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-statement" data-menu-key="fin-statement" data-route="/financeiro/extrato" title="Extrato">
+                                        <i class="ph-receipt me-2 text-secondary"></i> <span>Extrato</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item menu-financeiro-produtor-item" style="display: none;">
+                                    <a href="#" class="nav-link producer-submenu-link" data-view="financial-accounts" data-menu-key="fin-produtor-dados-bancarios" data-route="/financeiro/dados-bancarios" title="Dados Bancários">
+                                        <i class="ph-credit-card me-2 text-danger"></i> <span>Dados Bancários</span>
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 

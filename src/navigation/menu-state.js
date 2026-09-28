@@ -125,14 +125,30 @@ function findActiveLink(routeState) {
 
   // 1. data-menu-key direto
   if (routeState.menuKey) {
-    const byKey = root.querySelector(`[data-menu-key="${escapeCss(routeState.menuKey)}"]`);
-    if (byKey) return byKey;
+    const candidates = Array.from(root.querySelectorAll(`[data-menu-key="${escapeCss(routeState.menuKey)}"]`));
+    if (candidates.length === 1) return candidates[0];
+    if (candidates.length > 1) {
+      const visible = candidates.find(c => {
+        const item = c.closest('.nav-item');
+        return item && item.style.display !== 'none';
+      });
+      if (visible) return visible;
+      return candidates[0];
+    }
   }
 
   // 2. data-route exato
   if (routeState.path) {
-    const byRoute = root.querySelector(`[data-route="${escapeCss(routeState.path)}"]`);
-    if (byRoute) return byRoute;
+    const candidates = Array.from(root.querySelectorAll(`[data-route="${escapeCss(routeState.path)}"]`));
+    if (candidates.length === 1) return candidates[0];
+    if (candidates.length > 1) {
+      const visible = candidates.find(c => {
+        const item = c.closest('.nav-item');
+        return item && item.style.display !== 'none';
+      });
+      if (visible) return visible;
+      return candidates[0];
+    }
   }
 
   // 3. data-view + data-tab
@@ -381,6 +397,48 @@ function init() {
   });
 }
 
+/**
+ * Atualiza a visibilidade do menu financeiro conforme o papel (PRODUTOR vs FINANCEIRO DISK)
+ * @param {string} role - 'PRODUTOR' | 'FINANCEIRO' | 'ADMINISTRADOR'
+ */
+function updateRole(role) {
+  if (typeof document === 'undefined') return;
+
+  const isProducer = role === 'PRODUTOR' ||
+    (typeof window !== 'undefined' && window.currentRole === 'PRODUTOR') ||
+    (typeof window !== 'undefined' && window.isProducerRole === true) ||
+    (typeof window !== 'undefined' && window.accessControlService && typeof window.accessControlService.isProducerRole === 'function' && window.accessControlService.isProducerRole());
+
+  const body = document.body;
+  if (body) {
+    if (isProducer) {
+      body.classList.add('role-produtor');
+      body.setAttribute('data-active-role', 'PRODUTOR');
+    } else {
+      body.classList.remove('role-produtor');
+      body.setAttribute('data-active-role', role || 'FINANCEIRO_DISK');
+    }
+  }
+
+  const root = sidebar();
+  if (root) {
+    if (isProducer) {
+      root.classList.add('role-produtor');
+    } else {
+      root.classList.remove('role-produtor');
+    }
+
+    // Toggle de visibilidade explícito dos itens
+    root.querySelectorAll('#menu-sub-financeiro > li').forEach(el => {
+      if (el.classList.contains('menu-financeiro-produtor-item')) {
+        el.style.display = isProducer ? '' : 'none';
+      } else {
+        el.style.display = isProducer ? 'none' : '';
+      }
+    });
+  }
+}
+
 export const MenuStateManager = {
   sync,
   clearActiveItems,
@@ -394,9 +452,11 @@ export const MenuStateManager = {
   getScrollContainer,
   scrollModuleToTop,
   ensureActiveItemVisible,
+  updateRole,
   init
 };
 
 if (typeof window !== 'undefined') {
   window.MenuStateManager = MenuStateManager;
+  window.updateSidebarRole = updateRole;
 }

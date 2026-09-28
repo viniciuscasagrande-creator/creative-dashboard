@@ -503,6 +503,65 @@ function initApp() {
     }
     AppRouter.navigate('/dashboard');
   };
+
+  // Segregação de Papel Canônica: Produtor vs Financeiro Disk
+  window.switchGlobalRole = (role) => {
+    const isProd = role === 'PRODUTOR' || role === 'PRODUCER';
+    const normalizedRole = isProd ? 'PRODUTOR' : (role === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'FINANCEIRO');
+    window.currentRole = normalizedRole;
+    window.isProducerRole = isProd;
+
+    if (isProd) {
+      accessControlService.switchCurrentUser('user-producer-joao');
+    } else if (normalizedRole === 'ADMINISTRADOR') {
+      accessControlService.switchCurrentUser('user-admin-master');
+    } else {
+      accessControlService.switchCurrentUser('user-admin-carlos') || accessControlService.switchCurrentUser('user-fin-mariana');
+    }
+
+    const currentUser = accessControlService.getCurrentUser();
+
+    // Atualiza badge/rótulo do navbar
+    const labelEl = document.getElementById('navbar-role-label');
+    const iconEl = document.getElementById('navbar-role-icon');
+    if (labelEl) {
+      labelEl.textContent = isProd ? 'Produtor' : (normalizedRole === 'ADMINISTRADOR' ? 'Admin Master' : 'Financeiro Disk');
+    }
+    if (iconEl) {
+      iconEl.className = isProd ? 'ph-user text-primary' : (normalizedRole === 'ADMINISTRADOR' ? 'ph-crown text-warning' : 'ph-shield-check text-success');
+    }
+
+    // Atualiza sidebar
+    if (typeof MenuStateManager !== 'undefined' && typeof MenuStateManager.updateRole === 'function') {
+      MenuStateManager.updateRole(normalizedRole);
+    } else if (typeof window.updateSidebarRole === 'function') {
+      window.updateSidebarRole(normalizedRole);
+    }
+
+    // Sincroniza controlador de aprovações se aberto
+    if (typeof financialApprovalsController !== 'undefined' && typeof financialApprovalsController.switchRole === 'function') {
+      financialApprovalsController.switchRole(normalizedRole);
+    }
+
+    // Se estiver em rota restrita e mudou para Produtor, redireciona para /acesso-negado
+    if (typeof AppRouter !== 'undefined' && AppRouter.currentRoute) {
+      if (isProd && isDiskOnlyRoute(AppRouter.currentRoute)) {
+        AppRouter.navigate('/acesso-negado', { replace: true });
+      } else if (!isProd && AppRouter.currentRoute === '/acesso-negado') {
+        AppRouter.navigate('/financeiro/dashboard', { replace: true });
+      }
+    }
+
+    if (window.showAppNotification) {
+      window.showAppNotification(`Modo alternado: ${isProd ? 'Portal do Produtor' : 'Backoffice Financeiro Disk'} (${currentUser.name})`, 'info');
+    }
+  };
+
+  // Inicializar estado de papel na sidebar
+  if (typeof MenuStateManager !== 'undefined' && typeof MenuStateManager.updateRole === 'function') {
+    MenuStateManager.updateRole(window.currentRole || 'FINANCEIRO');
+  }
+
   window.openUserDetailsModal = (id) => {
     const user = accessControlService.getUserById(id);
     if (!user) return;

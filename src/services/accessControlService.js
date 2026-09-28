@@ -697,17 +697,41 @@ export const accessControlService = {
   },
 
   /**
+   * Verifica se o usuário autenticado ou informado possui papel/perfil de PRODUTOR
+   * Centraliza a verificação tanto por escopo de sessão quanto por window.currentRole
+   */
+  isProducerRole(user = this.getCurrentUser()) {
+    if (typeof window !== 'undefined') {
+      if (window.currentRole === 'PRODUTOR') return true;
+      if (window.currentRole === 'FINANCEIRO' || window.currentRole === 'ADMINISTRADOR') return false;
+      if (window.isProducerRole === true) return true;
+      if (window.isProducerRole === false) return false;
+    }
+    if (!user) return false;
+    const targetUser = this.resolveUser(user);
+    if (!targetUser) return false;
+    const roleStr = String(targetUser.profile || targetUser.role || '').toUpperCase();
+    return targetUser.userType === 'PRODUTOR' || roleStr.startsWith('PRODUTOR') || roleStr === 'PRODUTOR';
+  },
+
+  /**
+   * Verifica se o usuário pertence à equipe interna do Financeiro Disk (Backoffice / Gestão)
+   */
+  isDiskInternalRole(user = this.getCurrentUser()) {
+    return !this.isProducerRole(user);
+  },
+
+  /**
    * Verifica se o usuário tem permissão para acessar o módulo Gateways e Adquirentes (Implantação 5.4)
    * Regra rígida: Exclusivo do Financeiro Disk / Administrador. Produtor NUNCA tem acesso.
    */
   canAccessGateways(user = this.getCurrentUser()) {
     if (!user) return false;
-    const targetUser = this.resolveUser(user);
-    if (!targetUser) return false;
-    const roleStr = String(targetUser.profile || targetUser.role || '').toUpperCase();
-    if (targetUser.userType === 'PRODUTOR' || roleStr.startsWith('PRODUTOR_') || roleStr === 'PRODUTOR') {
+    if (this.isProducerRole(user)) {
       return false;
     }
+    const targetUser = this.resolveUser(user);
+    if (!targetUser) return false;
     return this.can(targetUser, 'financeiro.gateways.visualizar');
   },
 

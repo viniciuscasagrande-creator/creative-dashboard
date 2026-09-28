@@ -305,6 +305,50 @@ export const ROUTES = {
     title: 'Minhas Solicitações',
     sub: 'Portal do Produtor • Acompanhamento de protocolos e solicitações enviadas ao Financeiro Disk.'
   },
+
+  // Financeiro — Portal do Produtor (Menu Canônico de 8 Itens)
+  '/financeiro/meus-saldos': {
+    path: '/financeiro/meus-saldos',
+    view: 'financial-saldos',
+    module: 'financeiro',
+    menuKey: 'fin-produtor-saldos',
+    title: 'Meus Saldos',
+    sub: 'Saldo disponível, a liberar e detalhamento por evento do produtor.'
+  },
+  '/financeiro/solicitar-repasse': {
+    path: '/financeiro/solicitar-repasse',
+    view: 'financial-repass',
+    module: 'financeiro',
+    tab: 'payouts',
+    menuKey: 'fin-produtor-solicitar-repasse',
+    title: 'Solicitar Repasse',
+    sub: 'Solicitação de repasse financeiro de saldo disponível.'
+  },
+  '/financeiro/solicitar-antecipacao': {
+    path: '/financeiro/solicitar-antecipacao',
+    view: 'financial-advance',
+    module: 'financeiro',
+    menuKey: 'fin-produtor-solicitar-antecipacao',
+    title: 'Solicitar Antecipação',
+    sub: 'Solicitação de antecipação de recebíveis futuros.'
+  },
+  '/financeiro/transferir-eventos': {
+    path: '/financeiro/transferir-eventos',
+    view: 'financial-event-transfers',
+    module: 'financeiro',
+    tab: 'transfer',
+    menuKey: 'fin-produtor-transferir',
+    title: 'Transferir entre Eventos',
+    sub: 'Remanejamento de saldos entre eventos do produtor.'
+  },
+  '/financeiro/dados-bancarios': {
+    path: '/financeiro/dados-bancarios',
+    view: 'financial-accounts',
+    module: 'financeiro',
+    menuKey: 'fin-produtor-dados-bancarios',
+    title: 'Dados Bancários',
+    sub: 'Contas bancárias cadastradas para liquidação de repasses.'
+  },
   '/financeiro/compras': {
     path: '/financeiro/compras',
     view: 'procure-to-pay',
@@ -1112,8 +1156,96 @@ export const LEGACY_ROUTE_ALIASES = {
   'acesso-negado': '/acesso-negado',
   'access-denied': '/acesso-negado',
   'components-scrollspy': '/componentes/scrollspy',
-  'scrollspy': '/componentes/scrollspy'
+  'scrollspy': '/componentes/scrollspy',
+
+  // Aliases do Portal do Produtor
+  'meus-saldos': '/financeiro/meus-saldos',
+  'solicitar-repasse': '/financeiro/solicitar-repasse',
+  'solicitar-antecipacao': '/financeiro/solicitar-antecipacao',
+  'transferir-eventos': '/financeiro/transferir-eventos',
+  'dados-bancarios': '/financeiro/dados-bancarios',
+  'posicao-geral': '/financeiro/posicao-geral'
 };
+
+/**
+ * Catálogo Canônico de Rotas Financeiras Exclusivas do Financeiro Disk (Backoffice)
+ * O usuário com perfil PRODUTOR NUNCA tem permissão de visualizar estas rotas.
+ */
+export const DISK_ONLY_FINANCIAL_ROUTES = [
+  '/financeiro/aprovacoes',
+  '/financeiro/gateways-adquirentes',
+  '/financeiro/gateways',
+  '/financeiro/fechamento',
+  '/financeiro/posicao-geral',
+  '/financeiro/taxas-custos',
+  '/financeiro/tesouraria',
+  '/financeiro/cnab',
+  '/financeiro/pix',
+  '/financeiro/pagamentos-lote',
+  '/financeiro/conciliacao',
+  '/financeiro/conciliacao/bancaria',
+  '/financeiro/conciliacao/repasses',
+  '/financeiro/conciliacao/retorno',
+  '/financeiro/inteligencia',
+  '/financeiro/compras',
+  '/financeiro/compras/solicitacoes',
+  '/financeiro/compras/cotacoes',
+  '/financeiro/compras/pedidos',
+  '/financeiro/compras/recebimentos',
+  '/financeiro/centros-de-custos',
+  '/financeiro/orcamentos',
+  '/financeiro/fluxo-caixa',
+  '/financeiro/fluxo-caixa/evolucao',
+  '/financeiro/dre-evento',
+  '/financeiro/operadoras',
+  '/financeiro/metodos-pagamento',
+  '/financeiro/pagamentos-customizados',
+  '/financeiro/despesas'
+];
+
+/**
+ * Views legadas que são estritamente exclusivas do Financeiro Disk
+ */
+export const DISK_ONLY_LEGACY_VIEWS = [
+  'financial-gateways-adquirentes',
+  'gateways-adquirentes',
+  'financial-fechamento',
+  'financial-posicao-geral',
+  'financial-taxas-custos',
+  'treasury',
+  'procure-to-pay',
+  'cashflow-performance',
+  'cashflow-flow',
+  'cashflow-dre',
+  'financial-operators',
+  'financial-expenses'
+];
+
+/**
+ * Determina se um caminho ou rota é exclusivo da equipe interna da Disk
+ */
+export function isDiskOnlyRoute(path) {
+  if (!path) return false;
+  const p = path.toLowerCase().trim();
+  if (p.startsWith('/contabilidade')) return true;
+  return DISK_ONLY_FINANCIAL_ROUTES.some(r => r.toLowerCase() === p);
+}
+
+/**
+ * Determina se o usuário atual está operando sob papel de PRODUTOR
+ */
+export function isUserProducer() {
+  if (typeof window !== 'undefined') {
+    if (window.currentRole === 'PRODUTOR') return true;
+    if (window.currentRole === 'FINANCEIRO' || window.currentRole === 'ADMINISTRADOR') return false;
+    if (window.isProducerRole === true) return true;
+    if (window.isProducerRole === false) return false;
+    if (window.accessControlService && typeof window.accessControlService.isProducerRole === 'function') {
+      return window.accessControlService.isProducerRole();
+    }
+  }
+  return false;
+}
 
 /**
  * Resolve uma entrada de rota (canônica ou legada) para o contrato canônico
@@ -1133,15 +1265,11 @@ export function resolveRoute(input, subTab = null) {
   // 1. Garantir formato de caminho canônico com barra inicial
   const formattedPath = raw.startsWith('/') ? raw : '/' + raw;
 
-  // 1.5. Verificação de Acesso Estrito — Gateways e Adquirentes é Exclusivo do Financeiro Disk (Implantação 5.4)
-  if (formattedPath === '/financeiro/gateways-adquirentes' || raw === 'financial-gateways-adquirentes' || raw === 'gateways-adquirentes') {
-    const isProducer = typeof window !== 'undefined' && (
-      window.currentRole === 'PRODUTOR' ||
-      window.isProducerRole === true ||
-      (window.accessControlService && window.accessControlService.canAccessGateways && !window.accessControlService.canAccessGateways())
-    );
-    if (isProducer) {
-      console.warn('[resolveRoute] Acesso Negado: Gateways e Adquirentes é exclusivo do Financeiro Disk.');
+  // 1.5. Verificação de Acesso Estrito — Bloqueio de Rotas Exclusivas do Financeiro Disk para Produtor
+  const isProducer = isUserProducer();
+  if (isProducer) {
+    if (isDiskOnlyRoute(formattedPath) || DISK_ONLY_LEGACY_VIEWS.includes(raw) || formattedPath === '/financeiro/aprovacoes' || raw === 'aprovacoes') {
+      console.warn(`[resolveRoute] Acesso Negado: Rota/Recurso "${formattedPath}" é exclusivo do Financeiro Disk.`);
       return { ...ROUTES['/acesso-negado'] };
     }
   }
@@ -1176,6 +1304,10 @@ export function resolveRoute(input, subTab = null) {
   // 5. Verificar correspondência em aliases legados
   if (LEGACY_ROUTE_ALIASES[normalizedKey]) {
     const canonicalPath = LEGACY_ROUTE_ALIASES[normalizedKey];
+    if (isProducer && (isDiskOnlyRoute(canonicalPath) || canonicalPath === '/financeiro/aprovacoes')) {
+      console.warn(`[resolveRoute] Acesso Negado (via alias "${normalizedKey}"): Rota "${canonicalPath}" é exclusiva do Financeiro Disk.`);
+      return { ...ROUTES['/acesso-negado'] };
+    }
     if (explicitSubTab && (normalizedKey === 'contabilidade' || normalizedKey === 'accounting-disk')) {
       const canonicalSubRoute = ACCOUNTING_TAB_TO_ROUTE[explicitSubTab];
       if (canonicalSubRoute && ROUTES[canonicalSubRoute]) {
@@ -1192,6 +1324,9 @@ export function resolveRoute(input, subTab = null) {
 
   // 6. Se o input for diretamente uma tab contábil conhecida (ex: 'dre', 'conciliacao', 'rastreabilidade')
   if (ACCOUNTING_TAB_TO_ROUTE[normalizedKey]) {
+    if (isProducer) {
+      return { ...ROUTES['/acesso-negado'] };
+    }
     const canonicalSubRoute = ACCOUNTING_TAB_TO_ROUTE[normalizedKey];
     if (ROUTES[canonicalSubRoute]) {
       return { ...ROUTES[canonicalSubRoute] };
@@ -1215,4 +1350,7 @@ if (typeof window !== 'undefined') {
   window.ROUTES = ROUTES;
   window.LEGACY_ROUTE_ALIASES = LEGACY_ROUTE_ALIASES;
   window.resolveRoute = resolveRoute;
+  window.DISK_ONLY_FINANCIAL_ROUTES = DISK_ONLY_FINANCIAL_ROUTES;
+  window.isDiskOnlyRoute = isDiskOnlyRoute;
+  window.isUserProducer = isUserProducer;
 }
