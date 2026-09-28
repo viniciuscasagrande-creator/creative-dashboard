@@ -17,6 +17,9 @@ import { initUnifiedPayoutsModule, handleProducerRepasseSubmitConfirmed, refresh
 import { financialApprovalsController } from './controllers/financialApprovalsController.js';
 import { receivableAnticipationController } from './controllers/receivableAnticipationController.js';
 import { producerBankAccountController } from './controllers/producerBankAccountController.js';
+import { refundController } from './controllers/refundController.js';
+import { supplierPaymentController } from './controllers/supplierPaymentController.js';
+import { financialConsolidationController } from './controllers/financialConsolidationController.js';
 import { accessControlService } from './services/accessControlService.js';
 import { accessAuditService } from './services/accessAuditService.js';
 import { accessManagementController } from './controllers/accessManagementController.js';
@@ -387,6 +390,36 @@ function initApp() {
     AppRouter.registerHook('financial-accounts', () => {
       if (producerBankAccountController && typeof producerBankAccountController.loadBankAccountView === 'function') {
         producerBankAccountController.loadBankAccountView();
+      }
+    });
+
+    AppRouter.registerHook('financial-refunds', () => {
+      if (refundController && typeof refundController.loadRefundView === 'function') {
+        refundController.loadRefundView();
+      }
+    });
+
+    AppRouter.registerHook('financial-expenses', () => {
+      if (supplierPaymentController && typeof supplierPaymentController.loadPaymentView === 'function') {
+        supplierPaymentController.loadPaymentView();
+      }
+    });
+
+    AppRouter.registerHook('financial-posicao-geral', () => {
+      if (financialConsolidationController && typeof financialConsolidationController.renderPosicaoGeral === 'function') {
+        financialConsolidationController.renderPosicaoGeral();
+      }
+    });
+
+    AppRouter.registerHook('financial-saldos', (route) => {
+      if (financialConsolidationController && typeof financialConsolidationController.renderSaldos === 'function') {
+        financialConsolidationController.renderSaldos(route.query?.event || 'TODOS');
+      }
+    });
+
+    AppRouter.registerHook('financial-taxas-custos', () => {
+      if (financialConsolidationController && typeof financialConsolidationController.renderTaxasCustos === 'function') {
+        financialConsolidationController.renderTaxasCustos();
       }
     });
 
@@ -3058,6 +3091,15 @@ function initFinanceModule() {
   }
   if (typeof producerBankAccountController !== 'undefined' && typeof producerBankAccountController.init === 'function') {
     producerBankAccountController.init();
+  }
+  if (typeof refundController !== 'undefined' && typeof refundController.init === 'function') {
+    refundController.init();
+  }
+  if (typeof supplierPaymentController !== 'undefined' && typeof supplierPaymentController.init === 'function') {
+    supplierPaymentController.init();
+  }
+  if (typeof financialConsolidationController !== 'undefined' && typeof financialConsolidationController.init === 'function') {
+    financialConsolidationController.init();
   }
 
   // Render new Ticketera modules

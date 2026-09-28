@@ -2780,3 +2780,61 @@ div:has(> canvas),
 .nav-scrollspy .nav .nav-link {
   padding-left: 2rem;
 }
+
+/* ==========================================================================
+   SIDEBAR SMART SCROLL & FIXED HEADER (IMPLANTAÇÃO 5 & CORREÇÃO NAVEGAÇÃO)
+   ========================================================================== */
+.sidebar.sidebar-main {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar.sidebar-main .sidebar-content {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.sidebar-section-header-fixed {
+  flex-shrink: 0 !important;
+  background-color: inherit;
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-navigation-scroll-area {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scroll-behavior: smooth;
+}
+
+/* Operational Section Dividers in Sidebar Submenus */
+.nav-item-section-divider {
+  padding: 10px 18px 4px 18px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 6px;
+  user-select: none;
+  pointer-events: none;
+}
+
+.nav-item-section-divider:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 6px;
+}
+
+.nav-item-section-divider i {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-right: 5px;
+}
+

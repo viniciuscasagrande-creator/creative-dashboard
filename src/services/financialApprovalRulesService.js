@@ -6,6 +6,8 @@
  */
 
 import { eventBalanceService } from './eventBalanceService.js';
+import { refundService } from './refundService.js';
+import { supplierPaymentService } from './supplierPaymentService.js';
 
 /**
  * Matriz das 3 Categorias Canônicas de Operações (Transversal Produtor ➔ Financeiro)
@@ -123,10 +125,10 @@ export const APPROVAL_POLICIES = {
     ]
   },
   ESTORNO: {
-    title: 'Estorno Financeiro / Chargeback',
+    title: 'Estorno Financeiro / Cancelamento de Venda',
     tiers: [
       { maxAmount: 1000, level: 'NIVEL_1', risk: 'BAIXO', slaHours: 4 },
-      { maxAmount: Infinity, level: 'NIVEL_2', risk: 'MEDIO', slaHours: 4 }
+      { maxAmount: Infinity, level: 'NIVEL_2', risk: 'ALTO', slaHours: 2 }
     ]
   },
   COMPRA: {
@@ -163,6 +165,17 @@ export const APPROVAL_POLICIES = {
 };
 
 /**
+ * Agrupamentos Canônicos de Filtro da Central de Solicitações (Parte E)
+ */
+export const CENTRAL_CATEGORY_GROUPS = {
+  TODAS: { code: 'TODAS', label: 'Todas as Operações', icon: 'ph-list-dashes', types: [] },
+  MOVIMENTACAO: { code: 'MOVIMENTACAO', label: 'Movimentação (Repasses & Transferências)', icon: 'ph-arrows-left-right', types: ['REPASSE', 'TRANSFERENCIA_EVENTOS'] },
+  CREDITO_RECEBIVEIS: { code: 'CREDITO_RECEBIVEIS', label: 'Crédito & Recebíveis (Antecipações)', icon: 'ph-hand-coins', types: ['ANTECIPACAO'] },
+  CADASTRO_FINANCEIRO: { code: 'CADASTRO_FINANCEIRO', label: 'Cadastro Financeiro (Dados Bancários)', icon: 'ph-bank', types: ['ALTERACAO_DADOS_BANCARIOS'] },
+  SAIDAS: { code: 'SAIDAS', label: 'Saídas (Pagamentos & Estornos)', icon: 'ph-arrow-fat-line-down', types: ['PAGAMENTO', 'ESTORNO', 'PAGAMENTO_LOTE'] }
+};
+
+/**
  * Mapeamentos Visuais em Português
  */
 export const STATUS_MAP = {
@@ -175,11 +188,15 @@ export const STATUS_MAP = {
   AGUARDANDO_ACEITE_PRODUTOR: { label: 'Condição Ajustada (Aguardando Aceite)', badgeClass: 'bg-info-subtle text-info border border-info' },
   REENVIADA: { label: 'Reenviada pelo Produtor', badgeClass: 'bg-primary-subtle text-primary border border-primary' },
   APROVADA: { label: 'Aprovada', badgeClass: 'bg-success text-white' },
+  AGENDADA: { label: 'Agendada para Vencimento', badgeClass: 'bg-indigo text-white' },
   REJEITADA: { label: 'Reprovada', badgeClass: 'bg-danger text-white' },
   REPROVADA: { label: 'Reprovada', badgeClass: 'bg-danger text-white' },
   EM_EXECUCAO: { label: 'Em Execução Bancária', badgeClass: 'bg-primary text-white' },
+  PROCESSANDO: { label: 'Em Processamento', badgeClass: 'bg-primary text-white' },
   CONCLUIDA: { label: 'Concluída / Executada', badgeClass: 'bg-success text-white' },
+  PAGA: { label: 'Paga / Liquidada', badgeClass: 'bg-success text-white' },
   FALHA_EXECUCAO: { label: 'Falha na Execução', badgeClass: 'bg-danger text-white' },
+  FALHA_PAGAMENTO: { label: 'Falha no Pagamento', badgeClass: 'bg-danger text-white' },
   CANCELADA: { label: 'Cancelada', badgeClass: 'bg-dark text-white' }
 };
 
@@ -478,7 +495,211 @@ export const financialApprovalRulesService = {
       riskReasons.push('Alteração de domicílio bancário ativa alçada crítica.');
     }
 
-    // 4. Checagem de limites elevados
+    // 5. Checagens específicas de Estorno Financeiro
+    if (type === 'ESTORNO') {
+      const order = payload.order || (payload.orderId ? refundService.getOrder(payload.orderId) : null);
+      if (order) {
+        automatedValidations.push({
+          ruleCode: 'RN_PEDIDO_ORIGEM',
+          ruleTitle: 'Vínculo com Pedido/Transação Original',
+          passed: true,
+          severity: 'INFO',
+          message: `Estorno vinculado ao pedido #${order.orderNumber || order.id} (${order.client?.name || order.customer?.name} - ${order.payment?.gateway || 'Adquirente'}).`
+        });
+
+        // Checagem de ingressos consumidos / validados na portaria
+        const ticketList = payload.tickets || order.tickets || [];
+        const selectedTicketIds = payload.ticketIds || (payload.tickets ? payload.tickets.map(t => t.id) : []);
+        const ticketsToCheck = selectedTicketIds.length > 0
+          ? ticketList.filter(t => selectedTicketIds.includes(t.id))
+          : ticketList;
+
+        const hasCheckedInTickets = ticketsToCheck.some(t => t.status === 'validado' || t.checkedIn === true);
+
+        if (hasCheckedInTickets) {
+          automatedValidations.push({
+            ruleCode: 'RN_INGRESSO_CONSUMIDO',
+            ruleTitle: 'Alerta Crítico: Ingresso Já Validado/Consumido',
+            passed: false,
+            severity: 'WARN',
+            message: 'Atenção de Compliance: Um ou mais ingressos selecionados já foram validados na portaria/check-in! Exige alçada Nível 2 / Excepcional.'
+          });
+          riskReasons.push('Ingresso já validado/consumido na portaria.');
+          matchedTier = { level: 'NIVEL_2', risk: 'CRITICO', slaHours: 2, maxAmount: Infinity };
+        } else {
+          automatedValidations.push({
+            ruleCode: 'RN_INGRESSO_STATUS',
+            ruleTitle: 'Status dos Ingressos',
+            passed: true,
+            severity: 'INFO',
+            message: 'Todos os ingressos a estornar estão em aberto (não validados na portaria).'
+          });
+        }
+
+        // Checagem de saldo estornável do pedido
+        const availableRefund = order.payment ? order.payment.availableForRefund : (order.totalAmount - (order.refundedAmount || 0));
+        if (numAmount > availableRefund) {
+          automatedValidations.push({
+            ruleCode: 'RN_VALOR_ESTORNAVEL',
+            ruleTitle: 'Limite Estornável da Transação',
+            passed: false,
+            severity: 'BLOCK',
+            message: `Valor solicitado (R$ ${numAmount.toFixed(2)}) supera o saldo remanescente estornável do pedido (R$ ${availableRefund.toFixed(2)}).`
+          });
+          riskReasons.push('Valor pretendido excede o limite disponível do pagamento.');
+        } else {
+          automatedValidations.push({
+            ruleCode: 'RN_VALOR_ESTORNAVEL',
+            ruleTitle: 'Limite Estornável da Transação',
+            passed: true,
+            severity: 'INFO',
+            message: `Valor de R$ ${numAmount.toFixed(2)} está dentro do limite estornável da transação (R$ ${availableRefund.toFixed(2)}).`
+          });
+        }
+
+        // Alerta de venda já repassada ao produtor
+        if (order.payment?.alreadyPaidOutToProducer) {
+          automatedValidations.push({
+            ruleCode: 'RN_VENDA_REPASSADA',
+            ruleTitle: 'Aviso: Venda Já Repassada ao Produtor',
+            passed: true,
+            severity: 'WARN',
+            message: `O valor desta venda (R$ ${(order.payment.producerPaidOutAmount || order.payment.netAmount || 0).toFixed(2)}) já foi repassado anteriormente. O estorno gerará débito no saldo do evento.`
+          });
+          riskReasons.push('Venda já liquidada/repassada ao produtor.');
+        }
+      } else {
+        automatedValidations.push({
+          ruleCode: 'RN_PEDIDO_ORIGEM',
+          ruleTitle: 'Vínculo com Pedido/Transação Original',
+          passed: false,
+          severity: 'BLOCK',
+          message: 'Todo estorno financeiro deve ter um pedido e transação original identificados.'
+        });
+        riskReasons.push('Pedido original não identificado.');
+      }
+
+      automatedValidations.push({
+        ruleCode: 'RN_MAKER_CHECKER',
+        ruleTitle: 'Segregação de Funções Maker/Checker',
+        passed: true,
+        severity: 'INFO',
+        message: 'Operação sujeita à governança estrita: o solicitante não pode aprovar ou executar o estorno.'
+      });
+    }
+
+    // 6. Checagens específicas de Pagamento a Fornecedores
+    if (type === 'PAGAMENTO' || type === 'PAGAMENTO_LOTE') {
+      const supplierId = payload.supplierId;
+      const supplier = supplierId ? supplierPaymentService.getSupplier(supplierId) : null;
+
+      if (supplier) {
+        automatedValidations.push({
+          ruleCode: 'RN_FORNECEDOR_HOMOLOGADO',
+          ruleTitle: 'Fornecedor Cadastrado & Homologado',
+          passed: true,
+          severity: 'INFO',
+          message: `Fornecedor regular: ${supplier.tradeName || supplier.legalName} (${supplier.taxId}).`
+        });
+
+        // Checagem de alteração bancária recente (< 30 dias)
+        if (supplierPaymentService.hasRecentBankChange(supplier)) {
+          automatedValidations.push({
+            ruleCode: 'RN_DADOS_BANCARIOS_RECENTES',
+            ruleTitle: 'Alerta Antifraude: Alteração Bancária Recente (< 30 dias)',
+            passed: false,
+            severity: 'WARN',
+            message: 'Alerta de Segurança: Os dados bancários deste fornecedor foram atualizados há menos de 30 dias. Exige validação Nível 2.'
+          });
+          riskReasons.push('Dados bancários do fornecedor alterados recentemente (< 30 dias).');
+          if (matchedTier.level === 'NIVEL_1') {
+            matchedTier = { level: 'NIVEL_2', risk: 'ALTO', slaHours: 2, maxAmount: 50000 };
+          }
+        } else {
+          automatedValidations.push({
+            ruleCode: 'RN_DADOS_BANCARIOS_RECENTES',
+            ruleTitle: 'Estabilidade Cadastral Bancária',
+            passed: true,
+            severity: 'INFO',
+            message: 'Dados bancários do fornecedor estáveis e sem alterações recentes.'
+          });
+        }
+      } else if (payload.supplierName) {
+        automatedValidations.push({
+          ruleCode: 'RN_FORNECEDOR_HOMOLOGADO',
+          ruleTitle: 'Fornecedor Identificado',
+          passed: true,
+          severity: 'INFO',
+          message: `Fornecedor: ${payload.supplierName}.`
+        });
+      }
+
+      // Checagem de documento fiscal / comprobatório obrigatório
+      const hasDoc = payload.documentNumber || payload.invoiceNumber || (payload.documents && payload.documents.length > 0) || payload.documentFile;
+      if (hasDoc) {
+        automatedValidations.push({
+          ruleCode: 'RN_DOCUMENTO_FISCAL',
+          ruleTitle: 'Documento Comprobatório / Nota Fiscal',
+          passed: true,
+          severity: 'INFO',
+          message: `Documento comprobatório informado: ${payload.documentType || 'NF'} ${payload.documentNumber || payload.invoiceNumber || 'Anexo'}.`
+        });
+      } else {
+        automatedValidations.push({
+          ruleCode: 'RN_DOCUMENTO_FISCAL',
+          ruleTitle: 'Documento Comprobatório / Nota Fiscal',
+          passed: false,
+          severity: 'WARN',
+          message: 'Nenhum documento fiscal ou recibo anexado ao pagamento. Requer alçada Nível 2.'
+        });
+        riskReasons.push('Ausência de documento fiscal comprobatório.');
+        if (matchedTier.level === 'NIVEL_1') {
+          matchedTier = { level: 'NIVEL_2', risk: 'MEDIO', slaHours: 2, maxAmount: 50000 };
+        }
+      }
+
+      // Checagem de duplicidade preventiva
+      if (payload.existingRequests) {
+        const dupCheck = supplierPaymentService.checkDuplicatePayment({
+          supplierId: payload.supplierId,
+          documentNumber: payload.documentNumber,
+          amount: numAmount,
+          dueDate: payload.dueDate,
+          existingRequests: payload.existingRequests,
+          excludeRequestId: payload.requestId
+        });
+        if (dupCheck.isDuplicate) {
+          const firstAlert = dupCheck.alerts[0]?.message || 'Detectada duplicidade de pagamento.';
+          automatedValidations.push({
+            ruleCode: 'RN_SUSPEITA_DUPLICIDADE',
+            ruleTitle: 'Alerta Crítico: Suspeita de Pagamento Duplicado',
+            passed: false,
+            severity: 'WARN',
+            message: firstAlert
+          });
+          riskReasons.push('Possível pagamento duplicado detectado.');
+        } else {
+          automatedValidations.push({
+            ruleCode: 'RN_SEM_DUPLICIDADE',
+            ruleTitle: 'Verificação de Duplicidade',
+            passed: true,
+            severity: 'INFO',
+            message: 'Nenhum pagamento idêntico ou concorrente encontrado.'
+          });
+        }
+      }
+
+      // Maker / Checker
+      automatedValidations.push({
+        ruleCode: 'RN_MAKER_CHECKER',
+        ruleTitle: 'Segregação de Funções Maker/Checker',
+        passed: true,
+        severity: 'INFO',
+        message: 'Operação sujeita à governança estrita: o solicitante não pode aprovar ou liquidar o pagamento.'
+      });
+    }
+
+    // 7. Checagem de limites elevados
     if (numAmount > 50000) {
       riskReasons.push(`Operação de grande porte (> R$ 50.000,00) exige Dupla Aprovação.`);
     }

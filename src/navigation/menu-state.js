@@ -222,6 +222,80 @@ function openActiveParent(activeLink) {
 }
 
 /**
+ * Localiza o container navegável que sofre scroll na sidebar.
+ * Nunca retorna o documento inteiro ou window.
+ */
+function getScrollContainer() {
+  if (typeof document === 'undefined') return null;
+  const scrollArea = document.getElementById('sidebar-nav-scroll-area') || 
+                     document.querySelector('.sidebar-navigation-scroll-area');
+  if (scrollArea) return scrollArea;
+  const content = document.querySelector('.sidebar.sidebar-main .sidebar-content');
+  if (content) return content;
+  return document.querySelector('.sidebar.sidebar-main');
+}
+
+/**
+ * Rola a sidebar AUTOMATICAMENTE para que o cabeçalho do módulo selecionado
+ * fique posicionado no TOPO da área navegável da sidebar.
+ * NÃO rola a página central nem a janela (nunca window.scrollTo).
+ * @param {HTMLElement} moduleGroup - Elemento do grupo (li.nav-item-submenu)
+ * @param {boolean} [smooth=true] - Transição suave
+ */
+function scrollModuleToTop(moduleGroup, smooth = true) {
+  if (!moduleGroup) return;
+  const container = getScrollContainer();
+  if (!container) return;
+
+  const containerRect = container.getBoundingClientRect ? container.getBoundingClientRect() : { top: 0 };
+  const moduleRect = moduleGroup.getBoundingClientRect ? moduleGroup.getBoundingClientRect() : { top: 0 };
+
+  const currentScroll = container.scrollTop || 0;
+  const target = currentScroll + (moduleRect.top - containerRect.top);
+
+  if (typeof container.scrollTo === 'function') {
+    container.scrollTo({
+      top: Math.max(0, Math.round(target)),
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+  } else {
+    container.scrollTop = Math.max(0, Math.round(target));
+  }
+}
+
+/**
+ * Garante que o item de subrota ativo fique visível dentro da área navegável,
+ * sem movimentar a página inteira.
+ * @param {HTMLElement} item
+ */
+function ensureActiveItemVisible(item) {
+  if (!item) return;
+  const container = getScrollContainer();
+  if (!container) return;
+
+  const cRect = container.getBoundingClientRect ? container.getBoundingClientRect() : { top: 0, bottom: 1000 };
+  const iRect = item.getBoundingClientRect ? item.getBoundingClientRect() : { top: 0, bottom: 0 };
+
+  if (iRect.top < cRect.top) {
+    const diff = iRect.top - cRect.top - 12;
+    const target = (container.scrollTop || 0) + diff;
+    if (typeof container.scrollTo === 'function') {
+      container.scrollTo({ top: Math.max(0, Math.round(target)), behavior: 'smooth' });
+    } else {
+      container.scrollTop = Math.max(0, Math.round(target));
+    }
+  } else if (iRect.bottom > cRect.bottom) {
+    const diff = iRect.bottom - cRect.bottom + 12;
+    const target = (container.scrollTop || 0) + diff;
+    if (typeof container.scrollTo === 'function') {
+      container.scrollTo({ top: Math.max(0, Math.round(target)), behavior: 'smooth' });
+    } else {
+      container.scrollTop = Math.max(0, Math.round(target));
+    }
+  }
+}
+
+/**
  * Sincronização centralizada do estado visual da sidebar.
  * Deve ser invocada pelo AppRouter em todas as transições (navegação, popstate, F5, deep-link).
  * @param {object} routeState - Estado da rota { path, view, module, tab, menuKey }
@@ -241,6 +315,20 @@ function sync(routeState) {
 
   // 4. Sincronizar acessibilidade (aria-expanded e aria-current)
   syncAccessibility(routeState);
+
+  // 5. Garantir visibilidade do item ativo na área navegável (Comportamento B e C)
+  if (activeLink) {
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        ensureActiveItemVisible(activeLink);
+        setTimeout(() => {
+          ensureActiveItemVisible(activeLink);
+        }, 60);
+      });
+    } else {
+      ensureActiveItemVisible(activeLink);
+    }
+  }
 
   if (typeof window !== 'undefined' && window.NAV_DEBUG) {
     console.debug('[MENU_STATE]', {
@@ -269,10 +357,27 @@ function init() {
     const group = trigger.closest('.nav-item-submenu');
     if (!group) return;
 
-    // Deixar a animação/toggle do Limitless ou Bootstrap completar e sincronizar aria-expanded
-    setTimeout(() => {
+    e.preventDefault();
+
+    // 1. Fechar outros grupos irmãos (comportamento accordion exclusivo)
+    closeInactiveParents(group);
+
+    // 2. Abrir grupo e resetar posição anterior garantindo que fique no topo
+    openGroup(group);
+
+    // 3. Posicionar o cabeçalho no TOPO da área navegável da sidebar (Comportamento A)
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        scrollModuleToTop(group, true);
+        setTimeout(() => {
+          scrollModuleToTop(group, true);
+          syncAccessibility();
+        }, 60);
+      });
+    } else {
+      scrollModuleToTop(group, false);
       syncAccessibility();
-    }, 60);
+    }
   });
 }
 
@@ -286,6 +391,9 @@ export const MenuStateManager = {
   closeGroup,
   syncAccessibility,
   findActiveLink,
+  getScrollContainer,
+  scrollModuleToTop,
+  ensureActiveItemVisible,
   init
 };
 

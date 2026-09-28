@@ -13,6 +13,8 @@ import { accessControlService } from '../services/accessControlService.js';
 // Estado local da tela de aprovações
 let currentRole = 'FINANCEIRO'; // 'FINANCEIRO' | 'PRODUTOR' | 'ADMINISTRADOR'
 let activeTab = 'todas';        // 'todas' | 'pendentes' | 'em_analise' | 'devolvidas' | 'aprovadas' | 'rejeitadas' | 'concluidas'
+let activeCategoryGroup = 'TODAS'; // 'TODAS' | 'MOVIMENTACAO' | 'CREDITO_RECEBIVEIS' | 'CADASTRO_FINANCEIRO' | 'SAIDAS'
+let activeQueue = 'todas';         // 'todas' | 'minha-fila' | 'nao-atribuidas'
 let currentActor = accessControlService.getCurrentUser() || accessControlService.getUserById('user-admin-carlos') || {
   id: 'user-admin-carlos',
   name: 'Carlos Lima',
@@ -113,6 +115,35 @@ export const financialApprovalsController = {
   },
 
   /**
+   * Alterna agrupamento canônico da central (Parte E)
+   */
+  switchCategoryGroup(group) {
+    activeCategoryGroup = group;
+    document.querySelectorAll('.btn-category-group').forEach(btn => {
+      btn.classList.remove('active', 'btn-primary', 'text-white');
+      btn.classList.add('btn-light', 'text-dark');
+    });
+    const activeBtn = document.getElementById(`btn-cat-group-${group.toLowerCase()}`);
+    if (activeBtn) {
+      activeBtn.classList.remove('btn-light', 'text-dark');
+      activeBtn.classList.add('active', 'btn-primary', 'text-white');
+    }
+    const sel = document.getElementById('select-filter-approval-category-group');
+    if (sel && sel.value !== group) sel.value = group;
+    this.renderTable();
+  },
+
+  /**
+   * Alterna a fila de trabalho (todas, minha-fila, nao-atribuidas)
+   */
+  switchQueue(queue) {
+    activeQueue = queue;
+    const sel = document.getElementById('select-filter-approval-queue');
+    if (sel && sel.value !== queue) sel.value = queue;
+    this.renderTable();
+  },
+
+  /**
    * Atualiza todo o painel, KPIs e badges
    */
   refreshDashboard() {
@@ -162,6 +193,10 @@ export const financialApprovalsController = {
     const search = document.getElementById('input-filter-approval-search')?.value || '';
     const type = document.getElementById('select-filter-approval-type')?.value || 'TODOS';
     const risk = document.getElementById('select-filter-approval-risk')?.value || 'TODOS';
+    const catGroupEl = document.getElementById('select-filter-approval-category-group');
+    const queueEl = document.getElementById('select-filter-approval-queue');
+    const categoryGroup = catGroupEl && catGroupEl.value ? catGroupEl.value : activeCategoryGroup;
+    const queue = queueEl && queueEl.value ? queueEl.value : activeQueue;
 
     let statusFilter = 'TODAS';
     if (activeTab === 'pendentes' || activeTab === 'novas') statusFilter = 'PENDENTES';
@@ -176,7 +211,10 @@ export const financialApprovalsController = {
       type,
       riskLevel: risk,
       search,
-      producerId: currentRole === 'PRODUTOR' ? currentActor.producerId : null
+      producerId: currentRole === 'PRODUTOR' ? currentActor.producerId : null,
+      categoryGroup: categoryGroup !== 'TODAS' ? categoryGroup : undefined,
+      queue,
+      currentUserId: currentActor.id
     });
 
     if (list.length === 0) {
@@ -629,6 +667,162 @@ export const financialApprovalsController = {
             </div>
           </div>
         `;
+      } else if (req.type === 'ESTORNO') {
+        const p = req.payload || {};
+        const client = p.client || p.orderSnapshot?.client || {};
+        const tickets = p.tickets || p.orderSnapshot?.tickets || [];
+        const hasCheckedIn = p.hasCheckedInTickets || tickets.some(t => t.status === 'validado' || t.checkedIn === true);
+
+        financialSituationHtml = `
+          <div class="card border border-danger-subtle shadow-sm mb-3">
+            <div class="card-header bg-danger-subtle py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-danger d-flex align-items-center gap-1">
+                <i class="ph-arrow-counter-clockwise text-danger"></i> Análise de Estorno / Transação Original
+              </strong>
+              <span class="badge ${hasCheckedIn ? 'bg-danger text-white' : 'bg-primary-subtle text-primary border'} fs-xxs">
+                ${hasCheckedIn ? 'Alçada Nível 2 / Crítico' : 'Alçada Nível 1'}
+              </span>
+            </div>
+            <div class="card-body p-3">
+              ${hasCheckedIn ? `
+                <div class="alert alert-danger py-2 px-3 fs-xs mb-3">
+                  <i class="ph-warning-octagon me-1 fs-6 align-middle"></i>
+                  <strong>Alerta Crítico de Portaria:</strong> Um ou mais ingressos selecionados para devolução já constam como <strong>validados/consumidos na portaria</strong>. A aprovação é de caráter excepcional e restrita a Gestor Financeiro (N2).
+                </div>
+              ` : ''}
+
+              ${p.alreadyPaidOut ? `
+                <div class="alert alert-warning py-2 px-3 fs-xs mb-3">
+                  <i class="ph-info me-1 fs-6 align-middle"></i>
+                  <strong>Aviso Financeiro:</strong> O valor desta venda já foi repassado ao produtor. A aprovação debitará <strong>R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> do saldo do evento.
+                </div>
+              ` : ''}
+
+              <div class="row g-2 mb-3">
+                <div class="col-md-6 border-end">
+                  <span class="fs-xxs text-muted text-uppercase fw-bold d-block mb-1">Dados da Venda Original</span>
+                  <table class="table table-sm table-borderless fs-xxs mb-0">
+                    <tr><td class="text-muted">Pedido:</td><td class="text-dark font-monospace fw-bold">#${p.orderNumber || p.orderId || '—'}</td></tr>
+                    <tr><td class="text-muted">Comprador:</td><td class="text-dark">${client.name || 'Cliente'}</td></tr>
+                    <tr><td class="text-muted">CPF:</td><td class="text-dark font-monospace">${client.cpf || '—'}</td></tr>
+                    <tr><td class="text-muted">Adquirente:</td><td class="text-dark font-monospace">${p.gateway || 'GATEWAY'}</td></tr>
+                    <tr><td class="text-muted">ID Transação:</td><td class="text-dark font-monospace">${p.transactionId || '—'}</td></tr>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <span class="fs-xxs text-muted text-uppercase fw-bold d-block mb-1">Valores da Transação</span>
+                  <div class="p-2 bg-light rounded border fs-xxs font-monospace">
+                    <div class="d-flex justify-content-between"><span>Valor Original:</span> <strong>R$ ${(p.orderSnapshot?.originalAmount || req.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
+                    <div class="d-flex justify-content-between text-warning"><span>Já Estornado:</span> <span>R$ ${(p.orderSnapshot?.alreadyRefunded || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div>
+                    <div class="d-flex justify-content-between text-danger fw-bold border-top pt-1 mt-1">
+                      <span>A Estornar Agora:</span> <span>R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <strong class="fs-xxs text-uppercase text-muted d-block mb-1">Ingressos Selecionados para Devolução</strong>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered fs-xxs mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Código</th>
+                      <th>Categoria</th>
+                      <th>Setor</th>
+                      <th class="text-center">Status Portaria</th>
+                      <th class="text-end">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tickets.map(t => `
+                      <tr>
+                        <td class="font-monospace">${t.id}</td>
+                        <td>${t.category}</td>
+                        <td>${t.sector || 'Geral'}</td>
+                        <td class="text-center">
+                          ${t.status === 'validado' || t.checkedIn ? `
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-xxs"><i class="ph-check-circle me-1"></i> Validado</span>
+                          ` : `
+                            <span class="badge bg-success-subtle text-success fs-xxs">Em aberto</span>
+                          `}
+                        </td>
+                        <td class="text-end font-monospace">R$ ${(t.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (req.type === 'PAGAMENTO' || req.type === 'PAGAMENTO_LOTE') {
+        const p = req.payload || {};
+        const sup = p.supplierSnapshot || {};
+        const bank = p.supplierBankSnapshot || p.bankDetails || {};
+        const hasRecentChange = p.hasRecentBankChange || false;
+        const hasDup = p.duplicateAlerts && p.duplicateAlerts.length > 0;
+
+        financialSituationHtml = `
+          <div class="card border border-info-subtle shadow-sm mb-3">
+            <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
+                <i class="ph-credit-card text-info"></i> Análise de Pagamento a Fornecedor
+              </strong>
+              <span class="badge bg-info-subtle text-info border border-info-subtle fs-xxs">Conferência Fiscal & Bancária</span>
+            </div>
+            <div class="card-body p-3">
+              ${hasRecentChange ? `
+                <div class="alert alert-warning py-2 px-3 fs-xs mb-3 border-warning">
+                  <i class="ph-shield-warning text-warning fs-6 me-1 align-middle"></i>
+                  <strong>Alerta de Segurança Cadastral:</strong> Os dados bancários deste fornecedor foram atualizados há menos de 30 dias. Exige validação Nível 2 / Gestor Financeiro.
+                </div>
+              ` : ''}
+
+              ${hasDup ? `
+                <div class="alert alert-danger py-2 px-3 fs-xs mb-3 border-danger">
+                  <i class="ph-warning-octagon text-danger fs-6 me-1 align-middle"></i>
+                  <strong>Suspeita de Duplicidade:</strong> ${p.duplicateAlerts[0]?.message || 'Detectada duplicidade de pagamento.'}
+                </div>
+              ` : ''}
+
+              <div class="row g-2 mb-3">
+                <div class="col-md-6 border-end">
+                  <span class="fs-xxs text-muted text-uppercase fw-bold d-block mb-1">Dados do Fornecedor</span>
+                  <table class="table table-sm table-borderless fs-xxs mb-0">
+                    <tr><td class="text-muted">Razão Social:</td><td class="text-dark fw-bold">${sup.legalName || p.supplierName || 'Fornecedor'}</td></tr>
+                    <tr><td class="text-muted">CNPJ / CPF:</td><td class="text-dark font-monospace">${sup.taxId || p.supplierTaxId || '—'}</td></tr>
+                    <tr><td class="text-muted">Categoria:</td><td class="text-dark">${sup.primaryCategory || p.category || 'Geral'}</td></tr>
+                    <tr><td class="text-muted">Centro de Custo:</td><td class="text-dark">${p.costCenterName || p.costCenterId || 'Geral'}</td></tr>
+                    <tr><td class="text-muted">Competência:</td><td class="text-dark font-monospace">${p.competency || '—'}</td></tr>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <span class="fs-xxs text-muted text-uppercase fw-bold d-block mb-1">Documento Comprobatório</span>
+                  <div class="p-2 bg-light rounded border fs-xxs mb-2">
+                    <div><span class="text-muted">Tipo:</span> <strong class="text-dark">${p.documentType || 'NOTA_FISCAL'}</strong></div>
+                    <div><span class="text-muted">Número:</span> <strong class="text-dark font-monospace">${p.documentNumber || p.invoiceNumber || '—'}</strong></div>
+                    ${p.documentKey ? `<div class="text-truncate"><span class="text-muted">Chave:</span> <span class="font-monospace text-muted">${p.documentKey}</span></div>` : ''}
+                  </div>
+                  <div class="p-2 bg-primary-subtle rounded border border-primary-subtle fs-xxs">
+                    <div class="d-flex justify-content-between"><span>Vencimento:</span> <strong class="font-monospace">${p.dueDate || 'À vista'}</strong></div>
+                    <div class="d-flex justify-content-between"><span>Método:</span> <strong class="text-primary">${p.paymentMethod || 'PIX'}</strong></div>
+                    <div class="d-flex justify-content-between border-top pt-1 mt-1"><span class="fw-bold">Valor a Liquidar:</span> <strong class="text-dark font-monospace fs-xs">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Domicílio Bancário do Fornecedor -->
+              <strong class="fs-xxs text-uppercase text-muted d-block mb-1">Domicílio Bancário do Fornecedor (Snapshot Congelado)</strong>
+              <div class="p-2 bg-light rounded border fs-xxs font-monospace">
+                <div class="row g-2">
+                  <div class="col-sm-4"><span class="text-muted d-block">Banco:</span> <strong>${bank.bankName || 'Banco'} (${bank.bankCode || '001'})</strong></div>
+                  <div class="col-sm-4"><span class="text-muted d-block">Ag / CC:</span> <strong>Ag ${bank.agency || '0001'} / CC ${bank.account || '—'}</strong></div>
+                  <div class="col-sm-4"><span class="text-muted d-block">Chave PIX:</span> <strong class="text-primary">${bank.pixKey || 'Não cadastrada'}</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
       } else {
         financialSituationHtml = `
           <div class="card border border-primary-subtle shadow-sm mb-3">
@@ -788,6 +982,8 @@ export const financialApprovalsController = {
             <div class="col-6"><span class="text-muted fs-xxs d-block">Evento Vinculado:</span><strong class="text-dark">${req.eventName || 'Geral'}</strong></div>
             <div class="col-6"><span class="text-muted fs-xxs d-block">Valor Solicitado:</span><strong class="text-success fs-sm">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
             <div class="col-6"><span class="text-muted fs-xxs d-block">Solicitado Por:</span><strong class="text-dark">${req.requestedBy.name}</strong> (${req.requestedBy.role})</div>
+            <div class="col-6"><span class="text-muted fs-xxs d-block">Fila / Operador Responsável:</span><strong class="text-dark">${req.assignedToUser ? req.assignedToUser.name : '<span class="text-warning fst-italic">Não atribuída (Fila Geral)</span>'}</strong></div>
+            <div class="col-6"><span class="text-muted fs-xxs d-block">Protocolo do Motor:</span><strong class="font-monospace text-primary">${req.protocol || req.id}</strong></div>
             <div class="col-12 mt-2">
               <span class="text-muted fs-xxs d-block">Justificativa Formal:</span>
               <p class="text-dark bg-light p-2 rounded mb-0 fst-italic">"${req.justification}"</p>
@@ -909,29 +1105,41 @@ export const financialApprovalsController = {
             const isSecondLevel = req.approvalLevel === 'DUPLA_APROVACAO' && req.firstLevelApprovedBy;
             footer.innerHTML = `
               <div class="d-flex flex-wrap justify-content-between w-100 gap-2">
-                ${(req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE') ? `
-                  <button class="btn btn-sm btn-outline-info fw-bold d-flex align-items-center gap-1" onclick="window.startAnalysisAction('${req.id}')">
-                    <i class="ph-magnifying-glass"></i> Iniciar Análise
+                <div class="d-flex gap-1">
+                  ${(!req.assignedToUser || req.assignedToUser.id !== user.id) ? `
+                    <button class="btn btn-sm btn-outline-secondary fw-semibold d-flex align-items-center gap-1" onclick="window.assignToSelfAction('${req.id}')" title="Assumir análise para minha fila">
+                      <i class="ph-user-plus"></i> Assumir
+                    </button>
+                  ` : ''}
+                  <button class="btn btn-sm btn-outline-secondary fw-semibold d-flex align-items-center gap-1" onclick="window.openReassignModal('${req.id}')" title="Reatribuir operador responsável">
+                    <i class="ph-arrows-left-right"></i> Reatribuir
                   </button>
-                ` : ''}
-                ${(req.type === 'ANTECIPACAO' && (req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE' || req.status === 'EM_ANALISE')) ? `
-                  <button class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1" onclick="window.openAdjustConditionModal('${req.id}')">
-                    <i class="ph-sliders"></i> Propor Ajuste
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  ${(req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE') ? `
+                    <button class="btn btn-sm btn-outline-info fw-bold d-flex align-items-center gap-1" onclick="window.startAnalysisAction('${req.id}')">
+                      <i class="ph-magnifying-glass"></i> Iniciar Análise
+                    </button>
+                  ` : ''}
+                  ${(req.type === 'ANTECIPACAO' && (req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE' || req.status === 'EM_ANALISE')) ? `
+                    <button class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1" onclick="window.openAdjustConditionModal('${req.id}')">
+                      <i class="ph-sliders"></i> Propor Ajuste
+                    </button>
+                  ` : ''}
+                  ${canReturn ? `
+                    <button class="btn btn-sm btn-outline-warning fw-bold d-flex align-items-center gap-1" onclick="window.openReturnDecisionModal('${req.id}')">
+                      <i class="ph-arrow-u-up-left"></i> Devolver
+                    </button>
+                  ` : ''}
+                  ${canReject ? `
+                    <button class="btn btn-sm btn-outline-danger fw-bold d-flex align-items-center gap-1" onclick="window.openRejectDecisionModal('${req.id}')">
+                      <i class="ph-x-circle"></i> Reprovar
+                    </button>
+                  ` : ''}
+                  <button class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1 px-3" onclick="window.openApproveDecisionModal('${req.id}')">
+                    <i class="ph-check-circle"></i> ${isSecondLevel ? 'Aprovar (2º Nível)' : 'Aprovar Operação'}
                   </button>
-                ` : ''}
-                ${canReturn ? `
-                  <button class="btn btn-sm btn-outline-warning fw-bold d-flex align-items-center gap-1" onclick="window.openReturnDecisionModal('${req.id}')">
-                    <i class="ph-arrow-u-up-left"></i> Devolver
-                  </button>
-                ` : ''}
-                ${canReject ? `
-                  <button class="btn btn-sm btn-outline-danger fw-bold d-flex align-items-center gap-1" onclick="window.openRejectDecisionModal('${req.id}')">
-                    <i class="ph-x-circle"></i> Reprovar
-                  </button>
-                ` : ''}
-                <button class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1 px-3" onclick="window.openApproveDecisionModal('${req.id}')">
-                  <i class="ph-check-circle"></i> ${isSecondLevel ? 'Aprovar (2º Nível)' : 'Aprovar Operação'}
-                </button>
+                </div>
               </div>
             `;
           }
@@ -1158,9 +1366,58 @@ export const financialApprovalsController = {
     }
   },
 
+  /**
+   * Operador assume a análise da solicitação (Fila Pessoal)
+   */
+  assignToSelfAction(id) {
+    try {
+      financialApprovalService.assignToSelf(id, currentActor);
+      this.refreshDashboard();
+      this.openDrawer(id);
+      if (window.showAppNotification) {
+        window.showAppNotification('Você assumiu a análise desta solicitação!', 'success');
+      }
+    } catch (err) {
+      alert(`Erro ao assumir análise: ${err.message}`);
+    }
+  },
+
+  /**
+   * Reatribui a solicitação para outro operador com justificativa
+   */
+  openReassignModal(id) {
+    const newAssigneeName = prompt('Informe o nome ou e-mail do operador para o qual deseja reatribuir:');
+    if (!newAssigneeName || !newAssigneeName.trim()) return;
+    const reason = prompt('Informe a justificativa da reatribuição:');
+    if (!reason || !reason.trim()) {
+      alert('Justificativa é obrigatória para reatribuir.');
+      return;
+    }
+    try {
+      const newAssignee = {
+        id: `user-op-${Date.now()}`,
+        name: newAssigneeName.trim(),
+        role: 'OPERADOR_FINANCEIRO',
+        profile: 'OPERADOR_FINANCEIRO'
+      };
+      financialApprovalService.reassign(id, currentActor, newAssignee, reason.trim());
+      this.refreshDashboard();
+      this.openDrawer(id);
+      if (window.showAppNotification) {
+        window.showAppNotification(`Solicitação reatribuída com sucesso para ${newAssigneeName}!`, 'info');
+      }
+    } catch (err) {
+      alert(`Erro ao reatribuir: ${err.message}`);
+    }
+  },
+
   bindGlobalEvents() {
     window.switchApprovalRole = (role) => this.switchRole(role);
     window.switchApprovalTab = (tab) => this.switchTab(tab);
+    window.switchApprovalCategoryGroup = (group) => this.switchCategoryGroup(group);
+    window.switchApprovalQueue = (queue) => this.switchQueue(queue);
+    window.assignToSelfAction = (id) => this.assignToSelfAction(id);
+    window.openReassignModal = (id) => this.openReassignModal(id);
     window.filterApprovalTable = () => this.renderTable();
     window.openApprovalDecisionDrawer = (id) => this.openDrawer(id);
     window.openApproveDecisionModal = (id) => this.openApproveModal(id);

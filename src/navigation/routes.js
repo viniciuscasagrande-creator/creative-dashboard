@@ -114,6 +114,30 @@ export const ROUTES = {
     title: 'Painel Financeiro',
     sub: 'Resumo financeiro, conciliação e fluxo de caixa.'
   },
+  '/financeiro/posicao-geral': {
+    path: '/financeiro/posicao-geral',
+    view: 'financial-posicao-geral',
+    module: 'financeiro',
+    menuKey: 'fin-posicao-geral',
+    title: 'Posição Financeira Geral',
+    sub: 'Visão executiva master consolidada por produtor, evento e canal.'
+  },
+  '/financeiro/saldos': {
+    path: '/financeiro/saldos',
+    view: 'financial-saldos',
+    module: 'financeiro',
+    menuKey: 'fin-saldos-consolidado',
+    title: 'Saldos Consolidados',
+    sub: 'Saldo disponível, a liberar e detalhamento por evento.'
+  },
+  '/financeiro/taxas-custos': {
+    path: '/financeiro/taxas-custos',
+    view: 'financial-taxas-custos',
+    module: 'financeiro',
+    menuKey: 'fin-taxas-custos',
+    title: 'Taxas Disk & Custos de Pagamento',
+    sub: 'Regras de taxas Disk, MDR, custos de adquirentes e composição financeira.'
+  },
   '/financeiro/inteligencia': {
     path: '/financeiro/inteligencia',
     view: 'financial-analytics',
@@ -951,6 +975,12 @@ export const LEGACY_ROUTE_ALIASES = {
   'financial-refunds': '/financeiro/estornos',
   'financial-operators': '/financeiro/operadoras',
   'financial-analytics': '/financeiro/inteligencia',
+  'posicao-geral': '/financeiro/posicao-geral',
+  'financial-posicao-geral': '/financeiro/posicao-geral',
+  'saldos': '/financeiro/saldos',
+  'financial-saldos': '/financeiro/saldos',
+  'taxas-custos': '/financeiro/taxas-custos',
+  'financial-taxas-custos': '/financeiro/taxas-custos',
   'treasury': '/financeiro/tesouraria',
   'tesouraria': '/financeiro/tesouraria',
   'contas-bancarias': '/financeiro/tesouraria',

@@ -6,7 +6,7 @@
  * ============================================================================
  */
 
-import { financialApprovalRulesService } from './financialApprovalRulesService.js';
+import { financialApprovalRulesService, CENTRAL_CATEGORY_GROUPS } from './financialApprovalRulesService.js';
 import { financialApprovalNotificationService } from './financialApprovalNotificationService.js';
 import { eventBalanceService } from './eventBalanceService.js';
 import { accessControlService } from './accessControlService.js';
@@ -14,9 +14,136 @@ import { accessAuditService } from './accessAuditService.js';
 import { balanceTransferService } from './balanceTransferService.js';
 import { producerBankAccountService } from './producerBankAccountService.js';
 import { receivableAnticipationService } from './receivableAnticipationService.js';
+import { refundService } from './refundService.js';
+import { supplierPaymentService } from './supplierPaymentService.js';
 
 // Base de Solicitações Unificadas de Aprovação
 let APPROVAL_REQUESTS = [
+  // Solicitação de Estorno (Implantação 4 - Exemplo com Ingresso Validado)
+  {
+    id: 'EST-2026-000160',
+    protocol: 'EST-2026-000160',
+    type: 'ESTORNO',
+    producerId: 'prod-1',
+    producerName: 'Parque Jaime Lerner',
+    eventId: '3368',
+    eventName: 'Experiência Música & Natureza',
+    amount: 500.00,
+    currency: 'BRL',
+    requestedBy: {
+      id: 'user-producer-joao',
+      name: 'João Silva',
+      role: 'PRODUTOR',
+      email: 'joao.silva@parquejlerner.com.br'
+    },
+    justification: 'Solicitação de desistência do comprador dentro do prazo legal de 7 dias (CDC).',
+    payload: {
+      orderId: 'PED-123456',
+      orderNumber: '123456',
+      refundType: 'TOTAL',
+      reasonCategory: 'DESISTENCIA_CDC',
+      client: {
+        name: 'Carlos Alberto Ferreira',
+        cpf: '123.456.789-00',
+        email: 'carlos.ferreira@gmail.com'
+      },
+      gateway: 'CIELO',
+      transactionId: 'TRX-GW-882910',
+      hasCheckedInTickets: true,
+      ticketIds: ['TK-123456-1', 'TK-123456-2'],
+      tickets: [
+        { id: 'TK-123456-1', category: 'INTEIRA', sector: 'Pista', price: 250.00, status: 'vendido' },
+        { id: 'TK-123456-2', category: 'INTEIRA', sector: 'Pista', price: 250.00, status: 'validado' }
+      ]
+    },
+    status: 'AGUARDANDO_ANALISE',
+    statusLabelPtBr: 'Aguardando Análise',
+    badgeClass: 'bg-warning text-dark',
+    approvalLevel: 'NIVEL_2',
+    approvalLevelLabel: 'Nível 2 (Gestor Financeiro)',
+    riskLevel: 'CRITICO',
+    riskReasons: ['Ingresso já validado/consumido na portaria.'],
+    slaHours: 2,
+    slaDeadline: new Date(Date.now() + 3600000 * 2).toISOString(),
+    slaStatus: 'NO_PRAZO',
+    executionStatus: 'PENDENTE',
+    automatedValidations: [
+      { ruleCode: 'RN_PEDIDO_ORIGEM', ruleTitle: 'Vínculo com Pedido/Transação Original', passed: true, severity: 'INFO', message: 'Estorno vinculado ao pedido #123456 (Carlos Alberto Ferreira - CIELO).' },
+      { ruleCode: 'RN_INGRESSO_CONSUMIDO', ruleTitle: 'Alerta Crítico: Ingresso Já Validado/Consumido', passed: false, severity: 'WARN', message: 'Atenção de Compliance: Um ou mais ingressos selecionados já foram validados na portaria/check-in! Exige alçada Nível 2 / Excepcional.' }
+    ],
+    auditTrail: [
+      { id: 'AUD-EST-160-01', timestamp: new Date(Date.now() - 3600000).toISOString(), actorId: 'user-producer-joao', actorName: 'João Silva', actorRole: 'PRODUTOR', action: 'SOLICITACAO_CRIADA', newStatus: 'AGUARDANDO_ANALISE', comment: 'Solicitação de estorno criada para o pedido #123456.' }
+    ],
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000).toISOString()
+  },
+
+  // Solicitação de Pagamento a Fornecedor (Implantação 4 - Exemplo)
+  {
+    id: 'PAG-2026-000161',
+    protocol: 'PAG-2026-000161',
+    type: 'PAGAMENTO',
+    producerId: 'prod-1',
+    producerName: 'Parque Jaime Lerner',
+    eventId: '3368',
+    eventName: 'Experiência Música & Natureza',
+    amount: 14200.00,
+    currency: 'BRL',
+    requestedBy: {
+      id: 'user-producer-joao',
+      name: 'João Silva',
+      role: 'PRODUTOR',
+      email: 'joao.silva@parquejlerner.com.br'
+    },
+    justification: 'Locação e instalação de geradores de energia para estrutura de iluminação de palco.',
+    payload: {
+      supplierId: 'SUP-001',
+      supplierName: 'Geradores Paraná Ltda',
+      supplierTaxId: '19.401.882/0001-30',
+      costCenterId: 'cc-prod-01',
+      costCenterName: 'Infraestrutura e Palco',
+      competency: '09/2026',
+      dueDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+      paymentMethod: 'PIX',
+      documentType: 'NOTA_FISCAL',
+      documentNumber: 'NF-e 88412',
+      documentKey: '41260919401882000130550010000884121008841201',
+      supplierBankSnapshot: {
+        pixKeyType: 'CNPJ',
+        pixKey: '19401882000130',
+        bankCode: '001',
+        bankName: 'Banco do Brasil',
+        agency: '1502-4',
+        account: '44910-2',
+        accountType: 'CORRENTE',
+        beneficiaryName: 'Geradores Paraná Ltda'
+      },
+      hasRecentBankChange: false
+    },
+    status: 'AGUARDANDO_ANALISE',
+    statusLabelPtBr: 'Aguardando Análise',
+    badgeClass: 'bg-warning text-dark',
+    approvalLevel: 'NIVEL_2',
+    approvalLevelLabel: 'Nível 2 (Gestor Financeiro)',
+    riskLevel: 'MEDIO',
+    riskReasons: ['Pagamento superior a R$ 10.000,00 exige conferência N2.'],
+    slaHours: 4,
+    slaDeadline: new Date(Date.now() + 3600000 * 3.5).toISOString(),
+    slaStatus: 'NO_PRAZO',
+    executionStatus: 'PENDENTE',
+    automatedValidations: [
+      { ruleCode: 'RN_FORNECEDOR_HOMOLOGADO', ruleTitle: 'Fornecedor Cadastrado & Homologado', passed: true, severity: 'INFO', message: 'Fornecedor regular: Geradores Paraná Ltda (19.401.882/0001-30).' },
+      { ruleCode: 'RN_DOCUMENTO_FISCAL', ruleTitle: 'Documento Comprobatório / Nota Fiscal', passed: true, severity: 'INFO', message: 'Documento comprobatório informado: NOTA_FISCAL NF-e 88412.' },
+      { ruleCode: 'RN_SEM_DUPLICIDADE', ruleTitle: 'Verificação de Duplicidade', passed: true, severity: 'INFO', message: 'Nenhum pagamento idêntico ou concorrente encontrado.' }
+    ],
+    auditTrail: [
+      { id: 'AUD-PAG-161-01', timestamp: new Date(Date.now() - 7200000).toISOString(), actorId: 'user-producer-joao', actorName: 'João Silva', actorRole: 'PRODUTOR', action: 'SOLICITACAO_CRIADA', newStatus: 'AGUARDANDO_ANALISE', comment: 'Solicitação de pagamento criada no valor de R$ 14.200,00.' },
+      { id: 'AUD-PAG-161-02', timestamp: new Date(Date.now() - 7200000 + 1000).toISOString(), actorId: 'SISTEMA', actorName: 'Sistema de Reserva Financeira', actorRole: 'SISTEMA', action: 'SALDO_RESERVADO', comment: 'Reserva cautelar (RES-PAG-2026-000161) de R$ 14.200,00 aplicada no evento 3368 (status: ATIVA).' }
+    ],
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+    updatedAt: new Date(Date.now() - 7200000).toISOString()
+  },
+
   // Solicitação Modelo do Prompt (#APR-2026-00142 / #TR-2026-000142)
   {
     id: 'APR-2026-00142',
@@ -689,20 +816,90 @@ export const financialApprovalService = {
       payload.bankAccountSnapshot = producerBankAccountService.getActiveAccount(producerId);
     }
 
+    // Regras Específicas de ESTORNO (Vínculo obrigatório a Pedido/Transação)
+    if (type === 'ESTORNO') {
+      const orderId = payload.orderId || payload.order?.id;
+      if (!orderId) {
+        throw new Error('Todo estorno financeiro deve ter um pedido e transação original identificados.');
+      }
+      const elig = refundService.validateRefundEligibility(orderId, numAmount);
+      if (!elig.ok) {
+        throw new Error(elig.error);
+      }
+      const order = elig.order;
+      payload.orderId = order.id;
+      payload.orderNumber = order.orderNumber;
+      payload.orderSnapshot = {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        paymentId: order.payment?.id,
+        transactionId: order.payment?.transactionId,
+        gateway: order.payment?.gateway,
+        originalAmount: order.payment?.originalAmount,
+        availableForRefund: order.payment?.availableForRefund,
+        alreadyRefunded: order.payment?.alreadyRefunded,
+        client: order.client,
+        tickets: order.tickets
+      };
+      payload.client = order.client;
+      payload.gateway = order.payment?.gateway;
+      payload.transactionId = order.payment?.transactionId;
+      payload.hasCheckedInTickets = elig.hasCheckedInTickets;
+      payload.alreadyPaidOut = elig.alreadyPaidOut;
+    }
+
+    // Regras Específicas de PAGAMENTO (Fornecedor Homologado, Duplicidade e Snapshot Bancário)
+    if (type === 'PAGAMENTO' || type === 'PAGAMENTO_LOTE') {
+      const supplierId = payload.supplierId;
+      if (supplierId) {
+        const supplier = supplierPaymentService.getSupplier(supplierId);
+        if (supplier) {
+          payload.supplierSnapshot = {
+            id: supplier.id,
+            legalName: supplier.legalName,
+            tradeName: supplier.tradeName,
+            taxId: supplier.taxId,
+            primaryCategory: supplier.primaryCategory
+          };
+          payload.supplierName = supplier.tradeName || supplier.legalName;
+          payload.supplierTaxId = supplier.taxId;
+          payload.supplierBankSnapshot = { ...supplier.bankAccount };
+          payload.hasRecentBankChange = supplierPaymentService.hasRecentBankChange(supplier);
+        }
+      }
+
+      // Verificação preventiva de duplicidade
+      const dupCheck = supplierPaymentService.checkDuplicatePayment({
+        supplierId: payload.supplierId,
+        documentNumber: payload.documentNumber,
+        amount: numAmount,
+        dueDate: payload.dueDate,
+        existingRequests: APPROVAL_REQUESTS
+      });
+      if (dupCheck.isDuplicate) {
+        payload.duplicateAlerts = dupCheck.alerts;
+      }
+    }
+
     const nextSeq = APPROVAL_REQUESTS.length + 143;
     const isRepasse = type === 'REPASSE';
     const isTransfer = type === 'TRANSFERENCIA_EVENTOS';
     const isAdvance = type === 'ANTECIPACAO';
     const isBankChange = type === 'ALTERACAO_DADOS_BANCARIOS';
+    const isRefund = type === 'ESTORNO';
+    const isPayment = type === 'PAGAMENTO' || type === 'PAGAMENTO_LOTE';
     let prefix = 'APR';
     if (isRepasse) prefix = 'RP';
     else if (isTransfer) prefix = 'TR';
     else if (isAdvance) prefix = 'ANT';
     else if (isBankChange) prefix = 'BAN';
+    else if (isRefund) prefix = 'EST';
+    else if (isPayment) prefix = 'PAG';
 
-    const padLen = (isRepasse || isTransfer || isAdvance || isBankChange) ? 6 : 5;
+    const isControlled = isRepasse || isTransfer || isAdvance || isBankChange || isRefund || isPayment;
+    const padLen = isControlled ? 6 : 5;
     const id = `${prefix}-${new Date().getFullYear()}-${String(nextSeq).padStart(padLen, '0')}`;
-    const initialStatus = (isRepasse || isTransfer || isAdvance || isBankChange) ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
+    const initialStatus = isControlled ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
     const statusMeta = financialApprovalRulesService.getStatusMeta(initialStatus);
 
     const newRequest = {
@@ -771,7 +968,7 @@ export const financialApprovalService = {
    */
   reserveBalance(request) {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
-    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS') return;
+    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS' || request.type === 'ESTORNO') return;
     try {
       const sourceEventId = String(request.eventId);
       const val = Number(request.amount);
@@ -826,7 +1023,7 @@ export const financialApprovalService = {
    */
   releaseBalance(request, reason = '') {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
-    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS') return;
+    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS' || request.type === 'ESTORNO') return;
     try {
       const sourceEventId = String(request.eventId);
       const val = Number(request.amount);
@@ -867,7 +1064,7 @@ export const financialApprovalService = {
    */
   consumeReservation(request) {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
-    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS') return;
+    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS' || request.type === 'ESTORNO') return;
     try {
       const res = FINANCIAL_RESERVATIONS.find(r => r.requestId === request.id || r.id === `RES-${request.id}`);
       if (res) {
@@ -921,6 +1118,24 @@ export const financialApprovalService = {
       list = list.filter(r => r.type === filters.type);
     }
 
+    // Filtro por Agrupamento Canônico da Central (Parte E)
+    if (filters.categoryGroup && filters.categoryGroup !== 'TODAS') {
+      const grp = CENTRAL_CATEGORY_GROUPS[filters.categoryGroup];
+      if (grp && Array.isArray(grp.types) && grp.types.length > 0) {
+        list = list.filter(r => grp.types.includes(r.type));
+      }
+    }
+
+    // Filtro por Fila Operacional (Parte E: todas, minha-fila, nao-atribuidas)
+    if (filters.queue && filters.queue !== 'todas') {
+      if (filters.queue === 'minha-fila') {
+        const uid = filters.currentUserId || accessControlService.getCurrentUser()?.id;
+        list = list.filter(r => r.assignedToUser?.id === uid);
+      } else if (filters.queue === 'nao-atribuidas') {
+        list = list.filter(r => !r.assignedToUser);
+      }
+    }
+
     if (filters.producerId) {
       list = list.filter(r => r.producerId === filters.producerId);
     }
@@ -942,8 +1157,12 @@ export const financialApprovalService = {
         (r.eventName && r.eventName.toLowerCase().includes(term)) ||
         (r.payload?.sourceEventName && r.payload.sourceEventName.toLowerCase().includes(term)) ||
         (r.payload?.targetEventName && r.payload.targetEventName.toLowerCase().includes(term)) ||
+        (r.payload?.supplierName && r.payload.supplierName.toLowerCase().includes(term)) ||
+        (r.payload?.orderNumber && r.payload.orderNumber.toLowerCase().includes(term)) ||
+        (r.payload?.client?.name && r.payload.client.name.toLowerCase().includes(term)) ||
+        (r.payload?.documentNumber && r.payload.documentNumber.toLowerCase().includes(term)) ||
         (r.justification && r.justification.toLowerCase().includes(term)) ||
-        r.requestedBy.name.toLowerCase().includes(term)
+        r.requestedBy?.name?.toLowerCase().includes(term)
       );
     }
 
@@ -1011,6 +1230,79 @@ export const financialApprovalService = {
         details: `Análise operacional iniciada para ${id} por ${resolvedActor.name}.`
       });
     }
+
+    return { ok: true, data: item };
+  },
+
+  /**
+   * Operador assume a análise da solicitação (Fila do Operador - Parte E)
+   */
+  assignToSelf(id, actor) {
+    const item = this.getRequestById(id);
+    if (!item) throw new Error(`Solicitação ${id} não encontrada.`);
+    const resolvedActor = accessControlService.resolveUser(actor);
+
+    const prevUser = item.assignedToUser?.name || 'Não atribuída';
+    item.assignedToUser = resolvedActor;
+    if (item.status === 'AGUARDANDO_ANALISE' || item.status === 'AGUARDANDO_APROVACAO') {
+      item.status = 'EM_ANALISE';
+      const meta = financialApprovalRulesService.getStatusMeta('EM_ANALISE');
+      item.statusLabelPtBr = meta.label;
+      item.badgeClass = meta.badgeClass;
+    }
+    item.updatedAt = new Date().toISOString();
+
+    item.auditTrail.push({
+      id: `AUD-${id}-ASSIGN`,
+      timestamp: new Date().toISOString(),
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'ANALISE_ASSUMIDA',
+      comment: `Operador ${resolvedActor.name} assumiu a análise da solicitação (anterior: ${prevUser}).`
+    });
+
+    accessAuditService.log({
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'APPROVAL_ASSIGNED_SELF',
+      details: `Análise da solicitação ${id} assumida por ${resolvedActor.name}.`
+    });
+
+    return { ok: true, data: item };
+  },
+
+  /**
+   * Reatribui a solicitação para outro analista com auditoria (Parte E)
+   */
+  reassign(id, actor, newAssignee, reason = '') {
+    const item = this.getRequestById(id);
+    if (!item) throw new Error(`Solicitação ${id} não encontrada.`);
+    const resolvedActor = accessControlService.resolveUser(actor);
+    const resolvedTarget = accessControlService.resolveUser(newAssignee);
+
+    const prevUser = item.assignedToUser?.name || 'Não atribuída';
+    item.assignedToUser = resolvedTarget;
+    item.updatedAt = new Date().toISOString();
+
+    item.auditTrail.push({
+      id: `AUD-${id}-REASSIGN`,
+      timestamp: new Date().toISOString(),
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'SOLICITACAO_REATRIBUIDA',
+      comment: `Reatribuída de ${prevUser} para ${resolvedTarget.name} por ${resolvedActor.name}.${reason ? ' Motivo: ' + reason : ''}`
+    });
+
+    accessAuditService.log({
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'APPROVAL_REASSIGNED',
+      details: `Solicitação ${id} reatribuída de ${prevUser} para ${resolvedTarget.name}. Motivo: ${reason || 'Sem motivo informado'}`
+    });
 
     return { ok: true, data: item };
   },
@@ -1141,6 +1433,59 @@ export const financialApprovalService = {
       });
       if (!canApproveAnt) {
         throw new Error(`Alçada Insuficiente: O usuário "${resolvedActor.name}" não possui autorização ou alçada para aprovar antecipações.`);
+      }
+    }
+
+    // Validação específica de Alçada para Estorno
+    if (item.type === 'ESTORNO') {
+      const canApproveRefund = accessControlService.can(resolvedActor, 'financeiro.estornos.aprovar', {
+        amount: item.amount,
+        operation: 'ESTORNO',
+        producerId: item.producerId,
+        eventId: item.eventId
+      }) || accessControlService.can(resolvedActor, 'financeiro.estorno.aprovar', {
+        amount: item.amount,
+        operation: 'ESTORNO',
+        producerId: item.producerId,
+        eventId: item.eventId
+      });
+      if (!canApproveRefund) {
+        throw new Error(`Alçada Insuficiente: O usuário "${resolvedActor.name}" não possui autorização ou alçada para aprovar estornos.`);
+      }
+      if (item.approvalLevel === 'NIVEL_2' || item.payload?.hasCheckedInTickets) {
+        const canApproveN2 = accessControlService.can(resolvedActor, 'financeiro.aprovacoes.nivel2', {
+          amount: item.amount,
+          operation: 'ESTORNO',
+          producerId: item.producerId,
+          eventId: item.eventId
+        });
+        if (!canApproveN2) {
+          throw new Error(`Alçada Insuficiente: Este estorno envolve ingressos consumidos ou montante elevado, exigindo alçada de Nível 2 / Gestor Financeiro.`);
+        }
+      }
+    }
+
+    // Validação específica de Alçada para Pagamento a Fornecedores
+    if (item.type === 'PAGAMENTO' || item.type === 'PAGAMENTO_LOTE') {
+      const canApprovePayment = accessControlService.can(resolvedActor, 'financeiro.pagamentos.aprovar', {
+        amount: item.amount,
+        operation: 'PAGAMENTO',
+        producerId: item.producerId,
+        eventId: item.eventId
+      });
+      if (!canApprovePayment) {
+        throw new Error(`Alçada Insuficiente: O usuário "${resolvedActor.name}" não possui autorização ou alçada para aprovar pagamentos.`);
+      }
+      if (item.approvalLevel === 'NIVEL_2' || item.payload?.hasRecentBankChange) {
+        const canApproveN2 = accessControlService.can(resolvedActor, 'financeiro.aprovacoes.nivel2', {
+          amount: item.amount,
+          operation: 'PAGAMENTO',
+          producerId: item.producerId,
+          eventId: item.eventId
+        });
+        if (!canApproveN2) {
+          throw new Error(`Alçada Insuficiente: Este pagamento envolve fornecedor com dados bancários recentes ou montante superior a R$ 10.000,00, exigindo alçada de Nível 2.`);
+        }
       }
     }
 
@@ -1301,6 +1646,75 @@ export const financialApprovalService = {
         if (actRes && !actRes.ok) {
           throw new Error(actRes.error || 'Falha na ativação da nova conta bancária.');
         }
+      }
+
+      // Se for estorno financeiro de pedido
+      if (item.type === 'ESTORNO') {
+        const orderId = item.payload?.orderId || item.payload?.orderSnapshot?.orderId;
+        const refundRes = await refundService.executeRefund(item.id, {
+          orderId,
+          amount: item.amount,
+          reason: item.justification,
+          actor: item.reviewedBy || { name: 'Financeiro Disk' }
+        });
+        if (refundRes && !refundRes.ok) {
+          throw new Error(refundRes.error || 'Falha na reversão junto ao adquirente/gateway.');
+        }
+        item.refundResult = refundRes;
+      }
+
+      // Se for pagamento a fornecedor
+      if (item.type === 'PAGAMENTO' || item.type === 'PAGAMENTO_LOTE') {
+        const today = new Date().toISOString().split('T')[0];
+        const dueDate = item.payload?.dueDate;
+        const isImmediate = item.payload?.executeImmediately || false;
+
+        // Se data de vencimento for futura e não houver solicitação de liquidação imediata
+        if (dueDate && dueDate > today && !isImmediate) {
+          item.status = 'AGENDADA';
+          const agendMeta = financialApprovalRulesService.getStatusMeta('AGENDADA');
+          item.statusLabelPtBr = agendMeta.label;
+          item.badgeClass = agendMeta.badgeClass;
+          item.executionStatus = 'AGENDADA';
+          item.executionResult = {
+            scheduledFor: dueDate,
+            authCode,
+            transactionId: trxId,
+            message: `Pagamento aprovado e agendado com sucesso para a data de vencimento: ${dueDate}.`
+          };
+
+          item.auditTrail.push({
+            id: `AUD-${item.id}-SCHED`,
+            timestamp: new Date().toISOString(),
+            actorId: 'SISTEMA',
+            actorName: 'Sistema de Tesouraria',
+            actorRole: 'SISTEMA',
+            action: 'PAGAMENTO_AGENDADO',
+            newStatus: 'AGENDADA',
+            comment: `Pagamento programado para liquidação automática na data de vencimento (${dueDate}). Código: ${authCode}.`
+          });
+
+          return { ok: true, scheduled: true, dueDate, authCode, transactionId: trxId };
+        }
+
+        const payRes = await supplierPaymentService.executePayment(item.id, {
+          producerId: item.producerId,
+          eventId: item.eventId,
+          supplierId: item.payload?.supplierId,
+          supplierName: item.payload?.supplierName,
+          documentNumber: item.payload?.documentNumber || item.payload?.invoiceNumber,
+          documentType: item.payload?.documentType || 'NOTA_FISCAL',
+          amount: item.amount,
+          paymentMethod: item.payload?.paymentMethod || 'PIX',
+          bankDetails: item.payload?.supplierBankSnapshot || item.payload?.bankDetails,
+          costCenterId: item.payload?.costCenterId,
+          costCenterName: item.payload?.costCenterName
+        }, item.reviewedBy || { name: 'Tesouraria Disk' });
+
+        if (payRes && !payRes.ok) {
+          throw new Error(payRes.error || 'Falha na liquidação bancária do pagamento.');
+        }
+        item.paymentResult = payRes;
       }
 
       item.status = 'CONCLUIDA';
@@ -1839,6 +2253,23 @@ export const financialApprovalService = {
         pixKey: snap.pixKey || snap.account,
         isSnapshot: true,
         complianceStatus: 'CONTA_CONGELADA_SNAPSHOT'
+      };
+    }
+
+    // 1.1 Snapshot de conta bancária de fornecedor (Pagamentos a Fornecedores)
+    if ((item?.type === 'PAGAMENTO' || item?.type === 'PAGAMENTO_LOTE') && (payload.supplierBankSnapshot || payload.bankDetails)) {
+      const snap = payload.supplierBankSnapshot || payload.bankDetails;
+      return {
+        holderName: snap.beneficiaryName || payload.supplierName || 'Fornecedor Homologado',
+        document: snap.beneficiaryTaxId || payload.supplierTaxId || '',
+        bankName: snap.bankName || 'Banco do Brasil',
+        bankCode: snap.bankCode || '001',
+        agency: snap.agency || '0001',
+        account: snap.account || '',
+        accountType: snap.accountType || 'CORRENTE',
+        pixKey: snap.pixKey || '',
+        isSupplierAccount: true,
+        complianceStatus: 'CONTA_FORNECEDOR_SNAPSHOT'
       };
     }
 

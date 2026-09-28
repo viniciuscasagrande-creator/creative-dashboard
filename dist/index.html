@@ -22,8 +22,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-Cnp_mw9H.js"></script>
-      <link rel="stylesheet" crossorigin href="./assets/index-Cy4hA3ng.css">
+      <script type="module" crossorigin src="./assets/index-Eat_u6kF.js"></script>
+      <link rel="stylesheet" crossorigin href="./assets/index-CNW2NMqO.css">
     </head>
 <body>
 
@@ -118,7 +118,7 @@
             <div class="sidebar-content">
                 
                 <!-- Sidebar Header and Resize toggler -->
-                <div class="sidebar-section">
+                <div class="sidebar-section sidebar-section-header-fixed">
                     <div class="sidebar-section-body d-flex justify-content-center py-2">
                         <h6 class="sidebar-resize-hide flex-grow-1 my-auto text-uppercase fs-xs fw-bold text-muted" style="letter-spacing: 0.5px;">Navegação</h6>
                         <div>
@@ -132,7 +132,7 @@
                     </div>
                 </div>
                 <!-- Navigation Accordion -->
-                <div class="sidebar-section">
+                <div class="sidebar-section sidebar-navigation-scroll-area" id="sidebar-nav-scroll-area">
                     <ul class="nav nav-sidebar" id="main-sidebar-nav" data-nav-type="accordion">
                         
                         <!-- TODOS OS EVENTOS standalone menu item -->
@@ -217,11 +217,29 @@
                             </a>
                             <ul class="nav-group-sub collapse" id="menu-sub-financeiro">
                                 
+                                <!-- Seção Operacional: Visão Financeira -->
+                                <li class="nav-item-section-divider"><i class="ph-chart-pie"></i> Visão Financeira</li>
+
                                 <!-- 1. VISÃO GERAL -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-1" data-finance-domain="overview" style="list-style-type: none;">
                                     <i class="ph-squares-four me-1 text-primary"></i> 1. Visão Geral
                                 </li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard" data-menu-key="fin-dashboard" data-route="/financeiro/dashboard"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link consolidation-submenu-link" data-view="financial-posicao-geral" data-menu-key="fin-posicao-geral" data-route="/financeiro/posicao-geral" title="Posição Financeira Geral">
+                                        <i class="ph-chart-line-up me-2 text-primary"></i> Posição Geral
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link consolidation-submenu-link" data-view="financial-saldos" data-menu-key="fin-saldos-consolidado" data-route="/financeiro/saldos" title="Saldos Consolidados">
+                                        <i class="ph-currency-circle-dollar me-2 text-success"></i> Saldos
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link consolidation-submenu-link" data-view="financial-taxas-custos" data-menu-key="fin-taxas-custos" data-route="/financeiro/taxas-custos" title="Taxas e Custos">
+                                        <i class="ph-percent me-2 text-warning"></i> Taxas e Custos
+                                    </a>
+                                </li>
                                 <li class="nav-item">
                                     <a href="#" class="nav-link approval-submenu-link fw-bold d-flex align-items-center justify-content-between" data-view="financial-approvals" data-menu-key="fin-approvals" data-route="/financeiro/aprovacoes" style="color: #f59e0b !important;">
                                         <span><i class="ph-scales me-2 text-warning"></i> Aprovações</span>
@@ -236,6 +254,9 @@
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics" data-menu-key="fin-intelligence" data-route="/financeiro/inteligencia"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="dashboard-indicators" data-menu-key="fin-indicators" data-route="/financeiro/indicadores"><i class="ph-gauge me-2"></i> Indicadores</a></li>
 
+                                <!-- Seção Operacional: Tesouraria & Cadastros -->
+                                <li class="nav-item-section-divider"><i class="ph-vault"></i> Tesouraria &amp; Cadastros</li>
+
                                 <!-- 2. TESOURARIA -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" data-finance-domain="treasury" style="list-style-type: none;">
                                     <i class="ph-vault me-1 text-primary"></i> 2. Tesouraria
@@ -247,6 +268,9 @@
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury" data-tab="pix" data-menu-key="fin-treasury-pix" data-route="/financeiro/pix"><i class="ph-qr-code me-2"></i> PIX</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury" data-tab="batches" data-menu-key="fin-treasury-cnab" data-route="/financeiro/cnab"><i class="ph-file-code me-2"></i> CNAB</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="treasury" data-tab="batches" data-menu-key="fin-treasury-batches" data-route="/financeiro/pagamentos-lote"><i class="ph-stack me-2"></i> Pagamentos em Lote</a></li>
+
+                                <!-- Seção Operacional: Operações Financeiras -->
+                                <li class="nav-item-section-divider"><i class="ph-arrows-clockwise"></i> Operações Financeiras</li>
 
                                 <!-- 3. CONTAS (A PAGAR & RECEBER) -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" data-finance-domain="accounts" style="list-style-type: none;">
@@ -299,6 +323,9 @@
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-performance" data-menu-key="fin-cashflow" data-route="/financeiro/fluxo-caixa"><i class="ph-chart-line-up me-2"></i> Fluxo de Caixa</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-flow" data-menu-key="fin-cashflow-flow" data-route="/financeiro/fluxo-caixa/evolucao"><i class="ph-trend-up me-2"></i> Projeção de Caixa</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="cashflow-dre" data-menu-key="fin-dre" data-route="/financeiro/dre-evento"><i class="ph-presentation me-2"></i> DRE Gerencial</a></li>
+
+                                <!-- Seção Operacional: Controle & Conciliação -->
+                                <li class="nav-item-section-divider"><i class="ph-check-square-offset"></i> Controle &amp; Conciliação</li>
 
                                 <!-- 8. CONCILIAÇÃO -->
                                 <li class="nav-item-header text-uppercase fs-xs text-muted py-1 px-3 mt-2" data-finance-domain="reconciliation" style="list-style-type: none;">
@@ -4256,6 +4283,18 @@
                                             <span class="input-group-text bg-light border-end-0"><i class="ph-magnifying-glass"></i></span>
                                             <input type="text" class="form-control border-start-0" id="input-filter-approval-search" placeholder="Buscar ID, produtor, evento..." oninput="window.filterApprovalTable()">
                                         </div>
+                                        <select class="form-select form-select-sm" id="select-filter-approval-category-group" style="width: 175px;" onchange="window.switchApprovalCategoryGroup(this.value)">
+                                            <option value="TODAS">Todos Agrupamentos</option>
+                                            <option value="MOVIMENTACAO">Movimentações</option>
+                                            <option value="CREDITO_RECEBIVEIS">Crédito &amp; Recebíveis</option>
+                                            <option value="CADASTRO_FINANCEIRO">Cadastro Financeiro</option>
+                                            <option value="SAIDAS">Saídas (Pag/Estorno)</option>
+                                        </select>
+                                        <select class="form-select form-select-sm" id="select-filter-approval-queue" style="width: 140px;" onchange="window.switchApprovalQueue(this.value)">
+                                            <option value="todas">Todas as Filas</option>
+                                            <option value="minha-fila">Minha Fila</option>
+                                            <option value="nao-atribuidas">Não Atribuídas</option>
+                                        </select>
                                         <select class="form-select form-select-sm" id="select-filter-approval-type" style="width: 170px;" onchange="window.filterApprovalTable()">
                                             <option value="TODOS">Todos os Tipos</option>
                                             <option value="REPASSE">Repasse Financeiro</option>
@@ -4305,6 +4344,652 @@
                             </div>
                         </div>
                     </section>
+
+                    <!-- ============================================================================ -->
+                    <!-- IMPLANTAÇÃO 5 — POSIÇÃO FINANCEIRA GERAL (VISÃO MASTER DISK INTERNO)        -->
+                    <!-- ============================================================================ -->
+                    <section id="view-financial-posicao-geral" class="page-section" style="display:none;">
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                    <i class="ph-chart-line-up text-primary"></i> <span>Posição Financeira Geral</span>
+                                </h5>
+                                <div class="text-muted fs-xs">
+                                    Visão Executiva Consolidada &bull; Múltiplos Produtores, Eventos e Canais de Venda &bull; Separação Estrita de Receitas
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-refresh-posicao">
+                                    <i class="ph-arrows-clockwise"></i> <span>Atualizar</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btn-export-posicao">
+                                    <i class="ph-download-simple"></i> <span>Exportar Relatório</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Barra de Filtros Executivos -->
+                        <div class="card shadow-sm mb-3" style="border-radius: 6px;">
+                            <div class="card-body py-2 px-3">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-3">
+                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Produtor</label>
+                                        <select class="form-select form-select-sm" id="posicao-filter-producer">
+                                            <option value="TODOS">Todos os Produtores</option>
+                                            <option value="prod-1">Parque Jaime Lerner</option>
+                                            <option value="prod-2">Live Curitiba Entretenimento</option>
+                                            <option value="prod-3">Teatro Positivo Produções</option>
+                                            <option value="prod-festival">Festival Brasil Promoções</option>
+                                            <option value="prod-art">Arte &amp; Cultura Brasil</option>
+                                            <option value="prod-shows">Prime Shows e Eventos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Evento</label>
+                                        <select class="form-select form-select-sm" id="posicao-filter-event">
+                                            <option value="TODOS">Todos os Eventos</option>
+                                            <option value="3368">3368 - Parque Jaime Lerner</option>
+                                            <option value="3195">3195 - Festival de Inverno 2026</option>
+                                            <option value="3178">3178 - Stand-up Comedy Especial</option>
+                                            <option value="934">934 - Show Rock Nacional</option>
+                                            <option value="1001">1001 - Encontro Gastronômico</option>
+                                            <option value="1002">1002 - Turnê Sinfônica 2026</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Canal de Venda</label>
+                                        <select class="form-select form-select-sm" id="posicao-filter-channel">
+                                            <option value="TODOS">Todos os Canais</option>
+                                            <option value="ONLINE">Site &amp; App (Online)</option>
+                                            <option value="POS">Bilheteria Física (POS)</option>
+                                            <option value="AGENCIA">Pontos de Venda / Agência</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Meio de Pagamento</label>
+                                        <select class="form-select form-select-sm" id="posicao-filter-method">
+                                            <option value="TODOS">Todos os Meios</option>
+                                            <option value="PIX">PIX</option>
+                                            <option value="CREDIT_1X">Cartão de Crédito à Vista</option>
+                                            <option value="CREDIT_INSTALLMENTS">Cartão Parcelado</option>
+                                            <option value="DEBIT">Cartão de Débito</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button class="btn btn-sm btn-primary w-100" id="btn-apply-posicao-filter">
+                                            <i class="ph-funnel me-1"></i> Filtrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6 KPIs Mestres -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-lg-2">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #3b82f6 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Volume Bruto (GMV)</span>
+                                        <h5 class="fw-bold text-dark mb-0 mt-1" id="posicao-kpi-gross">R$ 0,00</h5>
+                                        <span class="fs-xxs text-muted">Total de ingressos transacionados</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #10b981 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Receita Bruta Disk</span>
+                                        <h5 class="fw-bold text-success mb-0 mt-1" id="posicao-kpi-disk-revenue">R$ 0,00</h5>
+                                        <span class="fs-xxs text-muted">Taxas e comissões da plataforma</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #ef4444 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Custos de Pagamento</span>
+                                        <h5 class="fw-bold text-danger mb-0 mt-1" id="posicao-kpi-costs">R$ 0,00</h5>
+                                        <span class="fs-xxs text-muted">MDR adquirentes e antifraude</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #8b5cf6 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Margem Líquida Disk</span>
+                                        <h5 class="fw-bold text-primary mb-0 mt-1" id="posicao-kpi-disk-margin">R$ 0,00</h5>
+                                        <span class="fs-xxs text-muted">Receita Disk menos custos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #f59e0b !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Devido a Produtores</span>
+                                        <h5 class="fw-bold text-warning mb-0 mt-1" id="posicao-kpi-producer-liability">R$ 0,00</h5>
+                                        <span class="fs-xxs text-muted">Passivo circulante com produtores</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #6b7280 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Retido em Reservas / CB</span>
+                                        <h5 class="fw-bold text-secondary mb-0 mt-1" id="posicao-kpi-reserves">R$ 0,00</h5>
+                                        <span class="fs-xxs text-muted">Garantias e chargebacks</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabela Hierárquica Consolidada -->
+                        <div class="card shadow-sm" style="border-radius: 6px;">
+                            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold text-dark mb-0 fs-xs text-uppercase">
+                                    <i class="ph-table me-1 text-primary"></i> Detalhamento por Produtor e Evento
+                                </h6>
+                                <span class="badge bg-primary rounded-pill fs-xxs" id="posicao-events-count-badge">0 eventos</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0" id="posicao-master-table">
+                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                        <tr>
+                                            <th>Produtor / Evento</th>
+                                            <th class="text-end">Vendas Brutas (GMV)</th>
+                                            <th class="text-end">Taxa Disk (R$)</th>
+                                            <th class="text-end">Custo MDR (R$)</th>
+                                            <th class="text-end">Margem Disk</th>
+                                            <th class="text-end">Estornos / CB</th>
+                                            <th class="text-end">Pago ao Produtor</th>
+                                            <th class="text-end">Saldo Disponível</th>
+                                            <th class="text-center" style="width: 80px;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="posicao-master-tbody" class="fs-xs">
+                                        <!-- Renderizado via controller -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ============================================================================ -->
+                    <!-- IMPLANTAÇÃO 5 — SALDOS CONSOLIDADOS (PRODUTOR & DISK)                        -->
+                    <!-- ============================================================================ -->
+                    <section id="view-financial-saldos" class="page-section" style="display:none;">
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                    <i class="ph-currency-circle-dollar text-success"></i> <span>Saldos Consolidados</span>
+                                </h5>
+                                <div class="text-muted fs-xs">
+                                    Saldo Disponível, Valores a Liberar e Detalhamento por Evento &bull; Fonte da Verdade do Ledger
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-refresh-saldos">
+                                    <i class="ph-arrows-clockwise"></i> <span>Atualizar</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btn-saldos-transfer">
+                                    <i class="ph-arrows-left-right"></i> <span>Transferir entre Eventos</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-success d-flex align-items-center gap-1" id="btn-saldos-payout">
+                                    <i class="ph-money"></i> <span>Solicitar Repasse</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning d-flex align-items-center gap-1" id="btn-saldos-advance">
+                                    <i class="ph-hand-coins"></i> <span>Solicitar Antecipação</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Seletor de Escopo: Todos os Eventos vs Individual -->
+                        <div class="card shadow-sm mb-3" style="border-radius: 6px;">
+                            <div class="card-body py-2 px-3">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-5">
+                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Visualizar Saldo de:</label>
+                                        <select class="form-select form-select-sm" id="saldos-filter-event">
+                                            <option value="TODOS">Todos os Eventos (Consolidado)</option>
+                                            <!-- Preenchido dinamicamente via controller -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-7 d-flex align-items-center justify-content-md-end text-muted fs-xs">
+                                        <i class="ph-info me-1 text-primary"></i>
+                                        <span>Os saldos exibidos são calculados em tempo real a partir dos lançamentos homologados do Ledger.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cards de Saldos -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-xs text-uppercase fw-bold text-white-50">Saldo Disponível</span>
+                                            <i class="ph-check-circle fs-4 text-white-50"></i>
+                                        </div>
+                                        <h3 class="fw-bold mb-1 mt-2 text-white" id="saldos-kpi-available">R$ 0,00</h3>
+                                        <span class="fs-xs text-white-50">Livre para transferência ou repasse imediato</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 8px; border-left: 4px solid #3b82f6 !important;">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-xs text-uppercase fw-bold text-muted">Saldo a Liberar (D+X)</span>
+                                            <i class="ph-clock-countdown fs-4 text-primary"></i>
+                                        </div>
+                                        <h3 class="fw-bold mb-1 mt-2 text-dark" id="saldos-kpi-future">R$ 0,00</h3>
+                                        <span class="fs-xs text-muted">Vendas em ciclo de liquidação de gateway</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 8px; border-left: 4px solid #f59e0b !important;">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-xs text-uppercase fw-bold text-muted">Valores Comprometidos</span>
+                                            <i class="ph-lock fs-4 text-warning"></i>
+                                        </div>
+                                        <h3 class="fw-bold mb-1 mt-2 text-dark" id="saldos-kpi-committed">R$ 0,00</h3>
+                                        <span class="fs-xs text-muted">Reservas técnicas e solicitações em análise</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 8px; border-left: 4px solid #6b7280 !important;">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-xs text-uppercase fw-bold text-muted">Total Já Repassado</span>
+                                            <i class="ph-arrows-up-down fs-4 text-secondary"></i>
+                                        </div>
+                                        <h3 class="fw-bold mb-1 mt-2 text-dark" id="saldos-kpi-paid">R$ 0,00</h3>
+                                        <span class="fs-xs text-muted">Repasses e transferências já liquidados</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Saldos Detalhada por Evento -->
+                        <div class="card shadow-sm" style="border-radius: 6px;">
+                            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold text-dark mb-0 fs-xs text-uppercase">
+                                    <i class="ph-list-bullets me-1 text-success"></i> Posição Financeira por Evento
+                                </h6>
+                                <span class="badge bg-success rounded-pill fs-xxs" id="saldos-events-count-badge">0 eventos</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0" id="saldos-events-table">
+                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                        <tr>
+                                            <th>Evento</th>
+                                            <th class="text-end">Vendas Brutas</th>
+                                            <th class="text-end">Taxa Plataforma</th>
+                                            <th class="text-end">Custo Meios Pagto</th>
+                                            <th class="text-end">Estornos / CB</th>
+                                            <th class="text-end">Líquido Produtor</th>
+                                            <th class="text-end">Já Repassado</th>
+                                            <th class="text-end">Comprometido</th>
+                                            <th class="text-end fw-bold text-success">Saldo Disponível</th>
+                                            <th class="text-center" style="width: 110px;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="saldos-events-tbody" class="fs-xs">
+                                        <!-- Renderizado via controller -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ============================================================================ -->
+                    <!-- IMPLANTAÇÃO 5 — TAXAS DISK & CUSTOS DE PAGAMENTO (DISK INTERNO)              -->
+                    <!-- ============================================================================ -->
+                    <section id="view-financial-taxas-custos" class="page-section" style="display:none;">
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                    <i class="ph-percent text-warning"></i> <span>Taxas Disk &amp; Custos de Pagamento</span>
+                                </h5>
+                                <div class="text-muted fs-xs">
+                                    Modelos de Taxa da Plataforma &bull; Custos de Adquirentes e Gateway &bull; Histórico Versionado de Regras
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-refresh-taxas">
+                                    <i class="ph-arrows-clockwise"></i> <span>Atualizar</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btn-open-fee-modal">
+                                    <i class="ph-gear-six"></i> <span>Configurar Regra de Taxa</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4 KPIs de Margem e Custos -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-lg-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #f59e0b !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Taxa Média Plataforma</span>
+                                        <h5 class="fw-bold text-warning mb-0 mt-1" id="taxas-kpi-avg-fee">14.12%</h5>
+                                        <span class="fs-xxs text-muted">Percentual ponderado sobre GMV</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #ef4444 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Custo Médio de Pagamento (MDR)</span>
+                                        <h5 class="fw-bold text-danger mb-0 mt-1" id="taxas-kpi-avg-cost">2.68%</h5>
+                                        <span class="fs-xxs text-muted">Custo ponderado adquirentes e antifraude</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #10b981 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Spread Líquido Disk</span>
+                                        <h5 class="fw-bold text-success mb-0 mt-1" id="taxas-kpi-avg-spread">11.44%</h5>
+                                        <span class="fs-xxs text-muted">Margem bruta após custos financeiros</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="card shadow-sm border-0 mb-0 h-100" style="border-radius: 6px; border-left: 4px solid #3b82f6 !important;">
+                                    <div class="card-body p-2">
+                                        <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Regras de Taxa Ativas</span>
+                                        <h5 class="fw-bold text-primary mb-0 mt-1" id="taxas-kpi-rules-count">6 regras</h5>
+                                        <span class="fs-xxs text-muted">Configurações globais e por evento</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Abas de Conteúdo -->
+                        <div class="card shadow-sm" style="border-radius: 6px;">
+                            <div class="card-header bg-light py-2 px-3">
+                                <ul class="nav nav-tabs card-header-tabs" id="taxas-tabs" role="tablist">
+                                    <li class="nav-item">
+                                        <button class="nav-link active fs-xs fw-semibold" id="tab-taxas-regras" data-bs-toggle="tab" data-bs-target="#pane-taxas-regras" type="button" role="tab">
+                                            <i class="ph-sliders me-1"></i> Regras de Taxas Disk
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link fs-xs fw-semibold" id="tab-taxas-custos" data-bs-toggle="tab" data-bs-target="#pane-taxas-custos" type="button" role="tab">
+                                            <i class="ph-credit-card me-1"></i> Custos por Canal e Adquirente
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link fs-xs fw-semibold" id="tab-taxas-simulador" data-bs-toggle="tab" data-bs-target="#pane-taxas-simulador" type="button" role="tab">
+                                            <i class="ph-calculator me-1"></i> Simulador de Composição
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link fs-xs fw-semibold" id="tab-taxas-historico" data-bs-toggle="tab" data-bs-target="#pane-taxas-historico" type="button" role="tab">
+                                            <i class="ph-clock-counter-clockwise me-1"></i> Histórico Versionado
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body p-3">
+                                <div class="tab-content" id="taxas-tabs-content">
+                                    <!-- TAB 1: REGRAS DE TAXAS DISK -->
+                                    <div class="tab-pane fade show active" id="pane-taxas-regras" role="tabpanel">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fs-xs text-muted">Configurações de taxa percentual (%) ou fixa (R$/ingresso) com herança por produtor e override por evento.</span>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0">
+                                                <thead class="table-light fs-xs text-uppercase text-muted">
+                                                    <tr>
+                                                        <th>Escopo / Identificador</th>
+                                                        <th>Tipo de Taxa</th>
+                                                        <th class="text-end">Valor / Taxa</th>
+                                                        <th>Base de Cálculo</th>
+                                                        <th>Mínimo / Máximo</th>
+                                                        <th>Vigência Desde</th>
+                                                        <th class="text-center" style="width: 80px;">Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="taxas-rules-tbody" class="fs-xs">
+                                                    <!-- Preenchido via controller -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 2: CUSTOS POR CANAL E ADQUIRENTE -->
+                                    <div class="tab-pane fade" id="pane-taxas-custos" role="tabpanel">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fs-xs text-muted">Custos negociados de processamento: canais Online, POS maquininha e Agência, distribuídos entre Cielo, Rede, PagBank e Stone.</span>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0">
+                                                <thead class="table-light fs-xs text-uppercase text-muted">
+                                                    <tr>
+                                                        <th>Canal</th>
+                                                        <th>Meio de Pagamento</th>
+                                                        <th>Adquirente Principal</th>
+                                                        <th class="text-end">MDR (%)</th>
+                                                        <th class="text-end">Custo Fixo Gateway</th>
+                                                        <th class="text-end">Antifraude</th>
+                                                        <th class="text-end fw-bold">Custo Total Est.</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="taxas-costs-tbody" class="fs-xs">
+                                                    <!-- Preenchido via controller -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 3: SIMULADOR DE COMPOSIÇÃO -->
+                                    <div class="tab-pane fade" id="pane-taxas-simulador" role="tabpanel">
+                                        <div class="row g-3">
+                                            <div class="col-md-5">
+                                                <div class="card border p-3 bg-light shadow-none mb-0">
+                                                    <h6 class="fw-bold text-dark fs-xs text-uppercase mb-2">Parâmetros de Simulação</h6>
+                                                    <div class="mb-2">
+                                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Evento Base</label>
+                                                        <select class="form-select form-select-sm" id="sim-event-select">
+                                                            <option value="3368">3368 - Parque Jaime Lerner (15%)</option>
+                                                            <option value="3195">3195 - Festival de Inverno (12%)</option>
+                                                            <option value="3178">3178 - Stand-up Especial (10%)</option>
+                                                            <option value="934">934 - Show Rock Nacional (R$ 5,00/ing)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Volume de Vendas Brutas (R$)</label>
+                                                        <input type="number" class="form-control form-control-sm" id="sim-gross-amount" value="1000000" step="1000">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Quantidade de Ingressos</label>
+                                                        <input type="number" class="form-control form-control-sm" id="sim-ticket-count" value="10000" step="100">
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Estornos Solicitados (R$)</label>
+                                                        <input type="number" class="form-control form-control-sm" id="sim-refunds-amount" value="30000" step="500">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fs-xxs text-uppercase text-muted fw-bold mb-1">Chargebacks Registrados (R$)</label>
+                                                        <input type="number" class="form-control form-control-sm" id="sim-chargeback-amount" value="5000" step="500">
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-run-composition-sim">
+                                                        <i class="ph-calculator me-1"></i> Calcular Composição Exata
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-7">
+                                                <div class="card border p-3 shadow-none mb-0 h-100">
+                                                    <h6 class="fw-bold text-dark fs-xs text-uppercase mb-2">Resultado da Decomposição Financeira</h6>
+                                                    <ul class="list-group list-group-flush fs-xs" id="sim-composition-results-list">
+                                                        <!-- Renderizado dinamicamente -->
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 4: HISTÓRICO VERSIONADO -->
+                                    <div class="tab-pane fade" id="pane-taxas-historico" role="tabpanel">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0">
+                                                <thead class="table-light fs-xs text-uppercase text-muted">
+                                                    <tr>
+                                                        <th>Versão</th>
+                                                        <th>Data / Hora</th>
+                                                        <th>Usuário / Ator</th>
+                                                        <th>Evento / Produtor</th>
+                                                        <th>Tipo</th>
+                                                        <th class="text-end">Valor Anterior</th>
+                                                        <th class="text-end fw-bold text-success">Novo Valor</th>
+                                                        <th>Justificativa</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="taxas-history-tbody" class="fs-xs">
+                                                    <!-- Preenchido via controller -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MODAL: CONFIGURAÇÃO DE REGRA DE TAXA -->
+                    <div class="modal fade" id="modal-configure-fee-rule" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header py-2 bg-light">
+                                    <h6 class="modal-title fw-bold fs-sm text-dark">
+                                        <i class="ph-sliders me-1 text-primary"></i> Configurar Regra de Taxa Disk
+                                    </h6>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <form id="form-configure-fee-rule">
+                                        <div class="mb-2">
+                                            <label class="form-label fs-xxs text-uppercase fw-bold text-muted mb-1">Evento Alvo (ou Padrão)</label>
+                                            <select class="form-select form-select-sm" id="modal-fee-target" required>
+                                                <option value="DEFAULT">Padrão Global da Plataforma</option>
+                                                <option value="3368">3368 - Parque Jaime Lerner</option>
+                                                <option value="3195">3195 - Festival de Inverno 2026</option>
+                                                <option value="3178">3178 - Stand-up Comedy Especial</option>
+                                                <option value="934">934 - Show Rock Nacional</option>
+                                                <option value="1001">1001 - Encontro Gastronômico</option>
+                                                <option value="1002">1002 - Turnê Sinfônica 2026</option>
+                                            </select>
+                                        </div>
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-6">
+                                                <label class="form-label fs-xxs text-uppercase fw-bold text-muted mb-1">Tipo de Taxa</label>
+                                                <select class="form-select form-select-sm" id="modal-fee-type">
+                                                    <option value="PERCENTAGE">Percentual (%)</option>
+                                                    <option value="FIXED_PER_TICKET">Fixo por Ingresso (R$)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fs-xxs text-uppercase fw-bold text-muted mb-1">Valor da Taxa</label>
+                                                <input type="number" class="form-control form-control-sm" id="modal-fee-rate" step="0.01" value="15" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label fs-xxs text-uppercase fw-bold text-muted mb-1">Base de Cálculo</label>
+                                            <select class="form-select form-select-sm" id="modal-fee-base">
+                                                <option value="GROSS_SALES">Vendas Brutas (GMV)</option>
+                                                <option value="NET_SALES">Vendas Líquidas de Estornos</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fs-xxs text-uppercase fw-bold text-muted mb-1">Justificativa / Motivo da Alteração</label>
+                                            <textarea class="form-control form-control-sm" id="modal-fee-reason" rows="2" placeholder="Ex: Negociação comercial aditivo contratual #2026-B..." required></textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-sm btn-primary">Salvar Regra</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL / DRAWER: COMPOSIÇÃO FINANCEIRA DETALHADA -->
+                    <div class="modal fade" id="modal-financial-composition-drawer" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header py-2 bg-light">
+                                    <h6 class="modal-title fw-bold fs-sm text-dark d-flex align-items-center gap-2">
+                                        <i class="ph-tree-structure text-primary"></i> <span id="composition-drawer-title">Composição Financeira Detalhada</span>
+                                    </h6>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <div class="alert alert-light border py-2 px-3 mb-3 fs-xs text-muted d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <strong>Regra Aplicada:</strong> <span id="comp-rule-badge" class="badge bg-primary">Percentual 15%</span>
+                                        </div>
+                                        <div>
+                                            <strong>Status:</strong> <span class="badge bg-success">Homologado no Ledger</span>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped align-middle mb-0 fs-xs">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="fw-semibold">1. Vendas Brutas (GMV)</td>
+                                                    <td class="text-end fw-bold text-dark" id="comp-row-gross">R$ 0,00</td>
+                                                </tr>
+                                                <tr class="table-warning">
+                                                    <td>(-) Taxa da Plataforma Disk (Comissão)</td>
+                                                    <td class="text-end text-danger fw-semibold" id="comp-row-disk-fee">- R$ 0,00</td>
+                                                </tr>
+                                                <tr class="table-warning">
+                                                    <td>(-) Custos de Meios de Pagamento (MDR + Antifraude)</td>
+                                                    <td class="text-end text-danger fw-semibold" id="comp-row-costs">- R$ 0,00</td>
+                                                </tr>
+                                                <tr class="table-danger">
+                                                    <td>(-) Estornos Aprovados</td>
+                                                    <td class="text-end text-danger fw-semibold" id="comp-row-refunds">- R$ 0,00</td>
+                                                </tr>
+                                                <tr class="table-danger">
+                                                    <td>(-) Chargebacks Efetivados</td>
+                                                    <td class="text-end text-danger fw-semibold" id="comp-row-chargebacks">- R$ 0,00</td>
+                                                </tr>
+                                                <tr class="table-info fw-bold">
+                                                    <td>(=) Recursos Totais do Produtor Gerados</td>
+                                                    <td class="text-end text-primary" id="comp-row-producer-funds">R$ 0,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>(-) Repasses Já Efetuados e Liquidados</td>
+                                                    <td class="text-end text-muted" id="comp-row-paid">- R$ 0,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>(-) Bloqueios Judiciais e Reservas Técnicas</td>
+                                                    <td class="text-end text-muted" id="comp-row-reserves">- R$ 0,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>(-) Valores Comprometidos em Solicitações</td>
+                                                    <td class="text-end text-muted" id="comp-row-committed">- R$ 0,00</td>
+                                                </tr>
+                                                <tr class="table-success fw-bold fs-6">
+                                                    <td>(=) SALDO DISPONÍVEL ATUAL</td>
+                                                    <td class="text-end text-success" id="comp-row-available">R$ 0,00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="modal-footer py-1 bg-light">
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <section id="view-financial-repass" class="page-section"  style="display:none;">
                         <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-0" style="border-radius: 6px;">
