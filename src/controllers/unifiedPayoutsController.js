@@ -8,6 +8,8 @@
 import { payoutScheduleGateway } from '../services/payoutScheduleGateway.js';
 import { payoutScheduleService } from '../services/payoutScheduleService.js';
 import { OFFICIAL_PRODUCERS } from '../services/eventBalanceService.js';
+import { financialApprovalService } from '../services/financialApprovalService.js';
+import { accessControlService } from '../services/accessControlService.js';
 
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -632,8 +634,42 @@ export function printPayoutReceipt() {
  */
 export async function handleProducerRepasseSubmitConfirmed(amount, bankName, method) {
   try {
-    const res = await payoutScheduleGateway.schedulePayout({
+    const user = (typeof accessControlService !== 'undefined' && accessControlService.getCurrentUser()) || {
+      id: 'user-producer-joao',
+      name: 'João Silva',
+      profile: 'PRODUTOR',
       producerId: currentProducerId,
+      email: 'joao@produtor.com.br'
+    };
+
+    // 1. Cria solicitação no motor central de aprovações (Fase 1 - Fundação Repasse)
+    const aprRes = await financialApprovalService.createRequest({
+      type: 'REPASSE',
+      producerId: user.producerId || currentProducerId,
+      producerName: 'DiskIngressos Eventos Ltda',
+      eventId: '3368',
+      eventName: 'Experiencia Música e Natureza - Julho',
+      amount: Number(amount),
+      justification: 'Solicitação de repasse bancário enviada pelo produtor.',
+      payload: {
+        bankName: bankName || 'Banco Inter',
+        pixKey: (bankName === 'PIX' || method === 'PIX') ? 'financeiro@empresa.com.br' : undefined,
+        method: method || 'PIX'
+      },
+      requestedBy: {
+        id: user.id,
+        name: user.name,
+        role: user.profile || 'PRODUTOR',
+        email: user.email || 'produtor@diskingressos.com.br'
+      }
+    });
+
+    const protocolId = aprRes?.data?.id || `RP-2026-000142`;
+
+    // 2. Agenda no gateway de payouts com o mesmo protocolo
+    const res = await payoutScheduleGateway.schedulePayout({
+      id: protocolId,
+      producerId: user.producerId || currentProducerId,
       producerName: 'DiskIngressos Eventos Ltda',
       eventId: '3368',
       eventName: 'Experiencia Música e Natureza - Julho',
@@ -643,16 +679,19 @@ export async function handleProducerRepasseSubmitConfirmed(amount, bankName, met
       type: 'SOLICITACAO_PRODUTOR',
       beneficiaryAccount: {
         bankName: bankName || 'Banco Inter',
-        pixKey: method === 'PIX' ? 'financeiro@empresa.com.br' : undefined,
+        pixKey: (bankName === 'PIX' || method === 'PIX') ? 'financeiro@empresa.com.br' : undefined,
         method: method || 'PIX'
       }
-    }, { name: 'Produtor Conectado', role: 'PRODUTOR' });
+    }, { name: user.name, role: user.profile || 'PRODUTOR' });
 
     if (res.ok) {
       await refreshUnifiedPayoutsDashboard();
     }
+
+    return { ok: true, protocolId, request: aprRes?.data };
   } catch (err) {
     console.error('Erro ao registrar solicitação de repasse:', err);
+    return { ok: false, error: err.message };
   }
 }
 

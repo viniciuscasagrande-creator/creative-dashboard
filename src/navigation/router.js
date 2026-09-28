@@ -72,6 +72,7 @@ class AppRouter {
       if (route.path !== '/login' && route.path !== '/acesso-negado') {
         const ROUTE_PERMISSIONS = {
           '/financeiro/aprovacoes': 'financeiro.aprovacoes.visualizar',
+          '/financeiro/minhas-solicitacoes': 'financeiro.solicitacoes.visualizar',
           '/acesso': 'acesso.usuarios.visualizar',
           '/acesso/visao-geral': 'acesso.usuarios.visualizar',
           '/acesso/usuarios': 'acesso.usuarios.visualizar',

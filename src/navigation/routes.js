@@ -255,6 +255,14 @@ export const ROUTES = {
     title: 'Central de Aprovações',
     sub: 'Workflow transversal de aprovação e autorização de operações financeiras.'
   },
+  '/financeiro/minhas-solicitacoes': {
+    path: '/financeiro/minhas-solicitacoes',
+    view: 'financial-approvals',
+    module: 'financeiro',
+    menuKey: 'fin-my-requests',
+    title: 'Minhas Solicitações',
+    sub: 'Portal do Produtor • Acompanhamento de protocolos e solicitações enviadas ao Financeiro Disk.'
+  },
   '/financeiro/compras': {
     path: '/financeiro/compras',
     view: 'procure-to-pay',
@@ -952,6 +960,8 @@ export const LEGACY_ROUTE_ALIASES = {
   'transferencias': '/financeiro/transferencias',
   'repasses-produtor': '/financeiro/repasses-produtor',
   'aprovacoes': '/financeiro/aprovacoes',
+  'minhas-solicitacoes': '/financeiro/minhas-solicitacoes',
+  'financial-my-requests': '/financeiro/minhas-solicitacoes',
   'fornecedores': '/financeiro/fornecedores',
   'fornecedores-360': '/financeiro/fornecedores/360',
   'contratos': '/financeiro/contratos',

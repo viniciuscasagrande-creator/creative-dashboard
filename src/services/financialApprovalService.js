@@ -122,6 +122,7 @@ let APPROVAL_REQUESTS = [
   // Repasse de Alto Porte com Dupla Aprovação
   {
     id: 'APR-2026-00141',
+    protocol: 'RP-2026-000141',
     type: 'REPASSE',
     producerId: 'prod-1',
     producerName: 'DiskIngressos Eventos Ltda',
@@ -541,11 +542,15 @@ export const financialApprovalService = {
     }
 
     const nextSeq = APPROVAL_REQUESTS.length + 143;
-    const id = `APR-${new Date().getFullYear()}-${String(nextSeq).padStart(5, '0')}`;
-    const statusMeta = financialApprovalRulesService.getStatusMeta('AGUARDANDO_APROVACAO');
+    const isRepasse = type === 'REPASSE';
+    const prefix = isRepasse ? 'RP' : 'APR';
+    const id = `${prefix}-${new Date().getFullYear()}-${String(nextSeq).padStart(isRepasse ? 6 : 5, '0')}`;
+    const initialStatus = isRepasse ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
+    const statusMeta = financialApprovalRulesService.getStatusMeta(initialStatus);
 
     const newRequest = {
       id,
+      protocol: id,
       type,
       producerId,
       producerName,
@@ -557,7 +562,7 @@ export const financialApprovalService = {
       justification: justification || 'Operação solicitada através do painel do produtor.',
       payload,
       attachments,
-      status: 'AGUARDANDO_APROVACAO',
+      status: initialStatus,
       statusLabelPtBr: statusMeta.label,
       badgeClass: statusMeta.badgeClass,
       approvalLevel: ruleEval.approvalLevel,
@@ -578,7 +583,7 @@ export const financialApprovalService = {
           actorName: requestedBy.name,
           actorRole: requestedBy.role,
           action: 'SOLICITACAO_CRIADA',
-          newStatus: 'AGUARDANDO_APROVACAO',
+          newStatus: initialStatus,
           comment: `Solicitação ${id} (${type}) criada no valor de R$ ${numAmount.toFixed(2)}.`
         }
       ],
@@ -650,8 +655,16 @@ export const financialApprovalService = {
     });
 
     if (filters.status && filters.status !== 'TODAS') {
-      if (filters.status === 'PENDENTES') {
-        list = list.filter(r => r.status === 'AGUARDANDO_APROVACAO' || r.status === 'EM_ANALISE');
+      if (filters.status === 'PENDENTES' || filters.status === 'NOVAS' || filters.status === 'AGUARDANDO_ANALISE') {
+        list = list.filter(r => r.status === 'AGUARDANDO_APROVACAO' || r.status === 'AGUARDANDO_ANALISE' || r.status === 'EM_ANALISE' || r.status === 'REENVIADA');
+      } else if (filters.status === 'DEVOLVIDA' || filters.status === 'DEVOLVIDAS' || filters.status === 'AGUARDANDO_CORRECAO') {
+        list = list.filter(r => r.status === 'DEVOLVIDA' || r.status === 'AGUARDANDO_CORRECAO');
+      } else if (filters.status === 'REJEITADA' || filters.status === 'REJEITADAS' || filters.status === 'REPROVADA' || filters.status === 'REPROVADAS') {
+        list = list.filter(r => r.status === 'REJEITADA' || r.status === 'REPROVADA');
+      } else if (filters.status === 'APROVADA' || filters.status === 'APROVADAS') {
+        list = list.filter(r => r.status === 'APROVADA');
+      } else if (filters.status === 'CONCLUIDA' || filters.status === 'CONCLUIDAS') {
+        list = list.filter(r => r.status === 'CONCLUIDA');
       } else {
         list = list.filter(r => r.status === filters.status);
       }
@@ -677,6 +690,7 @@ export const financialApprovalService = {
       const term = filters.search.toLowerCase().trim();
       list = list.filter(r =>
         r.id.toLowerCase().includes(term) ||
+        (r.protocol && r.protocol.toLowerCase().includes(term)) ||
         r.producerName.toLowerCase().includes(term) ||
         (r.eventName && r.eventName.toLowerCase().includes(term)) ||
         (r.justification && r.justification.toLowerCase().includes(term)) ||
@@ -688,10 +702,16 @@ export const financialApprovalService = {
   },
 
   /**
-   * Busca solicitação por ID
+   * Busca solicitação por ID ou Protocolo legível
    */
   getRequestById(id) {
-    const item = APPROVAL_REQUESTS.find(r => r.id === id);
+    if (!id) return null;
+    const clean = String(id).trim().toUpperCase();
+    const item = APPROVAL_REQUESTS.find(r => 
+      r.id.toUpperCase() === clean ||
+      (r.protocol && r.protocol.toUpperCase() === clean) ||
+      (r.id.replace(/^[A-Z]+-/, '') === clean.replace(/^[A-Z]+-/, ''))
+    );
     if (!item) return null;
     item.slaStatus = financialApprovalRulesService.calculateSlaStatus(item.slaDeadline, item.status);
     return item;
@@ -713,7 +733,8 @@ export const financialApprovalService = {
       throw new Error(`Acesso Negado: O usuário "${resolvedActor.name}" não possui autorização para analisar esta operação.`);
     }
 
-    if (item.status === 'AGUARDANDO_APROVACAO') {
+    if (item.status === 'AGUARDANDO_APROVACAO' || item.status === 'AGUARDANDO_ANALISE') {
+      const prevStatus = item.status;
       item.status = 'EM_ANALISE';
       const statusMeta = financialApprovalRulesService.getStatusMeta('EM_ANALISE');
       item.statusLabelPtBr = statusMeta.label;
@@ -728,7 +749,7 @@ export const financialApprovalService = {
         actorName: resolvedActor.name,
         actorRole: resolvedActor.profile,
         action: 'ANALISE_INICIADA',
-        previousStatus: 'AGUARDANDO_APROVACAO',
+        previousStatus: prevStatus,
         newStatus: 'EM_ANALISE',
         comment: `Solicitação aberta para análise operacional por ${resolvedActor.name}.`
       });
@@ -1002,8 +1023,9 @@ export const financialApprovalService = {
     // Libera a reserva de saldo
     this.releaseBalance(item);
 
+    const prevStatus = item.status;
     item.status = 'REJEITADA';
-    const statusMeta = financialApprovalRulesService.getStatusMeta('REJEITADA');
+    const statusMeta = financialApprovalRulesService.getStatusMeta('REPROVADA');
     item.statusLabelPtBr = statusMeta.label;
     item.badgeClass = statusMeta.badgeClass;
     item.reviewedAt = new Date().toISOString();
@@ -1018,8 +1040,9 @@ export const financialApprovalService = {
       actorName: resolvedActor.name,
       actorRole: resolvedActor.profile,
       action: 'SOLICITACAO_REJEITADA',
+      previousStatus: prevStatus,
       newStatus: 'REJEITADA',
-      comment: `Rejeitado por ${resolvedActor.name}. Motivo: ${reason}`
+      comment: `Reprovado por ${resolvedActor.name}. Motivo: ${reason}`
     });
 
     accessAuditService.log({
@@ -1027,7 +1050,7 @@ export const financialApprovalService = {
       actorName: resolvedActor.name,
       actorRole: resolvedActor.profile,
       action: 'APPROVAL_REJECTED',
-      details: `Solicitação ${id} rejeitada formalmente. Motivo: ${reason}`
+      details: `Solicitação ${id} reprovada formalmente. Motivo: ${reason}`
     });
 
     // Notifica o produtor com a justificativa
@@ -1059,8 +1082,9 @@ export const financialApprovalService = {
     // Libera a reserva preventiva de saldo enquanto aguarda correção
     this.releaseBalance(item);
 
+    const prevStatus = item.status;
     item.status = 'DEVOLVIDA';
-    const statusMeta = financialApprovalRulesService.getStatusMeta('DEVOLVIDA');
+    const statusMeta = financialApprovalRulesService.getStatusMeta('AGUARDANDO_CORRECAO');
     item.statusLabelPtBr = statusMeta.label;
     item.badgeClass = statusMeta.badgeClass;
     item.returnNotes = returnNotes;
@@ -1075,7 +1099,7 @@ export const financialApprovalService = {
       actorName: resolvedActor.name,
       actorRole: resolvedActor.profile,
       action: 'SOLICITACAO_DEVOLVIDA',
-      previousStatus: item.status,
+      previousStatus: prevStatus,
       newStatus: 'DEVOLVIDA',
       comment: `Solicitação devolvida por ${resolvedActor.name}. Orientação: ${returnNotes}`
     });
@@ -1101,8 +1125,8 @@ export const financialApprovalService = {
     const item = this.getRequestById(id);
     if (!item) throw new Error(`Solicitação ${id} não encontrada.`);
 
-    if (item.status !== 'DEVOLVIDA') {
-      throw new Error(`Apenas solicitações com status "Devolvida" podem ser reenviadas.`);
+    if (item.status !== 'DEVOLVIDA' && item.status !== 'AGUARDANDO_CORRECAO') {
+      throw new Error(`Apenas solicitações com status "Aguardando Correção" podem ser reenviadas.`);
     }
 
     const resolvedActor = accessControlService.resolveUser(actor);
@@ -1112,9 +1136,11 @@ export const financialApprovalService = {
     if (updatedData.payload) item.payload = { ...item.payload, ...updatedData.payload };
     if (updatedData.attachments) item.attachments = [...(item.attachments || []), ...updatedData.attachments];
 
-    item.status = 'AGUARDANDO_APROVACAO';
-    const statusMeta = financialApprovalRulesService.getStatusMeta('AGUARDANDO_APROVACAO');
-    item.statusLabelPtBr = 'Reenviada (Aguardando)';
+    const prevStatus = item.status;
+    const isRepasse = item.type === 'REPASSE';
+    item.status = isRepasse ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
+    const statusMeta = financialApprovalRulesService.getStatusMeta(item.status);
+    item.statusLabelPtBr = isRepasse ? 'Reenviada (Aguardando Análise)' : 'Reenviada (Aguardando)';
     item.badgeClass = 'bg-primary-subtle text-primary border border-primary';
     item.slaDeadline = new Date(Date.now() + item.slaHours * 3600000).toISOString();
     item.updatedAt = new Date().toISOString();
@@ -1129,8 +1155,8 @@ export const financialApprovalService = {
       actorName: resolvedActor.name,
       actorRole: resolvedActor.profile,
       action: 'SOLICITACAO_REENVIADA',
-      previousStatus: 'DEVOLVIDA',
-      newStatus: 'AGUARDANDO_APROVACAO',
+      previousStatus: prevStatus,
+      newStatus: item.status,
       comment: `Produtor corrigiu as pendências e reenviou a solicitação para avaliação.`
     });
 
@@ -1157,7 +1183,7 @@ export const financialApprovalService = {
       list = list.filter(r => r.producerId === producerId);
     }
 
-    const pendingList = list.filter(r => r.status === 'AGUARDANDO_APROVACAO' || r.status === 'EM_ANALISE' || r.status === 'REENVIADA');
+    const pendingList = list.filter(r => r.status === 'AGUARDANDO_APROVACAO' || r.status === 'AGUARDANDO_ANALISE' || r.status === 'EM_ANALISE' || r.status === 'REENVIADA');
     const pendingCount = pendingList.length;
     const pendingAmount = pendingList.reduce((acc, r) => acc + (r.amount || 0), 0);
 
@@ -1181,6 +1207,70 @@ export const financialApprovalService = {
       slaExpiringCount,
       approvedTodayCount,
       totalCount: list.length
+    };
+  },
+
+  /**
+   * Retorna a Situação Financeira Completa do Evento / Produtor
+   * (Vendas brutas, Taxas, Estornos, Chargebacks, Valores comprometidos, Saldo disponível, Solicitado, Projetado)
+   */
+  getFinancialSituation(requestOrId) {
+    const item = typeof requestOrId === 'string' ? this.getRequestById(requestOrId) : requestOrId;
+    if (!item) {
+      return {
+        grossSales: 350000.00,
+        platformFees: 21000.00,
+        refunds: 8000.00,
+        chargebacks: 2500.00,
+        committed: 30000.00,
+        available: 185430.00,
+        requested: 50000.00,
+        projected: 135430.00
+      };
+    }
+
+    if (item.financialSituation) {
+      return item.financialSituation;
+    }
+
+    const requested = item.amount || 0;
+    const grossSales = Math.max(requested * 4.5, 350000.00);
+    const platformFees = Number((grossSales * 0.06).toFixed(2));
+    const refunds = Number((grossSales * 0.0228).toFixed(2));
+    const chargebacks = Number((grossSales * 0.0071).toFixed(2));
+    const committed = 30000.00;
+    const available = Number(Math.max(0, grossSales - platformFees - refunds - chargebacks - committed - 103070).toFixed(2)) || 185430.00;
+    const projected = Number((available - requested).toFixed(2));
+
+    return {
+      grossSales,
+      platformFees,
+      refunds,
+      chargebacks,
+      committed,
+      available,
+      requested,
+      projected
+    };
+  },
+
+  /**
+   * Retorna os Dados Bancários Cadastrados para a Solicitação / Favorecido
+   */
+  getBankDetails(requestOrId) {
+    const item = typeof requestOrId === 'string' ? this.getRequestById(requestOrId) : requestOrId;
+    const payload = item?.payload || {};
+
+    return {
+      holderName: payload.holderName || item?.producerName || 'DiskIngressos Eventos Ltda',
+      document: payload.document || '08.123.456/0001-99',
+      bankName: payload.bankName || (payload.bankCode === '001' ? 'Banco do Brasil' : (payload.bankCode === '341' ? 'Banco Itaú S.A.' : (payload.bankCode === '033' ? 'Banco Santander' : 'Banco Bradesco'))),
+      bankCode: payload.bankCode || '001',
+      agency: payload.agency || '1502-4',
+      account: payload.account || '99201-0',
+      accountType: payload.accountType || 'Conta Corrente Pessoa Jurídica',
+      pixKey: payload.pixKey || (item?.type === 'ALTERACAO_DADOS_BANCARIOS' ? payload.newPixKey : 'financeiro@diskingressos.com.br'),
+      complianceStatus: 'VALIDADO_COMPLIANCE'
     };
   }
 };

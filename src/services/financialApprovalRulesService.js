@@ -8,6 +8,66 @@
 import { eventBalanceService } from './eventBalanceService.js';
 
 /**
+ * Matriz das 3 Categorias Canônicas de Operações (Transversal Produtor ➔ Financeiro)
+ * TIPO A — CONSULTA: Imediato sem fluxo de aprovação
+ * TIPO B — OPERAÇÃO DO PRODUTOR: Executa diretamente conforme regras configuradas
+ * TIPO C — OPERAÇÃO CONTROLADA: Gera solicitação formal de autorização ao Financeiro Disk
+ */
+export const OPERATION_CATEGORIES = {
+  TIPO_A_CONSULTA: {
+    code: 'TIPO_A_CONSULTA',
+    label: 'Tipo A — Consulta Imediata',
+    categoryName: 'Consulta',
+    description: 'Acesso imediato sem fluxo de autorização: visualização de saldos, extratos, relatórios, conciliação e fluxo de caixa.',
+    requiresApproval: false,
+    operations: [
+      'CONSULTA_SALDO',
+      'CONSULTA_EXTRATO',
+      'CONSULTA_RELATORIO',
+      'CONSULTA_CONCILIACAO',
+      'CONSULTA_BORDERO',
+      'FLUXO_DE_CAIXA'
+    ]
+  },
+  TIPO_B_PRODUTOR: {
+    code: 'TIPO_B_PRODUTOR',
+    label: 'Tipo B — Operação Direta do Produtor',
+    categoryName: 'Operação Direta',
+    description: 'Execução direta pelo produtor conforme parâmetros: cupons de desconto, check-in, portaria e exportação de CSV.',
+    requiresApproval: false,
+    operations: [
+      'CRIAR_CUPOM',
+      'EDITAR_CUPOM',
+      'CONFIGURAR_PORTARIA',
+      'CHECKIN_PARTICIPANTE',
+      'EXPORTAR_CSV_RELATORIO'
+    ]
+  },
+  TIPO_C_CONTROLADA: {
+    code: 'TIPO_C_CONTROLADA',
+    label: 'Tipo C — Operação Controlada (Requer Aprovação)',
+    categoryName: 'Operação Controlada',
+    description: 'Gera solicitação ao Financeiro Disk: repasses, transferências entre eventos, antecipações, dados bancários e pagamentos.',
+    requiresApproval: true,
+    operations: [
+      'REPASSE',
+      'ANTECIPACAO',
+      'TRANSFERENCIA_EVENTOS',
+      'PAGAMENTO',
+      'PAGAMENTO_LOTE',
+      'PIX',
+      'ALTERACAO_DADOS_BANCARIOS',
+      'ESTORNO',
+      'COMPRA',
+      'CONTRATO',
+      'ALTERACAO_TAXA',
+      'ALTERACAO_REGRA_REPASSE',
+      'DESPESA_EXTRAORDINARIA'
+    ]
+  }
+};
+
+/**
  * Matriz Configurável de Políticas de Aprovação
  */
 export const APPROVAL_POLICIES = {
@@ -107,12 +167,15 @@ export const APPROVAL_POLICIES = {
  */
 export const STATUS_MAP = {
   RASCUNHO: { label: 'Rascunho', badgeClass: 'bg-secondary text-white' },
-  AGUARDANDO_APROVACAO: { label: 'Aguardando Aprovação', badgeClass: 'bg-warning text-dark' },
+  AGUARDANDO_APROVACAO: { label: 'Aguardando Análise', badgeClass: 'bg-warning text-dark' },
+  AGUARDANDO_ANALISE: { label: 'Aguardando Análise', badgeClass: 'bg-warning text-dark' },
   EM_ANALISE: { label: 'Em Análise', badgeClass: 'bg-info text-white' },
-  DEVOLVIDA: { label: 'Devolvida p/ Correção', badgeClass: 'bg-warning-subtle text-dark border border-warning' },
+  DEVOLVIDA: { label: 'Aguardando Correção', badgeClass: 'bg-warning-subtle text-dark border border-warning' },
+  AGUARDANDO_CORRECAO: { label: 'Aguardando Correção', badgeClass: 'bg-warning-subtle text-dark border border-warning' },
   REENVIADA: { label: 'Reenviada pelo Produtor', badgeClass: 'bg-primary-subtle text-primary border border-primary' },
   APROVADA: { label: 'Aprovada', badgeClass: 'bg-success text-white' },
-  REJEITADA: { label: 'Rejeitada', badgeClass: 'bg-danger text-white' },
+  REJEITADA: { label: 'Reprovada', badgeClass: 'bg-danger text-white' },
+  REPROVADA: { label: 'Reprovada', badgeClass: 'bg-danger text-white' },
   EM_EXECUCAO: { label: 'Em Execução Bancária', badgeClass: 'bg-primary text-white' },
   CONCLUIDA: { label: 'Concluída / Executada', badgeClass: 'bg-success text-white' },
   FALHA_EXECUCAO: { label: 'Falha na Execução', badgeClass: 'bg-danger text-white' },
@@ -264,5 +327,35 @@ export const financialApprovalRulesService = {
    */
   getTypeMeta(type) {
     return TYPE_MAP[type] || { label: type, icon: 'ph-file', color: 'text-primary' };
+  },
+
+  /**
+   * Obtém a categoria canônica da operação (TIPO_A, TIPO_B, TIPO_C)
+   */
+  getOperationCategory(type) {
+    if (!type) return OPERATION_CATEGORIES.TIPO_A_CONSULTA;
+    const upper = String(type).toUpperCase().trim();
+    if (OPERATION_CATEGORIES.TIPO_C_CONTROLADA.operations.includes(upper) || APPROVAL_POLICIES[upper]) {
+      return OPERATION_CATEGORIES.TIPO_C_CONTROLADA;
+    }
+    if (OPERATION_CATEGORIES.TIPO_B_PRODUTOR.operations.includes(upper)) {
+      return OPERATION_CATEGORIES.TIPO_B_PRODUTOR;
+    }
+    return OPERATION_CATEGORIES.TIPO_A_CONSULTA;
+  },
+
+  /**
+   * Verifica se a operação requer aprovação da equipe financeira (Tipo C)
+   */
+  isControlledOperation(type) {
+    return this.getOperationCategory(type).requiresApproval;
+  },
+
+  /**
+   * Lista operações pertencentes a uma categoria
+   */
+  listOperationsByCategory(categoryCode) {
+    const cat = OPERATION_CATEGORIES[categoryCode];
+    return cat ? cat.operations : [];
   }
 };

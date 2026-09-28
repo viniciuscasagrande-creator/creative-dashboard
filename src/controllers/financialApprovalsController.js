@@ -13,8 +13,8 @@ import { accessControlService } from '../services/accessControlService.js';
 // Estado local da tela de aprovações
 let currentRole = 'FINANCEIRO'; // 'FINANCEIRO' | 'PRODUTOR' | 'ADMINISTRADOR'
 let activeTab = 'todas';        // 'todas' | 'pendentes' | 'em_analise' | 'devolvidas' | 'aprovadas' | 'rejeitadas' | 'concluidas'
-let currentActor = accessControlService.getCurrentUser() || {
-  id: 'user-fin-carlos',
+let currentActor = accessControlService.getCurrentUser() || accessControlService.getUserById('user-admin-carlos') || {
+  id: 'user-admin-carlos',
   name: 'Carlos Lima',
   role: 'GESTOR_FINANCEIRO',
   email: 'carlos.lima@diskingressos.com.br'
@@ -24,8 +24,33 @@ let selectedRequestId = null;
 export const financialApprovalsController = {
   init() {
     this.bindGlobalEvents();
+    this.updateHeader();
     this.refreshDashboard();
     financialApprovalNotificationService.refreshNavbarBell(currentRole);
+  },
+
+  /**
+   * Atualiza cabeçalho e títulos contextuais (Portal do Produtor vs Financeiro Disk)
+   */
+  updateHeader() {
+    const titleEl = document.getElementById('approval-header-main-text');
+    const subEl = document.getElementById('approval-view-header-subtitle');
+    const iconEl = document.getElementById('approval-header-icon');
+    if (titleEl) {
+      if (currentRole === 'PRODUTOR') {
+        titleEl.textContent = 'Portal do Produtor — Minhas Solicitações Financeiras';
+        if (iconEl) iconEl.className = 'ph-user-circle text-primary';
+        if (subEl) subEl.innerHTML = 'Portal do Produtor &bull; Acompanhamento de Protocolos e Solicitações Controladas (Tipo C)';
+      } else if (currentRole === 'FINANCEIRO') {
+        titleEl.textContent = 'Central de Solicitações Financeiras';
+        if (iconEl) iconEl.className = 'ph-shield-check text-primary';
+        if (subEl) subEl.innerHTML = 'Backoffice Disk Interno &bull; Recebimento, Análise, Decisão e Execução Financeira &bull; Maker/Checker &bull; Alçadas';
+      } else {
+        titleEl.textContent = 'Central Unificada de Aprovações Financeiras (Master)';
+        if (iconEl) iconEl.className = 'ph-shield-check text-dark';
+        if (subEl) subEl.innerHTML = 'Supervisão Geral de Governança, Alçadas, Auditoria e Liquidações Contábeis';
+      }
+    }
   },
 
   /**
@@ -39,7 +64,7 @@ export const financialApprovalsController = {
       currentActor = accessControlService.switchCurrentUser('user-admin-master');
     } else {
       currentRole = 'FINANCEIRO';
-      currentActor = accessControlService.switchCurrentUser('user-fin-carlos');
+      currentActor = accessControlService.switchCurrentUser('user-admin-carlos') || accessControlService.switchCurrentUser('user-fin-mariana');
     }
 
     // Atualiza badges visuais do seletor
@@ -56,6 +81,7 @@ export const financialApprovalsController = {
       labelIndicator.textContent = currentActor.name;
     }
 
+    this.updateHeader();
     this.refreshDashboard();
     financialApprovalNotificationService.refreshNavbarBell(currentRole);
   },
@@ -70,7 +96,14 @@ export const financialApprovalsController = {
       btn.classList.add('btn-light', 'text-dark');
     });
 
-    const activeBtn = document.getElementById(`tab-appr-${tab}`);
+    const activeBtn = document.getElementById(`tab-appr-${tab}`) ||
+      (tab === 'novas' ? document.getElementById('tab-appr-pendentes') : null) ||
+      (tab === 'pendentes' ? document.getElementById('tab-appr-novas') : null) ||
+      (tab === 'aguardando_correcao' ? document.getElementById('tab-appr-devolvidas') : null) ||
+      (tab === 'devolvidas' ? document.getElementById('tab-appr-aguardando_correcao') : null) ||
+      (tab === 'reprovadas' ? document.getElementById('tab-appr-rejeitadas') : null) ||
+      (tab === 'rejeitadas' ? document.getElementById('tab-appr-reprovadas') : null);
+
     if (activeBtn) {
       activeBtn.classList.remove('btn-light', 'text-dark');
       activeBtn.classList.add('active', 'btn-primary', 'text-white');
@@ -131,11 +164,11 @@ export const financialApprovalsController = {
     const risk = document.getElementById('select-filter-approval-risk')?.value || 'TODOS';
 
     let statusFilter = 'TODAS';
-    if (activeTab === 'pendentes') statusFilter = 'PENDENTES';
+    if (activeTab === 'pendentes' || activeTab === 'novas') statusFilter = 'PENDENTES';
     else if (activeTab === 'em_analise') statusFilter = 'EM_ANALISE';
-    else if (activeTab === 'devolvidas') statusFilter = 'DEVOLVIDA';
+    else if (activeTab === 'devolvidas' || activeTab === 'aguardando_correcao') statusFilter = 'DEVOLVIDA';
     else if (activeTab === 'aprovadas') statusFilter = 'APROVADA';
-    else if (activeTab === 'rejeitadas') statusFilter = 'REJEITADA';
+    else if (activeTab === 'rejeitadas' || activeTab === 'reprovadas') statusFilter = 'REJEITADA';
     else if (activeTab === 'concluidas') statusFilter = 'CONCLUIDA';
 
     const list = financialApprovalService.listRequests({
@@ -166,7 +199,7 @@ export const financialApprovalsController = {
       const isMaker = currentActor.id === req.requestedBy?.id;
 
       return `
-        <tr class="${isUrgent && req.status === 'AGUARDANDO_APROVACAO' ? 'table-warning-subtle' : ''}">
+        <tr class="${isUrgent && (req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE') ? 'table-warning-subtle' : ''}">
           <td class="fw-bold fs-xs text-primary font-monospace">
             ${req.id}
           </td>
@@ -199,9 +232,15 @@ export const financialApprovalsController = {
             <span class="badge ${req.badgeClass} fs-xxs">${req.statusLabelPtBr}</span>
           </td>
           <td class="text-end">
-            <button class="btn btn-xs btn-primary fw-bold d-inline-flex align-items-center gap-1 shadow-sm" onclick="window.openApprovalDecisionDrawer('${req.id}')">
-              <i class="ph-magnifying-glass"></i> Analisar
-            </button>
+            ${currentRole === 'PRODUTOR' ? `
+              <button class="btn btn-xs btn-outline-primary fw-bold d-inline-flex align-items-center gap-1 shadow-sm" onclick="window.openApprovalDecisionDrawer('${req.id}')">
+                <i class="ph-files"></i> Ver Protocolo
+              </button>
+            ` : `
+              <button class="btn btn-xs btn-primary fw-bold d-inline-flex align-items-center gap-1 shadow-sm" onclick="window.openApprovalDecisionDrawer('${req.id}')">
+                <i class="ph-magnifying-glass"></i> Analisar
+              </button>
+            `}
           </td>
         </tr>
       `;
@@ -216,19 +255,25 @@ export const financialApprovalsController = {
     const req = financialApprovalService.getRequestById(id);
     if (!req) return;
 
-    // Se estiver em aguardando e quem abriu foi Financeiro, inicia análise
-    if (currentRole === 'FINANCEIRO' && req.status === 'AGUARDANDO_APROVACAO') {
-      financialApprovalService.startAnalysis(id, currentActor);
-    }
+    const user = accessControlService.getCurrentUser() || currentActor;
+    const isProducer = currentRole === 'PRODUTOR' || (currentRole !== 'FINANCEIRO' && currentRole !== 'ADMINISTRADOR' && (user.userType === 'PRODUTOR' || user.profile?.startsWith('PRODUTOR')));
 
     const drawerElement = document.getElementById('offcanvas-approval-decision');
     const content = document.getElementById('offcanvas-approval-content');
     const footer = document.getElementById('offcanvas-approval-footer');
+    const drawerTitle = document.getElementById('offcanvas-approval-title-text');
+    const drawerSubtitle = document.getElementById('offcanvas-approval-subtitle');
+
+    if (drawerTitle) {
+      drawerTitle.textContent = isProducer ? `Protocolo de Solicitação — ${req.id}` : `Painel de Análise e Decisão — ${req.id}`;
+    }
+    if (drawerSubtitle) {
+      drawerSubtitle.textContent = isProducer ? 'Portal do Produtor • Acompanhamento da Solicitação' : 'Backoffice Disk • Controladoria Financeira';
+    }
 
     if (!drawerElement || !content) return;
 
     const typeMeta = financialApprovalRulesService.getTypeMeta(req.type);
-    const user = accessControlService.getCurrentUser() || currentActor;
     const isMaster = user.profile === 'ADMINISTRADOR' || user.profile === 'DEVELOPER';
     const isMaker = user.id === req.requestedBy?.id || (user.email && req.requestedBy?.email && user.email.toLowerCase() === req.requestedBy?.email.toLowerCase());
     const canApprove = accessControlService.can(user, 'financeiro.aprovacoes.aprovar', {
@@ -243,6 +288,10 @@ export const financialApprovalsController = {
       producerId: req.producerId,
       eventId: req.eventId
     });
+
+    // Dados de Situação Financeira e Domicílio Bancário
+    const fiSituation = financialApprovalService.getFinancialSituation(req);
+    const bankData = financialApprovalService.getBankDetails(req);
 
     // 1. Bloco de Impacto Financeiro
     let impactHtml = '';
@@ -278,7 +327,82 @@ export const financialApprovalsController = {
       `;
     }
 
-    // 2. Validações Automáticas
+    // 2. Situação Financeira (Exclusivo Backoffice Disk / Financeiro)
+    const financialSituationHtml = !isProducer ? `
+      <div class="card border border-primary-subtle shadow-sm mb-3">
+        <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+          <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
+            <i class="ph-chart-line-up text-primary"></i> Situação Financeira
+          </strong>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">Posição Atualizada</span>
+        </div>
+        <div class="card-body p-3">
+          <div class="table-responsive">
+            <table class="table table-sm table-borderless align-middle mb-0 fs-xs font-monospace">
+              <tbody>
+                <tr>
+                  <td class="text-muted font-sans-serif">Vendas brutas</td>
+                  <td class="text-end fw-bold text-dark">R$ ${fiSituation.grossSales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td class="text-muted font-sans-serif">Taxas</td>
+                  <td class="text-end text-danger">- R$ ${fiSituation.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td class="text-muted font-sans-serif">Estornos</td>
+                  <td class="text-end text-danger">- R$ ${fiSituation.refunds.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td class="text-muted font-sans-serif">Chargebacks</td>
+                  <td class="text-end text-danger">- R$ ${fiSituation.chargebacks.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td class="text-muted font-sans-serif">Valores comprometidos</td>
+                  <td class="text-end text-warning">- R$ ${fiSituation.committed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr class="border-top border-secondary">
+                  <td class="fw-bold text-dark font-sans-serif">Saldo disponível</td>
+                  <td class="text-end fw-bold text-success fs-sm">R$ ${fiSituation.available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr class="bg-light">
+                  <td class="fw-bold text-primary font-sans-serif">Repasse / Valor solicitado</td>
+                  <td class="text-end fw-bold text-primary fs-sm">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr class="border-top border-primary-subtle">
+                  <td class="fw-bold text-dark font-sans-serif">Saldo projetado</td>
+                  <td class="text-end fw-bold ${fiSituation.projected >= 0 ? 'text-success' : 'text-danger'} fs-sm">R$ ${fiSituation.projected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    // 3. Dados Bancários & Favorecido
+    const bankDetailsHtml = `
+      <div class="card border mb-3 shadow-sm bg-white">
+        <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+          <strong class="fs-xs text-dark d-flex align-items-center gap-1">
+            <i class="ph-bank text-secondary"></i> Dados Bancários &amp; Favorecido
+          </strong>
+          <span class="badge bg-success-subtle text-success border border-success-subtle fs-xxs">
+            <i class="ph-shield-check"></i> Titularidade Validada
+          </span>
+        </div>
+        <div class="card-body p-3 fs-xs">
+          <div class="row g-2">
+            <div class="col-7"><span class="text-muted fs-xxs d-block">Titular / Favorecido:</span><strong class="text-dark">${bankData.holderName}</strong></div>
+            <div class="col-5"><span class="text-muted fs-xxs d-block">CNPJ / CPF:</span><span class="text-dark font-monospace">${bankData.document}</span></div>
+            <div class="col-7"><span class="text-muted fs-xxs d-block">Banco:</span><strong class="text-dark">${bankData.bankName} (${bankData.bankCode})</strong></div>
+            <div class="col-5"><span class="text-muted fs-xxs d-block">Agência e Conta:</span><span class="text-dark font-monospace">Ag ${bankData.agency} / CC ${bankData.account}</span></div>
+            ${bankData.pixKey ? `<div class="col-12 mt-1"><span class="text-muted fs-xxs d-block">Chave PIX:</span><span class="badge bg-light text-dark border font-monospace">${bankData.pixKey}</span></div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 4. Validações Automáticas
     const validationsHtml = req.automatedValidations && req.automatedValidations.length > 0 ? `
       <div class="card border mb-3 shadow-sm">
         <div class="card-header bg-white py-2 px-3 border-bottom">
@@ -298,7 +422,7 @@ export const financialApprovalsController = {
       </div>
     ` : '';
 
-    // 3. Linha do Tempo e Auditoria
+    // 5. Linha do Tempo e Auditoria
     const auditHtml = `
       <div class="card border mb-3 shadow-sm">
         <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
@@ -339,10 +463,16 @@ export const financialApprovalsController = {
       </div>
 
       <!-- Alerta se devolvida -->
-      ${req.status === 'DEVOLVIDA' ? `
-        <div class="alert alert-warning py-2 px-3 fs-xs mb-3">
-          <strong class="d-block"><i class="ph-warning me-1"></i> Solicitação Devolvida para Ajustes:</strong>
-          <span>"${req.returnNotes}"</span>
+      ${(req.status === 'DEVOLVIDA' || req.status === 'AGUARDANDO_CORRECAO') ? `
+        <div class="alert alert-warning py-3 px-3 fs-xs mb-3 shadow-sm border border-warning">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="ph-warning-circle text-warning fs-4"></i>
+            <strong class="text-dark">${isProducer ? 'Solicitação Devolvida para Ajustes' : 'Aguardando Correção pelo Produtor'}</strong>
+          </div>
+          <div class="p-2 bg-white rounded border fs-xs text-dark fst-italic my-2">
+            "${req.returnNotes}"
+          </div>
+          ${isProducer ? '<span class="fs-xxs text-muted">Ajuste os dados solicitados e reenvie mantendo o mesmo protocolo e histórico.</span>' : ''}
         </div>
       ` : ''}
 
@@ -362,70 +492,114 @@ export const financialApprovalsController = {
         </div>
       </div>
 
+      ${financialSituationHtml}
+      ${bankDetailsHtml}
       ${impactHtml}
       ${validationsHtml}
       ${auditHtml}
     `;
 
-    // Renderiza o Rodapé de Ações com Governança Maker/Checker e Dupla Aprovação
+    // Renderiza o Rodapé de Ações com Governança Maker/Checker e Segregação
     if (footer) {
-      if (req.status === 'CONCLUIDA' || req.status === 'REJEITADA') {
-        footer.innerHTML = `
-          <div class="w-100 d-flex justify-content-between align-items-center">
-            <span class="fs-xs text-muted"><i class="ph-lock me-1"></i> Operação encerrada</span>
-            <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar</button>
-          </div>
-        `;
-      } else if (isMaker && !isMaster) {
-        // Bloqueio por Maker/Checker: o solicitante não pode aprovar
-        footer.innerHTML = `
-          <div class="w-100">
-            <div class="alert alert-warning py-1 px-2 fs-xxs mb-2 text-center">
-              <i class="ph-shield-warning me-1"></i> <strong>Princípio Maker/Checker:</strong> Você solicitou esta operação e não pode aprová-la.
-            </div>
-            ${req.status === 'DEVOLVIDA' ? `
-              <button class="btn btn-sm btn-warning w-100 fw-bold" onclick="window.openResubmitModal('${req.id}')">
-                <i class="ph-pencil-simple me-1"></i> Corrigir e Reenviar Solicitação
-              </button>
-            ` : `
-              <button class="btn btn-sm btn-light border w-100" data-bs-dismiss="offcanvas">Fechar Visualização</button>
-            `}
-          </div>
-        `;
-      } else if (canApprove) {
-        // Se estiver aguardando 2º Nível e quem abriu foi o mesmo que deu o 1º nível:
-        const isFirstLevelApprover = req.firstLevelApprovedBy && (req.firstLevelApprovedBy.id === user.id || (req.firstLevelApprovedBy.email && user.email && req.firstLevelApprovedBy.email.toLowerCase() === user.email.toLowerCase()));
-        if (isFirstLevelApprover && !isMaster) {
+      if (isProducer) {
+        // PRODUTOR NUNCA TEM BOTÕES DE APROVAR/REPROVAR/DEVOLVER
+        if (req.status === 'DEVOLVIDA' || req.status === 'AGUARDANDO_CORRECAO') {
           footer.innerHTML = `
-            <div class="w-100">
-              <div class="alert alert-info py-1 px-2 fs-xxs mb-2 text-center">
-                <i class="ph-info me-1"></i> <strong>Dupla Aprovação Requerida:</strong> Você concedeu o 1º nível de aprovação. O 2º nível deve ser aprovado por outro gestor financeiro.
-              </div>
-              <button class="btn btn-sm btn-light border w-100" data-bs-dismiss="offcanvas">Fechar</button>
+            <div class="w-100 d-flex gap-2">
+              <button class="btn btn-sm btn-light border w-50" data-bs-dismiss="offcanvas">Fechar</button>
+              <button class="btn btn-sm btn-warning w-50 fw-bold d-flex align-items-center justify-content-center gap-1 shadow-sm" onclick="window.openResubmitModal('${req.id}')">
+                <i class="ph-pencil-simple"></i> Corrigir e Reenviar
+              </button>
             </div>
           `;
         } else {
-          const isSecondLevel = req.approvalLevel === 'DUPLA_APROVACAO' && req.firstLevelApprovedBy;
           footer.innerHTML = `
-            <div class="d-flex justify-content-between w-100 gap-2">
-              ${canReturn ? `
-                <button class="btn btn-sm btn-outline-warning fw-bold d-flex align-items-center gap-1" onclick="window.openReturnDecisionModal('${req.id}')">
-                  <i class="ph-arrow-u-up-left"></i> Devolver
-                </button>
-              ` : ''}
-              ${canReject ? `
-                <button class="btn btn-sm btn-outline-danger fw-bold d-flex align-items-center gap-1" onclick="window.openRejectDecisionModal('${req.id}')">
-                  <i class="ph-x-circle"></i> Rejeitar
-                </button>
-              ` : ''}
-              <button class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1 px-3" onclick="window.openApproveDecisionModal('${req.id}')">
-                <i class="ph-check-circle"></i> ${isSecondLevel ? 'Aprovar (2º Nível)' : 'Aprovar Operação'}
-              </button>
+            <div class="w-100 d-flex justify-content-between align-items-center">
+              <span class="fs-xs text-muted"><i class="ph-info me-1"></i> Protocolo registrado no Financeiro Disk</span>
+              <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar Visualização</button>
             </div>
           `;
         }
       } else {
-        footer.innerHTML = `<button class="btn btn-sm btn-light border w-100" data-bs-dismiss="offcanvas">Fechar</button>`;
+        // BACKOFFICE DISK / FINANCEIRO INTERNO
+        if (req.status === 'CONCLUIDA') {
+          footer.innerHTML = `
+            <div class="w-100 d-flex justify-content-between align-items-center">
+              <span class="fs-xs text-success fw-bold"><i class="ph-check-circle me-1"></i> Operação Concluída e Liquidada</span>
+              <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar</button>
+            </div>
+          `;
+        } else if (req.status === 'REJEITADA' || req.status === 'REPROVADA') {
+          footer.innerHTML = `
+            <div class="w-100 d-flex justify-content-between align-items-center">
+              <span class="fs-xs text-danger fw-bold"><i class="ph-x-circle me-1"></i> Operação Reprovada / Arquivada</span>
+              <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar</button>
+            </div>
+          `;
+        } else if (isMaker && !isMaster) {
+          // Bloqueio por Maker/Checker: o solicitante não pode aprovar
+          footer.innerHTML = `
+            <div class="w-100">
+              <div class="alert alert-warning py-1 px-2 fs-xxs mb-2 text-center">
+                <i class="ph-shield-warning me-1"></i> <strong>Princípio Maker/Checker:</strong> Você solicitou esta operação e não possui permissão para aprová-la.
+              </div>
+              ${(req.status === 'DEVOLVIDA' || req.status === 'AGUARDANDO_CORRECAO') ? `
+                <button class="btn btn-sm btn-warning w-100 fw-bold" onclick="window.openResubmitModal('${req.id}')">
+                  <i class="ph-pencil-simple me-1"></i> Corrigir e Reenviar Solicitação
+                </button>
+              ` : `
+                <button class="btn btn-sm btn-light border w-100" data-bs-dismiss="offcanvas">Fechar Visualização</button>
+              `}
+            </div>
+          `;
+        } else if (canApprove) {
+          const isFirstLevelApprover = req.firstLevelApprovedBy && (req.firstLevelApprovedBy.id === user.id || (req.firstLevelApprovedBy.email && user.email && req.firstLevelApprovedBy.email.toLowerCase() === user.email.toLowerCase()));
+          if (isFirstLevelApprover && !isMaster) {
+            footer.innerHTML = `
+              <div class="w-100">
+                <div class="alert alert-info py-1 px-2 fs-xxs mb-2 text-center">
+                  <i class="ph-info me-1"></i> <strong>Dupla Aprovação Requerida:</strong> Você concedeu o 1º nível de aprovação. O 2º nível deve ser aprovado por outro gestor financeiro independente.
+                </div>
+                <button class="btn btn-sm btn-light border w-100" data-bs-dismiss="offcanvas">Fechar</button>
+              </div>
+            `;
+          } else if (req.status === 'APROVADA' && req.executionStatus !== 'CONCLUIDA') {
+            footer.innerHTML = `
+              <div class="d-flex justify-content-between w-100 gap-2">
+                <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar</button>
+                <button class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1 px-3 shadow-sm" onclick="window.executeApprovedAction('${req.id}')">
+                  <i class="ph-lightning"></i> Executar Operação
+                </button>
+              </div>
+            `;
+          } else {
+            const isSecondLevel = req.approvalLevel === 'DUPLA_APROVACAO' && req.firstLevelApprovedBy;
+            footer.innerHTML = `
+              <div class="d-flex flex-wrap justify-content-between w-100 gap-2">
+                ${(req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE') ? `
+                  <button class="btn btn-sm btn-outline-info fw-bold d-flex align-items-center gap-1" onclick="window.startAnalysisAction('${req.id}')">
+                    <i class="ph-magnifying-glass"></i> Iniciar Análise
+                  </button>
+                ` : ''}
+                ${canReturn ? `
+                  <button class="btn btn-sm btn-outline-warning fw-bold d-flex align-items-center gap-1" onclick="window.openReturnDecisionModal('${req.id}')">
+                    <i class="ph-arrow-u-up-left"></i> Devolver
+                  </button>
+                ` : ''}
+                ${canReject ? `
+                  <button class="btn btn-sm btn-outline-danger fw-bold d-flex align-items-center gap-1" onclick="window.openRejectDecisionModal('${req.id}')">
+                    <i class="ph-x-circle"></i> Reprovar
+                  </button>
+                ` : ''}
+                <button class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1 px-3" onclick="window.openApproveDecisionModal('${req.id}')">
+                  <i class="ph-check-circle"></i> ${isSecondLevel ? 'Aprovar (2º Nível)' : 'Aprovar Operação'}
+                </button>
+              </div>
+            `;
+          }
+        } else {
+          footer.innerHTML = `<button class="btn btn-sm btn-light border w-100" data-bs-dismiss="offcanvas">Fechar</button>`;
+        }
       }
     }
 
@@ -612,6 +786,40 @@ export const financialApprovalsController = {
     }
   },
 
+  /**
+   * Inicia formalmente a análise da solicitação pelo Financeiro Disk
+   */
+  startAnalysisAction(id) {
+    try {
+      financialApprovalService.startAnalysis(id, currentActor);
+      this.refreshDashboard();
+      this.openDrawer(id);
+      if (window.showAppNotification) {
+        window.showAppNotification('Solicitação colocada em análise operacional com sucesso!', 'info');
+      }
+    } catch (err) {
+      alert(`Erro ao iniciar análise: ${err.message}`);
+    }
+  },
+
+  /**
+   * Executa a operação aprovada
+   */
+  async executeApprovedAction(id) {
+    try {
+      const req = financialApprovalService.getRequestById(id);
+      if (!req) return;
+      await financialApprovalService.executeApprovedRequest(req);
+      this.refreshDashboard();
+      this.openDrawer(id);
+      if (window.showAppNotification) {
+        window.showAppNotification('Operação financeira executada e liquidada com sucesso!', 'success');
+      }
+    } catch (err) {
+      alert(`Erro na execução: ${err.message}`);
+    }
+  },
+
   bindGlobalEvents() {
     window.switchApprovalRole = (role) => this.switchRole(role);
     window.switchApprovalTab = (tab) => this.switchTab(tab);
@@ -625,6 +833,8 @@ export const financialApprovalsController = {
     window.confirmReturnDecision = () => this.confirmReturn();
     window.openResubmitModal = (id) => this.openResubmitModal(id);
     window.confirmResubmit = () => this.confirmResubmit();
+    window.startAnalysisAction = (id) => this.startAnalysisAction(id);
+    window.executeApprovedAction = (id) => this.executeApprovedAction(id);
     window.refreshApprovalsDashboard = () => this.refreshDashboard();
     window.handleNotificationItemClick = (notifId, reqId) => {
       financialApprovalNotificationService.markAsRead(notifId, currentRole);

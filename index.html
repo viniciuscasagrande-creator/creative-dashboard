@@ -230,6 +230,11 @@
                                         <span id="fin-nav-approvals-badge" class="badge rounded-pill bg-danger fs-xxs" style="padding: 2px 7px;">17</span>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link approval-submenu-link fw-semibold d-flex align-items-center justify-content-between" data-view="financial-approvals" data-menu-key="fin-my-requests" data-route="/financeiro/minhas-solicitacoes" id="fin-nav-producer-requests-link">
+                                        <span><i class="ph-files me-2 text-primary"></i> Minhas Solicitações</span>
+                                    </a>
+                                </li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics" data-menu-key="fin-intelligence" data-route="/financeiro/inteligencia"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="dashboard-indicators" data-menu-key="fin-indicators" data-route="/financeiro/indicadores"><i class="ph-gauge me-2"></i> Indicadores</a></li>
 
@@ -4096,9 +4101,9 @@
                         <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
                             <div>
                                 <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                                    <i class="ph-shield-check text-primary"></i> Central Unificada de Aprovações Financeiras
+                                    <i class="ph-shield-check text-primary" id="approval-header-icon"></i> <span id="approval-header-main-text">Central Unificada de Aprovações Financeiras</span>
                                 </h5>
-                                <div class="text-muted fs-xs">
+                                <div class="text-muted fs-xs" id="approval-view-header-subtitle">
                                     Workflow Transversal Produtor ➔ Controladoria &bull; Governança Maker/Checker &bull; Alçadas &bull; SLA
                                 </div>
                             </div>
@@ -4215,11 +4220,11 @@
                                     <!-- Abas de Navegação -->
                                     <div class="btn-group btn-group-sm flex-wrap" role="group" id="approval-status-tabs">
                                         <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-todas" onclick="window.switchApprovalTab('todas')">Todas</button>
-                                        <button type="button" class="btn btn-primary text-white fw-bold active tab-approval-link" id="tab-appr-pendentes" onclick="window.switchApprovalTab('pendentes')">Pendentes</button>
+                                        <button type="button" class="btn btn-primary text-white fw-bold active tab-approval-link" id="tab-appr-pendentes" onclick="window.switchApprovalTab('pendentes')">Novas</button>
                                         <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-em_analise" onclick="window.switchApprovalTab('em_analise')">Em Análise</button>
-                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-devolvidas" onclick="window.switchApprovalTab('devolvidas')">Devolvidas</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-devolvidas" onclick="window.switchApprovalTab('devolvidas')">Aguardando Correção</button>
                                         <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-aprovadas" onclick="window.switchApprovalTab('aprovadas')">Aprovadas</button>
-                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-rejeitadas" onclick="window.switchApprovalTab('rejeitadas')">Rejeitadas</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-rejeitadas" onclick="window.switchApprovalTab('rejeitadas')">Reprovadas</button>
                                         <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-concluidas" onclick="window.switchApprovalTab('concluidas')">Concluídas</button>
                                     </div>
 
@@ -4536,7 +4541,7 @@
                                                         </div>
                                                         <div class="text-end">
                                                             <button type="button" class="btn btn-light me-2 btn-sm fw-bold" onclick="activateFinancialSubtab('saldo')">Cancelar</button>
-                                                            <button type="submit" class="btn btn-success btn-sm fw-bold" id="btn-submit-repasse-form" disabled>Solicitar Repasse</button>
+                                                            <button type="submit" class="btn btn-success btn-sm fw-bold" id="btn-submit-repasse-form" disabled>Solicitar Repasse ao Financeiro Disk</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -17494,7 +17499,7 @@ Como podemos te ajudar hoje?
             <!-- Modal footer buttons with dynamic state management -->
             <div class="modal-footer" id="repasse-wizard-footer">
                 <button type="button" class="btn btn-light btn-sm" id="btn-repasse-prev" onclick="navigateRepasseWizard(-1)">Voltar</button>
-                <button type="button" class="btn btn-primary btn-sm fw-bold" id="btn-repasse-next" onclick="navigateRepasseWizard(1)">Confirmar</button>
+                <button type="button" class="btn btn-primary btn-sm fw-bold" id="btn-repasse-next" onclick="navigateRepasseWizard(1)">Solicitar Repasse ao Financeiro Disk</button>
             </div>
         </div>
     </div>
@@ -19365,9 +19370,12 @@ Como podemos te ajudar hoje?
     <!-- Painel Lateral de Decisão Financeira (Offcanvas / Drawer) -->
     <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvas-approval-decision" style="width: 580px; max-width: 95vw;">
         <div class="offcanvas-header bg-light border-bottom py-3">
-            <h5 class="offcanvas-title fw-bold text-dark d-flex align-items-center gap-2">
-                <i class="ph-shield-check text-primary fs-4"></i> Painel de Decisão Financeira
-            </h5>
+            <div>
+                <h5 class="offcanvas-title fw-bold text-dark d-flex align-items-center gap-2 mb-0" id="offcanvas-approval-title">
+                    <i class="ph-shield-check text-primary fs-4" id="offcanvas-approval-icon"></i> <span id="offcanvas-approval-title-text">Painel de Decisão Financeira</span>
+                </h5>
+                <div class="text-muted fs-xs" id="offcanvas-approval-subtitle">Backoffice Disk &bull; Controladoria Financeira</div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
         </div>
         <div class="offcanvas-body p-3" id="offcanvas-approval-content">

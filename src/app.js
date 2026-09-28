@@ -3301,7 +3301,7 @@ function updatePayoutWizardUI() {
     }
     if (btnNext) {
       btnNext.style.display = 'block';
-      btnNext.textContent = 'Confirmar';
+      btnNext.textContent = 'Solicitar Repasse ao Financeiro Disk';
       btnNext.disabled = false;
     }
     
@@ -3327,13 +3327,13 @@ function updatePayoutWizardUI() {
     }
     if (btnNext) {
       btnNext.style.display = 'block';
-      btnNext.textContent = 'Ver Histórico';
+      btnNext.textContent = 'Minhas Solicitações';
       btnNext.disabled = false;
     }
   }
 }
 
-function navigateRepasseWizard(direction) {
+async function navigateRepasseWizard(direction) {
   // If moving forward, validate inputs
   if (direction === 1) {
     if (payoutWizardStep === 1) {
@@ -3379,7 +3379,7 @@ function navigateRepasseWizard(direction) {
     } 
     else if (payoutWizardStep === 4) {
       // business rule: prevent duplicate payout requests if there is one processing
-      const hasPending = PAYOUTS_HISTORY.some(p => p.status === 'Em processamento' || p.status === 'Em Processamento');
+      const hasPending = PAYOUTS_HISTORY.some(p => p.status === 'Em processamento' || p.status === 'Em Processamento' || p.status === 'Aguardando Análise');
       if (hasPending) {
         alert('Impossível prosseguir. Já existe uma solicitação de repasse em processamento. Aguarde a aprovação atual.');
         closeModal('request-repasse');
@@ -3389,8 +3389,16 @@ function navigateRepasseWizard(direction) {
       // Confirm Repasse payout request execution!
       payoutAvailableBalance -= payoutRequestedBalance;
       
-      const newPayoutId = "REP000458";
-      const requestDate = "07/07/2026";
+      let createdProtocol = null;
+      if (typeof handleProducerRepasseSubmitConfirmed === 'function') {
+        const subRes = await handleProducerRepasseSubmitConfirmed(payoutRequestedBalance, payoutSelectedBank, payoutSelectedMethod);
+        if (subRes && subRes.protocolId) {
+          createdProtocol = subRes.protocolId;
+        }
+      }
+      
+      const newPayoutId = createdProtocol || "RP-2026-000142";
+      const requestDate = new Date().toLocaleDateString('pt-BR');
       
       // Append payout history log
       PAYOUTS_HISTORY.push({
@@ -3399,39 +3407,38 @@ function navigateRepasseWizard(direction) {
         value: payoutRequestedBalance,
         account: payoutSelectedBank,
         method: payoutSelectedMethod,
-        status: "Em processamento"
+        status: "Aguardando Análise"
       });
       
       // Render success panel content
-      document.getElementById('success-payout-id').textContent = `#${newPayoutId}`;
-      document.getElementById('success-payout-value').textContent = `R$ ${payoutRequestedBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-      document.getElementById('success-payout-date').textContent = "08/07/2026"; // next day
+      const succIdEl = document.getElementById('success-payout-id');
+      if (succIdEl) succIdEl.textContent = newPayoutId;
+      const succValEl = document.getElementById('success-payout-value');
+      if (succValEl) succValEl.textContent = `R$ ${payoutRequestedBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      const succDateEl = document.getElementById('success-payout-date');
+      if (succDateEl) succDateEl.textContent = new Date().toLocaleDateString('pt-BR');
       
       // Audit log registration (regras de negócio)
       const now = new Date();
       const timeStr = now.toLocaleTimeString('pt-BR');
       const auditBox = document.getElementById('payout-audit-logs');
-      auditBox.innerHTML = `
-        <strong>Ação Registrada na Auditoria Interna:</strong><br>
-        • Evento: Registro de Solicitação de Repasse #${newPayoutId}<br>
-        • Data/Hora: 07/07/2026 às ${timeStr}<br>
-        • Usuário Responsável: vinicius.casagrande@diskingressos.com.br<br>
-        • IP de Origem: 189.12.34.56 (Local Host)<br>
-        • Status do Fluxo: Aguardando Aprovação / Em Processamento
-      `;
+      if (auditBox) {
+        auditBox.innerHTML = `
+          <strong>Ação Registrada na Auditoria Interna:</strong><br>
+          • Evento: Registro de Solicitação de Repasse #${newPayoutId}<br>
+          • Data/Hora: ${requestDate} às ${timeStr}<br>
+          • Usuário Responsável: produtor@diskingressos.com.br<br>
+          • IP de Origem: 189.12.34.56 (Local Host)<br>
+          • Status do Fluxo: Aguardando Análise (Financeiro Disk)
+        `;
+      }
 
       // Update parent list summaries
       renderPayoutHistory();
       if (typeof renderFinancialBalanceRows === 'function') renderFinancialBalanceRows();
       if (typeof renderFinancialEligibleEvents === 'function') renderFinancialEligibleEvents();
-      if (typeof handleProducerRepasseSubmitConfirmed === 'function') {
-        handleProducerRepasseSubmitConfirmed(payoutRequestedBalance, payoutSelectedBank, payoutSelectedMethod);
-      }
 
-      // Simulated platform and email notification trigger on status change
-      console.log(`[Sistema de Notificação] E-mail enviado para vinicius.casagrande@diskingressos.com.br notificando a criação do repasse #${newPayoutId}.`);
-      console.log(`[Sistema de Notificação] Alerta de plataforma criado: Status do repasse #${newPayoutId} mudou para "Em processamento".`);
-      alert(`[Notificação DiskIngressos]\n• E-mail enviado para vinicius.casagrande@diskingressos.com.br informando sobre o repasse #${newPayoutId}.\n• Notificação interna de plataforma criada com o status "Em Processamento".`);
+      console.log(`[Sistema de Notificação] Alerta de plataforma criado: Solicitação de Repasse #${newPayoutId} enviada ao Financeiro Disk ("Aguardando Análise").`);
 
       payoutWizardStep = 5;
       updatePayoutWizardUI();
@@ -3439,7 +3446,11 @@ function navigateRepasseWizard(direction) {
     else if (payoutWizardStep === 5) {
       // Close modal and focus on requests page
       closeModal('request-repasse');
-      switchActiveView('financial-repass');
+      if (window.AppRouter) {
+        window.AppRouter.navigate('/financeiro/minhas-solicitacoes');
+      } else {
+        switchActiveView('financial-approvals');
+      }
     }
   } else {
     // Navigate Backwards
@@ -3455,6 +3466,7 @@ function navigateRepasseWizard(direction) {
     updatePayoutWizardUI();
   }
 }
+window.navigateRepasseWizard = navigateRepasseWizard;
 
 function updatePayoutAvailableSum() {
   let totalAvailable = 0;
