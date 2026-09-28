@@ -19,6 +19,7 @@
 import { eventBalanceService, OFFICIAL_PRODUCERS } from './eventBalanceService.js';
 import { accessAuditService } from './accessAuditService.js';
 import { eventFeeRulesService } from './eventFeeRulesService.js';
+import { financialConsolidationGateway as api } from './financialConsolidationGateway.js';
 
 // Catálogo e histórico de regras de taxa Disk por produtor e evento
 let DISK_FEE_RULES = [
@@ -978,6 +979,114 @@ export const financialConsolidationService = {
       paymentCosts: costsList,
       history: allHistory
     };
+  },
+
+  /**
+   * Implantação 5.2 — Carga assíncrona oficial via Core/Ledger e Gateway
+   */
+  async load(params = {}) {
+    const calls = {
+      position: api.getPosition(params),
+      events: api.getEvents(params),
+      ledger: api.getLedgerSummary(params),
+      rules: api.getFeeRules(params),
+      acquirerSettlements: api.getAcquirerSettlements(params),
+      acquirerContracts: api.getAcquirerContracts(params),
+      refunds: api.getRefunds(params),
+      chargebacks: api.getChargebacks(params),
+      payouts: api.getPayoutSettlements(params)
+    };
+    const names = Object.keys(calls);
+    const settled = await Promise.all(names.map(k => calls[k]));
+    const source = Object.fromEntries(names.map((k, i) => [k, settled[i]]));
+    const failures = names.filter(k => !source[k].ok).map(k => ({ source: k, status: source[k].status, error: source[k].error }));
+
+    // Para números financeiros, eventos/Core e Ledger são fontes críticas.
+    const criticalOk = source.events.ok && source.ledger.ok;
+    if (!criticalOk) {
+      return { ok: false, data: null, failures, sourceStatus: source };
+    }
+
+    const n = (v) => Number(v || 0);
+    const r2 = (v) => Number(n(v).toFixed(2));
+    const list = (payload) => Array.isArray(payload) ? payload : (payload?.items || payload?.data || payload?.events || payload?.rows || []);
+
+    const sumFor = (items, eventId, fields) => {
+      return r2(items.filter(x => String(x.eventId ?? x.event_id ?? '') === String(eventId))
+        .reduce((acc, x) => acc + fields.reduce((s, f) => s + n(x?.[f]), 0), 0));
+    };
+
+    const resolveFeeRuleApi = (rules, eventId, producerId) => {
+      const candidates = rules.filter(rule => {
+        const eventOk = !rule.eventId || String(rule.eventId) === String(eventId);
+        const producerOk = !rule.producerId || String(rule.producerId) === String(producerId);
+        return eventOk && producerOk && rule.active !== false;
+      });
+      return candidates.sort((a, b) => Number(Boolean(b.eventId)) - Number(Boolean(a.eventId)) || String(b.effectiveFrom || '').localeCompare(String(a.effectiveFrom || '')))[0] || null;
+    };
+
+    const feeAmountApi = (rule, gross, tickets) => {
+      if (!rule) return 0;
+      const type = String(rule.type || rule.feeType || '').toUpperCase();
+      const value = n(rule.value ?? rule.rate ?? rule.amount);
+      if (type === 'PERCENT' || type === 'PERCENTUAL' || type === 'PERCENTAGE') return r2(gross * value / 100);
+      if (type === 'FIXED_PER_TICKET' || type === 'FIXO_POR_INGRESSO') return r2(tickets * value);
+      if (type === 'FIXED_EVENT' || type === 'FIXO_EVENTO') return r2(value);
+      return r2(n(rule.calculatedAmount));
+    };
+
+    const feeLabelApi = (rule) => {
+      if (!rule) return 'Sem contrato vigente';
+      const type = String(rule.type || rule.feeType || '').toUpperCase();
+      const value = n(rule.value ?? rule.rate ?? rule.amount);
+      if (type.includes('PERCENT')) return `${value.toLocaleString('pt-BR')}% contratual`;
+      if (type.includes('TICKET') || type.includes('INGRESSO')) return `${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por ingresso`;
+      return `${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} fixo`;
+    };
+
+    const events = list(source.events.data);
+    const ledger = list(source.ledger.data);
+    const rules = source.rules.ok ? list(source.rules.data) : [];
+    const settlements = source.acquirerSettlements.ok ? list(source.acquirerSettlements.data) : [];
+    const contracts = source.acquirerContracts.ok ? list(source.acquirerContracts.data) : [];
+    const refunds = source.refunds.ok ? list(source.refunds.data) : [];
+    const chargebacks = source.chargebacks.ok ? list(source.chargebacks.data) : [];
+    const payouts = source.payouts.ok ? list(source.payouts.data) : [];
+
+    const rows = events.map(ev => {
+      const eventId = ev.eventId ?? ev.id;
+      const producerId = ev.producerId ?? ev.producer_id;
+      const eventLedger = ledger.filter(x => String(x.eventId ?? x.event_id ?? '') === String(eventId));
+      const gross = r2(n(ev.grossSales ?? ev.gross ?? ev.revenue) || eventLedger.reduce((a, x) => a + n(x.grossSales ?? x.salesCredit ?? x.creditSales), 0));
+      const tickets = n(ev.ticketCount ?? ev.salesCount ?? ev.tickets);
+      const rule = resolveFeeRuleApi(rules, eventId, producerId);
+      const diskFee = source.rules.ok ? feeAmountApi(rule, gross, tickets) : r2(n(ev.diskFee ?? ev.platformFee));
+      const refundAmount = source.refunds.ok ? sumFor(refunds, eventId, ['amount', 'settledAmount', 'value']) : r2(n(ev.refunds));
+      const chargebackAmount = source.chargebacks.ok ? sumFor(chargebacks, eventId, ['amount', 'settledAmount', 'value']) : r2(n(ev.chargebacks));
+      const paidPayouts = source.payouts.ok ? sumFor(payouts, eventId, ['settledAmount', 'amount', 'value']) : r2(n(ev.paidPayouts));
+      const acq = settlements.filter(x => String(x.eventId ?? x.event_id ?? '') === String(eventId));
+      const paymentCost = source.acquirerSettlements.ok ? r2(acq.reduce((a, x) => a + n(x.mdrAmount ?? x.mdr ?? x.feeAmount ?? x.cost), 0)) : r2(n(ev.paymentCost ?? ev.cardFees));
+      const committed = r2(n(ev.committed ?? ev.reserved ?? ev.blocked));
+      const available = r2(n(ev.availableBalance ?? ev.available) || Math.max(0, gross - diskFee - paymentCost - refundAmount - chargebackAmount - committed - paidPayouts));
+      return { id: eventId, eventId, producerId, name: ev.eventName ?? ev.name ?? `Evento ${eventId}`, gross, tickets, diskFee, feeRule: rule, feeLabel: feeLabelApi(rule), paymentCost, refunds: refundAmount, chargebacks: chargebackAmount, committed, paid: paidPayouts, available };
+    });
+
+    const ACQUIRERS = ['CIELO', 'REDE', 'STONE', 'PAGBANK'];
+    const acquirers = ACQUIRERS.map(name => {
+      const tx = settlements.filter(x => String(x.acquirer ?? x.provider ?? '').toUpperCase().includes(name));
+      const ct = contracts.find(x => String(x.acquirer ?? x.provider ?? '').toUpperCase().includes(name));
+      return {
+        name,
+        gross: r2(tx.reduce((a, x) => a + n(x.grossAmount ?? x.amount), 0)),
+        mdrAmount: r2(tx.reduce((a, x) => a + n(x.mdrAmount ?? x.mdr ?? x.feeAmount ?? x.cost), 0)),
+        netSettled: r2(tx.reduce((a, x) => a + n(x.netAmount ?? x.settledAmount), 0)),
+        contractedMdr: n(ct?.mdrRate ?? ct?.rate ?? ct?.mdr),
+        transactions: tx.length,
+        status: source.acquirerSettlements.ok ? 'REAL' : 'INDISPONIVEL'
+      };
+    });
+
+    return { ok: true, data: { rows, acquirers }, failures, sourceStatus: source };
   }
 };
 

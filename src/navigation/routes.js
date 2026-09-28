@@ -138,6 +138,14 @@ export const ROUTES = {
     title: 'Taxas Disk & Custos de Pagamento',
     sub: 'Regras de taxas Disk, MDR, custos de adquirentes e composição financeira.'
   },
+  '/financeiro/fechamento': {
+    path: '/financeiro/fechamento',
+    view: 'financial-fechamento',
+    module: 'financeiro',
+    menuKey: 'fin-fechamento',
+    title: 'Fechamento Financeiro',
+    sub: 'Apuração financeira oficial por evento, ingressos, formas de pagamento e conciliação.'
+  },
   '/financeiro/inteligencia': {
     path: '/financeiro/inteligencia',
     view: 'financial-analytics',
@@ -224,6 +232,14 @@ export const ROUTES = {
     menuKey: 'fin-treasury-batches',
     title: 'Tesouraria Operacional & Bancos',
     sub: 'Gestão de contas, pagamentos PIX, remessa e retorno bancário CNAB 240.'
+  },
+  '/financeiro/gateways-adquirentes': {
+    path: '/financeiro/gateways-adquirentes',
+    view: 'financial-gateways-adquirentes',
+    module: 'financeiro',
+    menuKey: 'fin-gateways-adquirentes',
+    title: 'Gateways e Adquirentes',
+    sub: 'Bandeiras, custos de adquirência, regras comerciais e vigências versionadas.'
   },
 
   // Financeiro — Domínio 3: Contas
@@ -981,6 +997,11 @@ export const LEGACY_ROUTE_ALIASES = {
   'financial-saldos': '/financeiro/saldos',
   'taxas-custos': '/financeiro/taxas-custos',
   'financial-taxas-custos': '/financeiro/taxas-custos',
+  'fechamento': '/financeiro/fechamento',
+  'fechamento-financeiro': '/financeiro/fechamento',
+  'financial-fechamento': '/financeiro/fechamento',
+  'gateways-adquirentes': '/financeiro/gateways-adquirentes',
+  'financial-gateways-adquirentes': '/financeiro/gateways-adquirentes',
   'treasury': '/financeiro/tesouraria',
   'tesouraria': '/financeiro/tesouraria',
   'contas-bancarias': '/financeiro/tesouraria',

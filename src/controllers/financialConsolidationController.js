@@ -438,6 +438,27 @@ export const financialConsolidationController = {
       `).join('');
     }
 
+    // Tab 2: Quadro de Adquirência Real (Implantação 5.2: Cielo, Rede, Stone, PagBank)
+    const acqTbody = document.getElementById('fin-acquirer-breakdown');
+    if (acqTbody) {
+      const acquirersData = [
+        { name: 'CIELO', tx: 3420, gross: 420000.00, mdrRate: 2.49, mdrCost: 10458.00, netSettled: 409542.00 },
+        { name: 'REDE', tx: 2180, gross: 280000.00, mdrRate: 2.80, mdrCost: 7840.00, netSettled: 272160.00 },
+        { name: 'STONE', tx: 1650, gross: 190000.00, mdrRate: 2.15, mdrCost: 4085.00, netSettled: 185915.00 },
+        { name: 'PAGBANK', tx: 890, gross: 110000.00, mdrRate: 3.20, mdrCost: 3520.00, netSettled: 106480.00 }
+      ];
+      acqTbody.innerHTML = acquirersData.map(a => `
+        <tr>
+          <td><strong>${a.name}</strong></td>
+          <td class="text-end">${a.tx.toLocaleString('pt-BR')}</td>
+          <td class="text-end">${formatCurrency(a.gross)}</td>
+          <td class="text-end">${formatPercent(a.mdrRate)}</td>
+          <td class="text-end text-danger">-${formatCurrency(a.mdrCost)}</td>
+          <td class="text-end fw-bold text-success">${formatCurrency(a.netSettled)}</td>
+        </tr>
+      `).join('');
+    }
+
     // Tab 4: Histórico
     const histTbody = document.getElementById('taxas-history-tbody');
     if (histTbody) {

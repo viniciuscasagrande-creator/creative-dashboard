@@ -20,6 +20,10 @@ import { producerBankAccountController } from './controllers/producerBankAccount
 import { refundController } from './controllers/refundController.js';
 import { supplierPaymentController } from './controllers/supplierPaymentController.js';
 import { financialConsolidationController } from './controllers/financialConsolidationController.js';
+import { financialClosingController } from './controllers/financialClosingController.js';
+import { gatewayFeeMatrixController } from './controllers/gatewayFeeMatrixController.js';
+import { financialConsolidationGateway } from './services/financialConsolidationGateway.js';
+import { financialConsolidationService } from './services/financialConsolidationService.js';
 import { eventFeeRulesService } from './services/eventFeeRulesService.js';
 import { accessControlService } from './services/accessControlService.js';
 import { accessAuditService } from './services/accessAuditService.js';
@@ -421,6 +425,18 @@ function initApp() {
     AppRouter.registerHook('financial-taxas-custos', () => {
       if (financialConsolidationController && typeof financialConsolidationController.renderTaxasCustos === 'function') {
         financialConsolidationController.renderTaxasCustos();
+      }
+    });
+
+    AppRouter.registerHook('financial-fechamento', () => {
+      if (financialClosingController && typeof financialClosingController.render === 'function') {
+        financialClosingController.render();
+      }
+    });
+
+    AppRouter.registerHook('financial-gateways-adquirentes', () => {
+      if (gatewayFeeMatrixController && typeof gatewayFeeMatrixController.render === 'function') {
+        gatewayFeeMatrixController.render();
       }
     });
 
@@ -3101,6 +3117,12 @@ function initFinanceModule() {
   }
   if (typeof financialConsolidationController !== 'undefined' && typeof financialConsolidationController.init === 'function') {
     financialConsolidationController.init();
+  }
+  if (typeof financialClosingController !== 'undefined' && typeof financialClosingController.init === 'function') {
+    financialClosingController.init();
+  }
+  if (typeof gatewayFeeMatrixController !== 'undefined' && typeof gatewayFeeMatrixController.init === 'function') {
+    gatewayFeeMatrixController.init();
   }
 
   // Render new Ticketera modules
@@ -13045,3 +13067,7 @@ window.FinancialFlowDashboard = FinancialFlowDashboard;
 window.openFeeRuleEditor = (id) => FinancialFlowDashboard.openFeeRuleEditor(id);
 window.saveFeeRule = () => FinancialFlowDashboard.saveFeeRule();
 window.eventFeeRulesService = eventFeeRulesService;
+window.financialClosingController = financialClosingController;
+window.gatewayFeeMatrixController = gatewayFeeMatrixController;
+window.financialConsolidationGateway = financialConsolidationGateway;
+window.financialConsolidationService = financialConsolidationService;
