@@ -11,12 +11,14 @@ import { financialApprovalNotificationService } from './financialApprovalNotific
 import { eventBalanceService } from './eventBalanceService.js';
 import { accessControlService } from './accessControlService.js';
 import { accessAuditService } from './accessAuditService.js';
+import { balanceTransferService } from './balanceTransferService.js';
 
 // Base de Solicitações Unificadas de Aprovação
 let APPROVAL_REQUESTS = [
-  // Solicitação Modelo do Prompt (#APR-2026-00142)
+  // Solicitação Modelo do Prompt (#APR-2026-00142 / #TR-2026-000142)
   {
     id: 'APR-2026-00142',
+    protocol: 'TR-2026-000142',
     type: 'TRANSFERENCIA_EVENTOS',
     producerId: 'prod-1',
     producerName: 'Parque Jaime Lerner',
@@ -488,7 +490,54 @@ function ensureInitialKpiVolume() {
 }
 ensureInitialKpiVolume();
 
+// Base Formal de Reservas Financeiras (FinancialReservation)
+let FINANCIAL_RESERVATIONS = [
+  {
+    id: 'RES-APR-2026-00142',
+    requestId: 'APR-2026-00142',
+    producerId: 'prod-1',
+    eventId: '3368',
+    targetEventId: '3178',
+    operationType: 'TRANSFERENCIA_EVENTOS',
+    amount: 35000.00,
+    status: 'ATIVA',
+    createdAt: '2026-09-27T18:42:05.000Z',
+    updatedAt: '2026-09-27T18:42:05.000Z'
+  },
+  {
+    id: 'RES-RP-2026-000141',
+    requestId: 'APR-2026-00141',
+    producerId: 'prod-1',
+    eventId: '3368',
+    operationType: 'REPASSE',
+    amount: 75000.00,
+    status: 'ATIVA',
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 3).toISOString()
+  }
+];
+
 export const financialApprovalService = {
+  /**
+   * Obtém a lista de reservas financeiras ativas ou filtradas
+   */
+  getFinancialReservations(filters = {}) {
+    let list = [...FINANCIAL_RESERVATIONS];
+    if (filters.requestId) list = list.filter(r => r.requestId === filters.requestId);
+    if (filters.eventId) list = list.filter(r => r.eventId === filters.eventId);
+    if (filters.producerId) list = list.filter(r => r.producerId === filters.producerId);
+    if (filters.status) list = list.filter(r => r.status === filters.status);
+    return list;
+  },
+
+  /**
+   * Obtém reserva por ID da solicitação
+   */
+  getReservationByRequestId(requestId) {
+    if (!requestId) return null;
+    return FINANCIAL_RESERVATIONS.find(r => r.requestId === requestId || r.id === `RES-${requestId}`) || null;
+  },
+
   /**
    * Cria nova solicitação de aprovação (Iniciada pelo Produtor ou Operador)
    */
@@ -507,7 +556,26 @@ export const financialApprovalService = {
     if (!type) throw new Error('Tipo da solicitação é obrigatório.');
     const numAmount = Number(amount) || 0;
 
-    // 1. Avalia contra o Motor de Regras e Alçadas
+    // 1. Validação estrita de saldo real disponível se houver evento de origem
+    let sourceAvailable = 0;
+    let sourceSettled = 0;
+    let sourceCommitted = 0;
+
+    if (eventId) {
+      const balRes = await eventBalanceService.getEventBalance(eventId);
+      if (balRes && balRes.data) {
+        const b = balRes.data.balances || {};
+        sourceAvailable = typeof b.availableBalance === 'number' ? b.availableBalance : (balRes.data.available || 0);
+        sourceSettled = typeof b.settledAmount === 'number' ? b.settledAmount : sourceAvailable;
+        sourceCommitted = typeof b.committedBalance === 'number' ? b.committedBalance : 0;
+      }
+
+      if (numAmount > sourceAvailable && type === 'TRANSFERENCIA_EVENTOS') {
+        throw new Error(`Saldo disponível insuficiente no evento ${eventId} (Disponível: R$ ${sourceAvailable.toFixed(2)}) para operação de R$ ${numAmount.toFixed(2)}.`);
+      }
+    }
+
+    // 2. Avalia contra o Motor de Regras e Alçadas
     const ruleEval = await financialApprovalRulesService.evaluateApprovalRequirement({
       type,
       amount: numAmount,
@@ -516,36 +584,56 @@ export const financialApprovalService = {
       payload
     });
 
-    // 2. Calcula Impacto Financeiro se houver evento de origem/destino
+    // 3. Calcula Impacto Financeiro com Invariante Consolidado
     let financialImpact = null;
     if (eventId) {
-      const balRes = await eventBalanceService.getEventBalance(eventId);
-      const currBal = (balRes && balRes.data) ? balRes.data.available : 0;
-
       financialImpact = {
-        sourceEventId: eventId,
+        sourceEventId: String(eventId),
         sourceEventName: eventName || `Evento ${eventId}`,
-        sourceBalanceBefore: currBal,
+        sourceSettled,
+        sourceCommitted,
+        sourceBalanceBefore: sourceAvailable,
         sourceAmount: -numAmount,
-        sourceBalanceAfter: Number(Math.max(0, currBal - numAmount).toFixed(2))
+        sourceBalanceAfter: Number(Math.max(0, sourceAvailable - numAmount).toFixed(2))
       };
 
-      if (payload.targetEventId) {
-        const targetRes = await eventBalanceService.getEventBalance(payload.targetEventId);
-        const targetBal = (targetRes && targetRes.data) ? targetRes.data.available : 0;
-        financialImpact.targetEventId = payload.targetEventId;
-        financialImpact.targetEventName = payload.targetEventName || `Evento ${payload.targetEventId}`;
+      const targetId = payload.targetEventId;
+      if (targetId) {
+        const targetRes = await eventBalanceService.getEventBalance(targetId);
+        let targetBal = 0;
+        let targetSettled = 0;
+        if (targetRes && targetRes.data) {
+          const tb = targetRes.data.balances || {};
+          targetBal = typeof tb.availableBalance === 'number' ? tb.availableBalance : (targetRes.data.available || 0);
+          targetSettled = typeof tb.settledAmount === 'number' ? tb.settledAmount : targetBal;
+        }
+
+        financialImpact.targetEventId = String(targetId);
+        financialImpact.targetEventName = payload.targetEventName || targetRes?.data?.eventName || `Evento ${targetId}`;
+        financialImpact.targetSettled = targetSettled;
         financialImpact.targetBalanceBefore = targetBal;
         financialImpact.targetAmount = numAmount;
         financialImpact.targetBalanceAfter = Number((targetBal + numAmount).toFixed(2));
+
+        const consolidatedBefore = Number((sourceAvailable + targetBal).toFixed(2));
+        const consolidatedAfter = Number((financialImpact.sourceBalanceAfter + financialImpact.targetBalanceAfter).toFixed(2));
+        financialImpact.consolidatedBefore = consolidatedBefore;
+        financialImpact.consolidatedAfter = consolidatedAfter;
+        financialImpact.consolidatedDifference = Number(Math.abs(consolidatedAfter - consolidatedBefore).toFixed(2));
+        financialImpact.isInvariant = financialImpact.consolidatedDifference === 0;
       }
     }
 
     const nextSeq = APPROVAL_REQUESTS.length + 143;
     const isRepasse = type === 'REPASSE';
-    const prefix = isRepasse ? 'RP' : 'APR';
-    const id = `${prefix}-${new Date().getFullYear()}-${String(nextSeq).padStart(isRepasse ? 6 : 5, '0')}`;
-    const initialStatus = isRepasse ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
+    const isTransfer = type === 'TRANSFERENCIA_EVENTOS';
+    let prefix = 'APR';
+    if (isRepasse) prefix = 'RP';
+    else if (isTransfer) prefix = 'TR';
+
+    const padLen = (isRepasse || isTransfer) ? 6 : 5;
+    const id = `${prefix}-${new Date().getFullYear()}-${String(nextSeq).padStart(padLen, '0')}`;
+    const initialStatus = (isRepasse || isTransfer) ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
     const statusMeta = financialApprovalRulesService.getStatusMeta(initialStatus);
 
     const newRequest = {
@@ -591,56 +679,138 @@ export const financialApprovalService = {
       updatedAt: new Date().toISOString()
     };
 
-    // 3. Reserva preventiva de saldo no evento para evitar gasto duplo
+    // 4. Reserva financeira preventiva (FinancialReservation: ATIVA)
     this.reserveBalance(newRequest);
 
-    // 4. Salva na store central
+    // 5. Salva na store central
     APPROVAL_REQUESTS.unshift(newRequest);
 
-    // 5. Dispara notificação no sino para a equipe financeira
+    // 6. Dispara notificação no sino para a equipe financeira
     financialApprovalNotificationService.notifyNewRequest(newRequest);
 
     return { ok: true, data: newRequest };
   },
 
   /**
-   * Reserva preventiva de saldo para impedir gasto duplo enquanto a solicitação estiver aguardando aprovação
+   * Reserva preventiva formal de saldo (FinancialReservation)
+   * Impede gasto duplo enquanto a solicitação estiver aguardando aprovação
    */
   reserveBalance(request) {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
     try {
+      const sourceEventId = String(request.eventId);
+      const val = Number(request.amount);
+
+      // Bloqueio cautelar de saldo no serviço de saldos de eventos
+      eventBalanceService.reserveBalance(sourceEventId, val, request.id);
       const store = eventBalanceService.getLocalBalanceStore();
-      const ev = store.find(e => String(e.eventId) === String(request.eventId));
+      const ev = store.find(e => String(e.eventId) === sourceEventId);
       if (ev && ev.balances) {
-        ev.balances.pendingTransfers = Number(((ev.balances.pendingTransfers || 0) + request.amount).toFixed(2));
-        ev.balances.availableBalance = Number(Math.max(0, ev.balances.availableBalance - request.amount).toFixed(2));
-        
-        request.auditTrail.push({
-          id: `AUD-${request.id}-RES`,
-          timestamp: new Date().toISOString(),
-          actorId: 'SISTEMA',
-          actorName: 'Sistema de Saldos',
-          actorRole: 'SISTEMA',
-          action: 'SALDO_RESERVADO',
-          comment: `Reserva preventiva de R$ ${request.amount.toFixed(2)} aplicada no evento ${request.eventId}.`
+        ev.balances.pendingTransfers = Number(((ev.balances.pendingTransfers || 0) + val).toFixed(2));
+      }
+
+      // Registro formal do ciclo de vida da reserva
+      const resId = `RES-${request.id}`;
+      const existingRes = FINANCIAL_RESERVATIONS.find(r => r.requestId === request.id || r.id === resId);
+      if (existingRes) {
+        existingRes.status = 'ATIVA';
+        existingRes.amount = val;
+        existingRes.updatedAt = new Date().toISOString();
+      } else {
+        FINANCIAL_RESERVATIONS.unshift({
+          id: resId,
+          requestId: request.id,
+          producerId: request.producerId,
+          eventId: sourceEventId,
+          targetEventId: request.payload?.targetEventId ? String(request.payload.targetEventId) : undefined,
+          operationType: request.type,
+          amount: val,
+          status: 'ATIVA',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
       }
-    } catch (_) {}
+
+      request.auditTrail.push({
+        id: `AUD-${request.id}-RES`,
+        timestamp: new Date().toISOString(),
+        actorId: 'SISTEMA',
+        actorName: 'Sistema de Reserva Financeira',
+        actorRole: 'SISTEMA',
+        action: 'SALDO_RESERVADO',
+        comment: `Reserva cautelar (${resId}) de R$ ${val.toFixed(2)} aplicada no evento ${sourceEventId} (status: ATIVA).`
+      });
+    } catch (err) {
+      console.error('[FinancialReservation] Falha na reserva preventiva:', err);
+    }
   },
 
   /**
-   * Liberação de saldo reservado em caso de rejeição, cancelamento ou devolução
+   * Liberação de saldo reservado em caso de reprovação ou cancelamento
+   * Status: 'LIBERADA'
    */
-  releaseBalance(request) {
+  releaseBalance(request, reason = '') {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
     try {
+      const sourceEventId = String(request.eventId);
+      const val = Number(request.amount);
+
+      // Restitui o saldo utilizável no serviço de eventos
+      eventBalanceService.releaseReservation(sourceEventId, val, request.id);
       const store = eventBalanceService.getLocalBalanceStore();
-      const ev = store.find(e => String(e.eventId) === String(request.eventId));
+      const ev = store.find(e => String(e.eventId) === sourceEventId);
       if (ev && ev.balances) {
-        ev.balances.pendingTransfers = Number(Math.max(0, (ev.balances.pendingTransfers || 0) - request.amount).toFixed(2));
-        ev.balances.availableBalance = Number((ev.balances.availableBalance + request.amount).toFixed(2));
+        ev.balances.pendingTransfers = Number(Math.max(0, (ev.balances.pendingTransfers || 0) - val).toFixed(2));
       }
-    } catch (_) {}
+
+      const res = FINANCIAL_RESERVATIONS.find(r => r.requestId === request.id || r.id === `RES-${request.id}`);
+      if (res) {
+        res.status = 'LIBERADA';
+        res.releasedAt = new Date().toISOString();
+        res.releaseReason = reason || 'Operação reprovada ou cancelada';
+        res.updatedAt = new Date().toISOString();
+      }
+
+      request.auditTrail.push({
+        id: `AUD-${request.id}-REL`,
+        timestamp: new Date().toISOString(),
+        actorId: 'SISTEMA',
+        actorName: 'Sistema de Reserva Financeira',
+        actorRole: 'SISTEMA',
+        action: 'RESERVA_LIBERADA',
+        comment: `Reserva financeira liberada. R$ ${val.toFixed(2)} devolvidos ao saldo disponível do evento ${sourceEventId} (status: LIBERADA).`
+      });
+    } catch (err) {
+      console.error('[FinancialReservation] Falha na liberação:', err);
+    }
+  },
+
+  /**
+   * Consumo da reserva financeira após aprovação definitiva e liquidação
+   * Status: 'CONSUMIDA'
+   */
+  consumeReservation(request) {
+    if (!request.eventId || !request.amount || request.amount <= 0) return;
+    try {
+      const res = FINANCIAL_RESERVATIONS.find(r => r.requestId === request.id || r.id === `RES-${request.id}`);
+      if (res) {
+        res.status = 'CONSUMIDA';
+        res.consumedAt = new Date().toISOString();
+        res.updatedAt = new Date().toISOString();
+      }
+
+      request.auditTrail.push({
+        id: `AUD-${request.id}-CON`,
+        timestamp: new Date().toISOString(),
+        actorId: 'SISTEMA',
+        actorName: 'Sistema de Reserva Financeira',
+        actorRole: 'SISTEMA',
+        action: 'RESERVA_CONSUMIDA',
+        comment: `Reserva cautelar convertida em liquidação definitiva no Ledger (status: CONSUMIDA).`
+      });
+    } catch (err) {
+      console.error('[FinancialReservation] Falha no consumo da reserva:', err);
+    }
   },
 
   /**
@@ -693,6 +863,8 @@ export const financialApprovalService = {
         (r.protocol && r.protocol.toLowerCase().includes(term)) ||
         r.producerName.toLowerCase().includes(term) ||
         (r.eventName && r.eventName.toLowerCase().includes(term)) ||
+        (r.payload?.sourceEventName && r.payload.sourceEventName.toLowerCase().includes(term)) ||
+        (r.payload?.targetEventName && r.payload.targetEventName.toLowerCase().includes(term)) ||
         (r.justification && r.justification.toLowerCase().includes(term)) ||
         r.requestedBy.name.toLowerCase().includes(term)
       );
@@ -936,6 +1108,9 @@ export const financialApprovalService = {
       const authCode = `AUTH-DK-${item.id.replace(/[^a-zA-Z0-9]/g, '')}-${Math.floor(100000 + Math.random() * 900000)}`;
       const trxId = `TRX-EXEC-${Date.now().toString(36).toUpperCase()}`;
 
+      // Consome a reserva formal
+      this.consumeReservation(item);
+
       // Baixa definitiva de saldo de origem se houver
       if (item.eventId && item.amount > 0) {
         const store = eventBalanceService.getLocalBalanceStore();
@@ -946,14 +1121,68 @@ export const financialApprovalService = {
         }
       }
 
-      // Se for transferência entre eventos, credita o destino
+      // Se for transferência entre eventos, liquidação atômica e dupla movimentação no Ledger
       if (item.type === 'TRANSFERENCIA_EVENTOS' && item.payload.targetEventId) {
+        const targetEventId = String(item.payload.targetEventId);
+        const sourceEventId = String(item.eventId);
         const store = eventBalanceService.getLocalBalanceStore();
-        const targetEv = store.find(e => String(e.eventId) === String(item.payload.targetEventId));
+        const targetEv = store.find(e => String(e.eventId) === targetEventId);
+        const sourceEv = store.find(e => String(e.eventId) === sourceEventId);
+
         if (targetEv && targetEv.balances) {
           targetEv.balances.availableBalance = Number(((targetEv.balances.availableBalance || 0) + item.amount).toFixed(2));
           targetEv.balances.settledAmount = Number(((targetEv.balances.settledAmount || 0) + item.amount).toFixed(2));
         }
+
+        // Ledger: Movimentação atômica de saída no evento de origem (RN05/RN06)
+        const outMovement = {
+          id: `MOV-${sourceEventId}-${Date.now()}-OUT`,
+          eventId: sourceEventId,
+          producerId: item.producerId,
+          transferId: `TRX-${item.id}`,
+          type: 'TRANSFERENCIA_EVENTO_SAIDA',
+          description: `Transferência aprovada enviada para ${item.payload.targetEventName || ('Evento ' + targetEventId)} (${item.id})`,
+          amount: -item.amount,
+          balanceBefore: item.financialImpact?.sourceBalanceBefore || (sourceEv?.balances?.availableBalance ? sourceEv.balances.availableBalance + item.amount : item.amount),
+          balanceAfter: item.financialImpact?.sourceBalanceAfter || (sourceEv?.balances?.availableBalance || 0),
+          createdAt: new Date().toISOString(),
+          createdBy: item.reviewedBy?.name || 'Sistema de Liquidação',
+          referenceType: 'TRANSFER_OUT',
+          referenceId: item.id
+        };
+        eventBalanceService.updateLocalEventBalance(sourceEventId, 0, outMovement);
+
+        // Ledger: Movimentação atômica de entrada no evento de destino (RN05/RN06)
+        const inMovement = {
+          id: `MOV-${targetEventId}-${Date.now()}-IN`,
+          eventId: targetEventId,
+          producerId: item.producerId,
+          transferId: `TRX-${item.id}`,
+          type: 'TRANSFERENCIA_EVENTO_ENTRADA',
+          description: `Transferência aprovada recebida de ${item.eventName || ('Evento ' + sourceEventId)} (${item.id})`,
+          amount: item.amount,
+          balanceBefore: item.financialImpact?.targetBalanceBefore || (targetEv?.balances?.availableBalance ? targetEv.balances.availableBalance - item.amount : 0),
+          balanceAfter: item.financialImpact?.targetBalanceAfter || (targetEv?.balances?.availableBalance || item.amount),
+          createdAt: new Date().toISOString(),
+          createdBy: item.reviewedBy?.name || 'Sistema de Liquidação',
+          referenceType: 'TRANSFER_IN',
+          referenceId: item.id
+        };
+        eventBalanceService.updateLocalEventBalance(targetEventId, 0, inMovement);
+
+        // Sincroniza linha do tempo com o serviço de transferências
+        try {
+          if (balanceTransferService && typeof balanceTransferService.addTimelineEvent === 'function') {
+            balanceTransferService.addTimelineEvent(item.id, {
+              type: 'APROVADA_E_EXECUTADA',
+              actorName: item.reviewedBy?.name || 'Financeiro Disk',
+              actorRole: 'Controladoria',
+              description: `Transferência ${item.id} autorizada e liquidada com sucesso via Central de Solicitações. Código: ${authCode}.`,
+              previousStatus: 'EM_ANALISE',
+              newStatus: 'CONCLUIDA'
+            });
+          }
+        } catch (_) {}
       }
 
       item.status = 'CONCLUIDA';
@@ -1079,8 +1308,17 @@ export const financialApprovalService = {
       throw new Error(`Acesso Negado: O usuário "${resolvedActor.name}" não possui permissão para devolver solicitações.`);
     }
 
-    // Libera a reserva preventiva de saldo enquanto aguarda correção
-    this.releaseBalance(item);
+    // Regra Oficial Implantação 2: Para TRANSFERENCIA_EVENTOS, a reserva de saldo PERMANECE ATIVA durante AGUARDANDO_CORRECAO (impedir gasto duplo)
+    if (item.type === 'TRANSFERENCIA_EVENTOS') {
+      const activeRes = FINANCIAL_RESERVATIONS.find(r => r.requestId === item.id || r.id === `RES-${item.id}`);
+      if (activeRes) {
+        activeRes.status = 'ATIVA';
+        activeRes.updatedAt = new Date().toISOString();
+      }
+    } else {
+      // Para outras operações (ex: REPASSE), libera a reserva temporariamente enquanto aguarda correção
+      this.releaseBalance(item, 'Devolvida para correção');
+    }
 
     const prevStatus = item.status;
     item.status = 'DEVOLVIDA';
@@ -1103,6 +1341,18 @@ export const financialApprovalService = {
       newStatus: 'DEVOLVIDA',
       comment: `Solicitação devolvida por ${resolvedActor.name}. Orientação: ${returnNotes}`
     });
+
+    if (item.type === 'TRANSFERENCIA_EVENTOS') {
+      item.auditTrail.push({
+        id: `AUD-${id}-RES-HELD`,
+        timestamp: new Date().toISOString(),
+        actorId: 'SISTEMA',
+        actorName: 'Sistema de Reserva Financeira',
+        actorRole: 'SISTEMA',
+        action: 'RESERVA_MANTIDA',
+        comment: `Reserva financeira cautelar de R$ ${item.amount.toFixed(2)} mantida ATIVA durante a correção pelo produtor (bloqueio contra gasto duplo).`
+      });
+    }
 
     accessAuditService.log({
       actorId: resolvedActor.id,
@@ -1136,17 +1386,39 @@ export const financialApprovalService = {
     if (updatedData.payload) item.payload = { ...item.payload, ...updatedData.payload };
     if (updatedData.attachments) item.attachments = [...(item.attachments || []), ...updatedData.attachments];
 
+    // Se o valor foi alterado pelo produtor na correção, recalibra a reserva financeira
+    if (updatedData.amount && Number(updatedData.amount) !== item.amount) {
+      const newAmount = Number(updatedData.amount);
+      const delta = Number((newAmount - item.amount).toFixed(2));
+      const store = eventBalanceService.getLocalBalanceStore();
+      const ev = store.find(e => String(e.eventId) === String(item.eventId));
+      if (delta > 0 && ev && ev.balances.availableBalance < delta) {
+        throw new Error(`Saldo disponível insuficiente no evento para acréscimo de R$ ${delta.toFixed(2)}.`);
+      }
+      if (ev && ev.balances) {
+        ev.balances.availableBalance = Number(Math.max(0, ev.balances.availableBalance - delta).toFixed(2));
+        ev.balances.pendingTransfers = Number(((ev.balances.pendingTransfers || 0) + delta).toFixed(2));
+      }
+      item.amount = newAmount;
+      const res = FINANCIAL_RESERVATIONS.find(r => r.requestId === item.id || r.id === `RES-${item.id}`);
+      if (res) {
+        res.amount = newAmount;
+        res.status = 'ATIVA';
+        res.updatedAt = new Date().toISOString();
+      }
+    } else if (item.type !== 'TRANSFERENCIA_EVENTOS') {
+      // Se não for TRANSFERENCIA_EVENTOS (cujo saldo já permaneceu ATIVA), reaplica a reserva de saldo
+      this.reserveBalance(item);
+    }
+
     const prevStatus = item.status;
-    const isRepasse = item.type === 'REPASSE';
-    item.status = isRepasse ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
+    const isControlled = item.type === 'REPASSE' || item.type === 'TRANSFERENCIA_EVENTOS';
+    item.status = isControlled ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
     const statusMeta = financialApprovalRulesService.getStatusMeta(item.status);
-    item.statusLabelPtBr = isRepasse ? 'Reenviada (Aguardando Análise)' : 'Reenviada (Aguardando)';
+    item.statusLabelPtBr = isControlled ? 'Reenviada (Aguardando Análise)' : 'Reenviada (Aguardando)';
     item.badgeClass = 'bg-primary-subtle text-primary border border-primary';
     item.slaDeadline = new Date(Date.now() + item.slaHours * 3600000).toISOString();
     item.updatedAt = new Date().toISOString();
-
-    // Reativa a reserva preventiva de saldo
-    this.reserveBalance(item);
 
     item.auditTrail.push({
       id: `AUD-${id}-RESUB`,

@@ -293,9 +293,9 @@ export const financialApprovalsController = {
     const fiSituation = financialApprovalService.getFinancialSituation(req);
     const bankData = financialApprovalService.getBankDetails(req);
 
-    // 1. Bloco de Impacto Financeiro
+    // 1. Bloco de Impacto Financeiro (Apenas para operações sem tela dedicada de transferência)
     let impactHtml = '';
-    if (req.financialImpact) {
+    if (req.financialImpact && req.type !== 'TRANSFERENCIA_EVENTOS') {
       const fi = req.financialImpact;
       impactHtml = `
         <div class="card border border-primary-subtle bg-light mb-3 shadow-sm">
@@ -328,59 +328,159 @@ export const financialApprovalsController = {
     }
 
     // 2. Situação Financeira (Exclusivo Backoffice Disk / Financeiro)
-    const financialSituationHtml = !isProducer ? `
-      <div class="card border border-primary-subtle shadow-sm mb-3">
-        <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-          <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
-            <i class="ph-chart-line-up text-primary"></i> Situação Financeira
-          </strong>
-          <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">Posição Atualizada</span>
-        </div>
-        <div class="card-body p-3">
-          <div class="table-responsive">
-            <table class="table table-sm table-borderless align-middle mb-0 fs-xs font-monospace">
-              <tbody>
-                <tr>
-                  <td class="text-muted font-sans-serif">Vendas brutas</td>
-                  <td class="text-end fw-bold text-dark">R$ ${fiSituation.grossSales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr>
-                  <td class="text-muted font-sans-serif">Taxas</td>
-                  <td class="text-end text-danger">- R$ ${fiSituation.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr>
-                  <td class="text-muted font-sans-serif">Estornos</td>
-                  <td class="text-end text-danger">- R$ ${fiSituation.refunds.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr>
-                  <td class="text-muted font-sans-serif">Chargebacks</td>
-                  <td class="text-end text-danger">- R$ ${fiSituation.chargebacks.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr>
-                  <td class="text-muted font-sans-serif">Valores comprometidos</td>
-                  <td class="text-end text-warning">- R$ ${fiSituation.committed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr class="border-top border-secondary">
-                  <td class="fw-bold text-dark font-sans-serif">Saldo disponível</td>
-                  <td class="text-end fw-bold text-success fs-sm">R$ ${fiSituation.available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr class="bg-light">
-                  <td class="fw-bold text-primary font-sans-serif">Repasse / Valor solicitado</td>
-                  <td class="text-end fw-bold text-primary fs-sm">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-                <tr class="border-top border-primary-subtle">
-                  <td class="fw-bold text-dark font-sans-serif">Saldo projetado</td>
-                  <td class="text-end fw-bold ${fiSituation.projected >= 0 ? 'text-success' : 'text-danger'} fs-sm">R$ ${fiSituation.projected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    ` : '';
+    let financialSituationHtml = '';
+    if (!isProducer) {
+      if (req.type === 'TRANSFERENCIA_EVENTOS' && req.financialImpact) {
+        const fi = req.financialImpact;
+        const totalBefore = fi.consolidatedBefore || ((fi.sourceBalanceBefore || 0) + (fi.targetBalanceBefore || 0));
+        const totalAfter = fi.consolidatedAfter || ((fi.sourceBalanceAfter || 0) + (fi.targetBalanceAfter || 0));
 
-    // 3. Dados Bancários & Favorecido
-    const bankDetailsHtml = `
+        financialSituationHtml = `
+          <div class="card border border-primary-subtle shadow-sm mb-3">
+            <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
+                <i class="ph-arrows-left-right text-primary"></i> Situação Financeira — Transferência entre Eventos
+              </strong>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">Posição Atualizada</span>
+            </div>
+            <div class="card-body p-3">
+              <div class="row g-2 mb-3">
+                <!-- Origem -->
+                <div class="col-md-6 border-end">
+                  <div class="p-2 bg-light rounded border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <strong class="fs-xs text-danger d-flex align-items-center gap-1">
+                        <i class="ph-arrow-up-right"></i> Evento de Origem (Cede Saldo)
+                      </strong>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-xxs">#${fi.sourceEventId}</span>
+                    </div>
+                    <div class="text-truncate fw-bold text-dark fs-xs mb-2">${fi.sourceEventName}</div>
+                    <table class="table table-sm table-borderless fs-xxs mb-0 font-monospace">
+                      <tr>
+                        <td class="text-muted font-sans-serif">Saldo contábil:</td>
+                        <td class="text-end text-dark">R$ ${(fi.sourceSettled || fi.sourceBalanceBefore || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted font-sans-serif">Valores comprometidos:</td>
+                        <td class="text-end text-warning">- R$ ${(fi.sourceCommitted || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted font-sans-serif">Saldo disponível:</td>
+                        <td class="text-end text-success fw-bold">R$ ${(fi.sourceBalanceBefore || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr class="border-top">
+                        <td class="text-danger font-sans-serif fw-bold">Valor da transferência:</td>
+                        <td class="text-end text-danger fw-bold">- R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr class="border-top border-primary-subtle bg-white">
+                        <td class="text-dark font-sans-serif fw-bold">Saldo projetado:</td>
+                        <td class="text-end text-success fw-bold">R$ ${(fi.sourceBalanceAfter || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+                <!-- Destino -->
+                <div class="col-md-6">
+                  <div class="p-2 bg-light rounded border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <strong class="fs-xs text-success d-flex align-items-center gap-1">
+                        <i class="ph-arrow-down-left"></i> Evento de Destino (Recebe Saldo)
+                      </strong>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle fs-xxs">#${fi.targetEventId}</span>
+                    </div>
+                    <div class="text-truncate fw-bold text-dark fs-xs mb-2">${fi.targetEventName}</div>
+                    <table class="table table-sm table-borderless fs-xxs mb-0 font-monospace">
+                      <tr>
+                        <td class="text-muted font-sans-serif">Saldo contábil atual:</td>
+                        <td class="text-end text-dark">R$ ${(fi.targetSettled || fi.targetBalanceBefore || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted font-sans-serif">Saldo disponível atual:</td>
+                        <td class="text-end text-primary fw-bold">R$ ${(fi.targetBalanceBefore || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr class="border-top">
+                        <td class="text-success font-sans-serif fw-bold">Valor a receber:</td>
+                        <td class="text-end text-success fw-bold">+ R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr class="border-top border-primary-subtle bg-white">
+                        <td class="text-dark font-sans-serif fw-bold">Novo saldo projetado:</td>
+                        <td class="text-end text-primary fw-bold">R$ ${(fi.targetBalanceAfter || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <!-- Invariante Consolidado -->
+              <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center fs-xs">
+                <div>
+                  <span class="text-muted">Invariante Consolidado do Produtor:</span>
+                  <strong class="text-dark ms-1">R$ ${totalBefore.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                </div>
+                <div>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                    <i class="ph-check-circle"></i> &Delta; R$ 0,00 (Consolidado Invariável)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        financialSituationHtml = `
+          <div class="card border border-primary-subtle shadow-sm mb-3">
+            <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
+                <i class="ph-chart-line-up text-primary"></i> Situação Financeira
+              </strong>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">Posição Atualizada</span>
+            </div>
+            <div class="card-body p-3">
+              <div class="table-responsive">
+                <table class="table table-sm table-borderless align-middle mb-0 fs-xs font-monospace">
+                  <tbody>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Vendas brutas</td>
+                      <td class="text-end fw-bold text-dark">R$ ${fiSituation.grossSales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Taxas</td>
+                      <td class="text-end text-danger">- R$ ${fiSituation.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Estornos</td>
+                      <td class="text-end text-danger">- R$ ${fiSituation.refunds.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Chargebacks</td>
+                      <td class="text-end text-danger">- R$ ${fiSituation.chargebacks.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Valores comprometidos</td>
+                      <td class="text-end text-warning">- R$ ${fiSituation.committed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="border-top border-secondary">
+                      <td class="fw-bold text-dark font-sans-serif">Saldo disponível</td>
+                      <td class="text-end fw-bold text-success fs-sm">R$ ${fiSituation.available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="bg-light">
+                      <td class="fw-bold text-primary font-sans-serif">Repasse / Valor solicitado</td>
+                      <td class="text-end fw-bold text-primary fs-sm">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="border-top border-primary-subtle">
+                      <td class="fw-bold text-dark font-sans-serif">Saldo projetado</td>
+                      <td class="text-end fw-bold ${fiSituation.projected >= 0 ? 'text-success' : 'text-danger'} fs-sm">R$ ${fiSituation.projected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // 3. Dados Bancários & Favorecido (Ocultado em transferências internas entre eventos)
+    const bankDetailsHtml = req.type !== 'TRANSFERENCIA_EVENTOS' ? `
       <div class="card border mb-3 shadow-sm bg-white">
         <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
           <strong class="fs-xs text-dark d-flex align-items-center gap-1">
@@ -400,7 +500,7 @@ export const financialApprovalsController = {
           </div>
         </div>
       </div>
-    `;
+    ` : '';
 
     // 4. Validações Automáticas
     const validationsHtml = req.automatedValidations && req.automatedValidations.length > 0 ? `

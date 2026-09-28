@@ -9,6 +9,8 @@ import { cashForecastService } from '../services/cashForecastService.js';
 import { financialRulesEngine } from '../services/financialRulesService.js';
 import { payoutScheduleGateway } from '../services/payoutScheduleGateway.js';
 import { payoutScheduleService } from '../services/payoutScheduleService.js';
+import { financialApprovalService } from '../services/financialApprovalService.js';
+import { accessControlService } from '../services/accessControlService.js';
 
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -600,7 +602,10 @@ export async function updateTransferPreview() {
   const reasonVal = document.getElementById('trf-input-reason')?.value || '';
 
   const sourceLabel = document.getElementById('trf-source-available-label');
+  const sourceSettledLabel = document.getElementById('trf-source-settled-label');
+  const sourceCommittedLabel = document.getElementById('trf-source-committed-label');
   const targetLabel = document.getElementById('trf-target-available-label');
+  const targetSettledLabel = document.getElementById('trf-target-settled-label');
   const submitBtn = document.getElementById('btn-submit-balance-transfer');
   const alertEl = document.getElementById('trf-preview-alert');
   const badgeEl = document.getElementById('trf-preview-badge');
@@ -609,7 +614,10 @@ export async function updateTransferPreview() {
   const targetEv = cachedEvents.find(e => String(e.eventId) === String(targetId));
 
   if (sourceLabel) sourceLabel.textContent = sourceEv ? formatBRL(sourceEv.balances.availableBalance) : 'R$ 0,00';
+  if (sourceSettledLabel) sourceSettledLabel.textContent = sourceEv ? formatBRL(sourceEv.balances.settledAmount) : 'R$ 0,00';
+  if (sourceCommittedLabel) sourceCommittedLabel.textContent = sourceEv ? formatBRL(sourceEv.balances.committedBalance) : 'R$ 0,00';
   if (targetLabel) targetLabel.textContent = targetEv ? formatBRL(targetEv.balances.availableBalance) : 'R$ 0,00';
+  if (targetSettledLabel) targetSettledLabel.textContent = targetEv ? formatBRL(targetEv.balances.settledAmount) : 'R$ 0,00';
 
   const preview = await balanceTransferService.calculateTransferPreview({
     sourceEventId: sourceId,
@@ -645,11 +653,14 @@ export async function updateTransferPreview() {
 
     if (badgeEl) {
       badgeEl.className = 'badge bg-success-subtle text-success border border-success-subtle';
-      badgeEl.textContent = val > 20000 ? 'Simulação Válida (Requer Aprovação)' : 'Simulação Válida';
+      badgeEl.textContent = 'Solicitação Pronta para Envio';
     }
 
     const isReasonValid = reasonVal.trim().length >= 3;
-    if (submitBtn) submitBtn.disabled = !isReasonValid;
+    if (submitBtn) {
+      submitBtn.disabled = !isReasonValid;
+      submitBtn.innerHTML = '<i class="ph-paper-plane-tilt me-1"></i> Solicitar Transferência';
+    }
   } else {
     if (prevSourceVal) prevSourceVal.textContent = '—';
     if (prevSourceDelta) prevSourceDelta.textContent = '—';
@@ -710,19 +721,62 @@ export async function handleBalanceTransferSubmit(e) {
   const submitBtn = document.getElementById('btn-submit-balance-transfer');
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="ph-arrows-clockwise ph-spin me-1"></i> Processando...';
+    submitBtn.innerHTML = '<i class="ph-arrows-clockwise ph-spin me-1"></i> Enviando solicitação...';
   }
 
   try {
-    const transfer = await balanceTransferService.executeTransfer({
-      sourceEventId: sourceId,
-      targetEventId: targetId,
-      amount,
-      reason,
-      notes,
-      costCenter,
-      producerId: currentProducerId,
-      actor: 'Vinicius Casagrande'
+    const sourceEv = cachedEvents.find(e => String(e.eventId) === String(sourceId));
+    const targetEv = cachedEvents.find(e => String(e.eventId) === String(targetId));
+
+    if (!sourceEv || !targetEv) {
+      throw new Error("Selecione os eventos de origem e destino.");
+    }
+
+    if (sourceId === targetId) {
+      throw new Error("O evento de origem e o de destino devem ser diferentes.");
+    }
+
+    if (sourceEv.producerId !== targetEv.producerId) {
+      throw new Error("Origem e destino pertencem a produtores diferentes! Operação proibida.");
+    }
+
+    const val = Number(amount);
+    if (val <= 0) {
+      throw new Error("O valor da transferência deve ser maior que R$ 0,00.");
+    }
+
+    if (val > sourceEv.balances.availableBalance) {
+      throw new Error(`Saldo insuficiente no evento de origem. Disponível: ${formatBRL(sourceEv.balances.availableBalance)}.`);
+    }
+
+    const user = (typeof accessControlService !== 'undefined' && accessControlService.getCurrentUser)
+      ? accessControlService.getCurrentUser()
+      : { id: 'user-producer-joao', name: 'João Silva', role: 'PRODUTOR', email: 'joao.silva@parquejlerner.com.br' };
+
+    // Submissão oficial para a Central de Solicitações Financeiras do Disk
+    const res = await financialApprovalService.createRequest({
+      type: 'TRANSFERENCIA_EVENTOS',
+      producerId: sourceEv.producerId,
+      producerName: sourceEv.producerName,
+      eventId: sourceId,
+      eventName: sourceEv.eventName,
+      amount: val,
+      justification: reason ? reason.trim() : 'Transferência operacional de saldo entre eventos.',
+      requestedBy: {
+        id: user.id,
+        name: user.name,
+        role: user.profile || user.role || 'PRODUTOR',
+        email: user.email
+      },
+      payload: {
+        sourceEventId: sourceId,
+        sourceEventName: sourceEv.eventName,
+        targetEventId: targetId,
+        targetEventName: targetEv.eventName,
+        reason: reason ? reason.trim() : '',
+        notes: notes ? notes.trim() : '',
+        costCenter: costCenter ? costCenter.trim() : ''
+      }
     });
 
     const modalEl = document.getElementById('modal-balance-transfer');
@@ -730,21 +784,26 @@ export async function handleBalanceTransferSubmit(e) {
       bootstrap.Modal.getInstance(modalEl)?.hide();
     }
 
-    if (transfer.status === 'EM_APROVACAO') {
-      alert(`Transferência ${transfer.id} registrada com sucesso!\nValor: ${formatBRL(transfer.amount)}\nStatus: EM_APROVACAO (Saldo reservado cautelarmente no evento de origem).`);
-      await refreshFinancialTransfersView();
-      switchTransferTab('approvals');
+    const reqData = res.data;
+    const protocolStr = reqData.protocol || reqData.id;
+    const successMsg = `Solicitação ${protocolStr} enviada ao Financeiro Disk!\nValor: ${formatBRL(val)}\nStatus: Aguardando análise (Saldo reservado no evento de origem).`;
+
+    if (window.showAppNotification) {
+      window.showAppNotification(`Solicitação de transferência ${protocolStr} enviada com sucesso! O valor de ${formatBRL(val)} foi reservado cautelarmente e aguarda análise do Financeiro Disk.`, 'success');
     } else {
-      alert(`Transferência ${transfer.id} processada com sucesso!\nStatus: ${transfer.status}\nValor: ${formatBRL(transfer.amount)}`);
-      await refreshFinancialTransfersView();
-      switchTransferTab('history');
+      alert(successMsg);
+    }
+
+    await refreshFinancialTransfersView();
+    if (window.refreshApprovalsDashboard) {
+      window.refreshApprovalsDashboard();
     }
   } catch (err) {
-    alert(`Falha ao realizar transferência: ${err.message || err}`);
+    alert(`Falha ao solicitar transferência: ${err.message || err}`);
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="ph-check-circle me-1"></i> Confirmar Transferência';
+      submitBtn.innerHTML = '<i class="ph-paper-plane-tilt me-1"></i> Solicitar Transferência';
     }
   }
 }
@@ -2609,3 +2668,38 @@ if (typeof window !== 'undefined') {
   window.updateRulesSimEvents = updateRulesSimEvents;
 }
 
+export const financialEventTransfersController = {
+  init: initFinancialEventTransfersView,
+  refresh: refreshFinancialTransfersView,
+  changeProducer: changeTransferProducer,
+  switchTab: switchTransferTab,
+  filterEvents: filterTransferEvents,
+  openBalanceTransferModal,
+  updateTransferPreview,
+  setTransferPercentage,
+  handleBalanceTransferSubmit,
+  openEventMovementsModal,
+  openTransferAuditModal,
+  openTransferTimelineModal,
+  openApprovalActionModal,
+  confirmApprovalAction,
+  handleReverseTransfer,
+  exportTransfersCsv,
+  printTransferReceipt,
+  refreshForecastData,
+  switchForecastHorizon,
+  switchForecastEvent,
+  renderForecastCharts,
+  openCoverageSimulator,
+  updateCoverageSimulation,
+  applySimulatedTransferToModal,
+  switchRulesSubTab,
+  refreshRulesData,
+  runRulesSimulation,
+  openCreateExceptionModal,
+  handleCreateException,
+  handleRevokeException,
+  updateRulesSimEvents
+};
+
+export default financialEventTransfersController;

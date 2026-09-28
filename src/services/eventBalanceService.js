@@ -280,6 +280,14 @@ export const eventBalanceService = {
   },
 
   /**
+   * Retorna diretamente a lista de movimentações registradas localmente (Ledger)
+   */
+  getMovements(eventId) {
+    const cacheKey = String(eventId);
+    return LOCAL_MOVEMENTS_CACHE[cacheKey] || [];
+  },
+
+  /**
    * Aplica atualização atômica de saldo local para um evento
    */
   updateLocalEventBalance(eventId, availableDelta, newMovement = null) {

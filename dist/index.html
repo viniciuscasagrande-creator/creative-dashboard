@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-DqQrzjEN.js"></script>
+      <script type="module" crossorigin src="./assets/index-CYjf4-J8.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-CdfODmdt.css">
     </head>
 <body>
@@ -2886,9 +2886,19 @@
                                                 <select id="trf-select-source" class="form-select fw-semibold border-secondary" required onchange="window.updateTransferPreview()">
                                                     <option value="">Selecione a origem...</option>
                                                 </select>
-                                                <div class="mt-1 d-flex justify-content-between align-items-center fs-xs">
-                                                    <span class="text-muted">Saldo Disponível:</span>
-                                                    <span class="fw-bold text-success" id="trf-source-available-label">R$ 0,00</span>
+                                                <div class="mt-2 p-2 bg-light rounded border fs-xs">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="text-muted">Saldo Contábil:</span>
+                                                        <span class="fw-bold text-dark font-monospace" id="trf-source-settled-label">R$ 0,00</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="text-muted">Valores Comprometidos:</span>
+                                                        <span class="fw-bold text-warning font-monospace" id="trf-source-committed-label">R$ 0,00</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center border-top pt-1">
+                                                        <span class="text-dark fw-semibold">Saldo Disponível:</span>
+                                                        <span class="fw-bold text-success font-monospace" id="trf-source-available-label">R$ 0,00</span>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -2898,9 +2908,15 @@
                                                 <select id="trf-select-target" class="form-select fw-semibold border-secondary" required onchange="window.updateTransferPreview()">
                                                     <option value="">Selecione o destino...</option>
                                                 </select>
-                                                <div class="mt-1 d-flex justify-content-between align-items-center fs-xs">
-                                                    <span class="text-muted">Saldo Atual:</span>
-                                                    <span class="fw-bold text-primary" id="trf-target-available-label">R$ 0,00</span>
+                                                <div class="mt-2 p-2 bg-light rounded border fs-xs">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="text-muted">Saldo Contábil Atual:</span>
+                                                        <span class="fw-bold text-dark font-monospace" id="trf-target-settled-label">R$ 0,00</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center border-top pt-1">
+                                                        <span class="text-dark fw-semibold">Saldo Disponível Atual:</span>
+                                                        <span class="fw-bold text-primary font-monospace" id="trf-target-available-label">R$ 0,00</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2984,8 +3000,8 @@
 
                                         <div class="modal-footer px-0 pb-0 pt-3 border-top mt-3">
                                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                            <button type="submit" class="btn btn-success fw-bold d-flex align-items-center gap-1" id="btn-submit-balance-transfer" disabled>
-                                                <i class="ph-check-circle"></i> Confirmar Transferência
+                                            <button type="submit" class="btn btn-success fw-bold d-flex align-items-center gap-1 shadow-sm" id="btn-submit-balance-transfer" disabled>
+                                                <i class="ph-paper-plane-tilt"></i> Solicitar Transferência
                                             </button>
                                         </div>
                                     </form>
