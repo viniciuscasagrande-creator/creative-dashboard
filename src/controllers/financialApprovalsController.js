@@ -425,6 +425,210 @@ export const financialApprovalsController = {
             </div>
           </div>
         `;
+      } else if (req.type === 'ANTECIPACAO') {
+        const snap = req.payload?.advanceSnapshot || req.financialImpact || {};
+        const sched = snap.allocatedSchedule || [];
+        financialSituationHtml = `
+          <div class="card border border-primary-subtle shadow-sm mb-3">
+            <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
+                <i class="ph-hand-coins text-primary"></i> Análise Financeira da Antecipação
+              </strong>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">Simulação Contratual</span>
+            </div>
+            <div class="card-body p-3">
+              <div class="row g-2 mb-3">
+                <div class="col-6 col-md-4">
+                  <div class="p-2 bg-light rounded border">
+                    <span class="text-muted fs-xxs d-block">Valor Solicitado</span>
+                    <strong class="text-dark fs-xs">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="p-2 bg-light rounded border">
+                    <span class="text-muted fs-xxs d-block">Taxa Contratual</span>
+                    <strong class="text-primary fs-xs">${snap.contractRate || 2.5}% a.m.</strong>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="p-2 bg-light rounded border">
+                    <span class="text-muted fs-xxs d-block">Custo Estimado</span>
+                    <strong class="text-danger fs-xs">- R$ ${(snap.estimatedCost || (req.amount * 0.025)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="p-2 bg-light rounded border">
+                    <span class="text-muted fs-xxs d-block">Outros Encargos</span>
+                    <strong class="text-muted fs-xs">R$ 0,00</strong>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="p-2 bg-success-subtle rounded border border-success-subtle">
+                    <span class="text-success-emphasis fs-xxs d-block fw-bold">Valor Líquido Estimado</span>
+                    <strong class="text-success fs-xs">R$ ${(snap.estimatedNet || (req.amount * 0.975)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="p-2 bg-light rounded border">
+                    <span class="text-muted fs-xxs d-block">Previsão Liquidação</span>
+                    <strong class="text-dark fs-xs">Até 24h úteis</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="alert alert-info py-1 px-2 fs-xxs mb-3">
+                <i class="ph-info me-1"></i> Esta é uma simulação. O valor final está sujeito à análise e aprovação do Financeiro Disk.
+              </div>
+              <strong class="fs-xxs text-uppercase text-muted d-block mb-1">Agenda de Recebíveis Considerados</strong>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered fs-xxs mb-0 font-monospace">
+                  <thead class="table-light font-sans-serif">
+                    <tr>
+                      <th>Vencimento</th>
+                      <th class="text-end">Disponível</th>
+                      <th class="text-end">Alocado</th>
+                      <th class="text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${sched.length > 0 ? sched.map(s => `
+                      <tr>
+                        <td>${s.dueDateLabel || s.dueDate}</td>
+                        <td class="text-end">R$ ${(s.grossAvailable || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-end text-primary fw-bold">R$ ${(s.allocatedAmount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-center"><span class="badge bg-warning-subtle text-warning border fs-xxs">Bloqueado</span></td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td>15/10/2026</td>
+                        <td class="text-end">R$ 40.000,00</td>
+                        <td class="text-end text-primary fw-bold">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-center"><span class="badge bg-warning-subtle text-warning border fs-xxs">Bloqueado</span></td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (req.type === 'ALTERACAO_DADOS_BANCARIOS') {
+        const curAcc = req.payload?.currentAccount || {};
+        const reqAcc = req.payload?.requestedAccount || {};
+        const docs = reqAcc.documents || req.attachments || [];
+        financialSituationHtml = `
+          <div class="card border border-danger-subtle shadow-sm mb-3">
+            <div class="card-header bg-danger-subtle py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-danger d-flex align-items-center gap-1">
+                <i class="ph-bank text-danger"></i> Comparativo Cadastral — Alteração de Dados Bancários
+              </strong>
+              <span class="badge bg-danger text-white fs-xxs">Alçada Nível 2 / Crítica</span>
+            </div>
+            <div class="card-body p-3">
+              <div class="alert alert-warning py-2 px-3 fs-xs mb-3">
+                <i class="ph-shield-warning me-1"></i> <strong>Aviso de Segurança:</strong> Por segurança, a conta bancária atual continuará ativa até que a alteração seja analisada e aprovada pelo Financeiro Disk. Repasses anteriores já autorizados mantêm seus dados congelados.
+              </div>
+              <div class="row g-2 mb-3">
+                <!-- Conta Atual -->
+                <div class="col-md-6 border-end">
+                  <div class="p-2 bg-light rounded border h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <strong class="fs-xs text-secondary d-flex align-items-center gap-1">
+                        <i class="ph-lock"></i> DADOS ATUAIS (Conta Vigente)
+                      </strong>
+                      <span class="badge bg-success text-white fs-xxs">ATIVA</span>
+                    </div>
+                    <table class="table table-sm table-borderless fs-xxs mb-0">
+                      <tr><td class="text-muted">Banco:</td><td class="text-dark fw-bold">${curAcc.bankName || 'Banco do Brasil'} (${curAcc.bankCode || '001'})</td></tr>
+                      <tr><td class="text-muted">Agência:</td><td class="text-dark font-monospace">${curAcc.agency || '1502-4'}</td></tr>
+                      <tr><td class="text-muted">Conta:</td><td class="text-dark font-monospace">${curAcc.account || '99201-0'}</td></tr>
+                      <tr><td class="text-muted">Titular:</td><td class="text-dark">${curAcc.holderName || req.producerName}</td></tr>
+                      <tr><td class="text-muted">CNPJ/CPF:</td><td class="text-dark font-monospace">${curAcc.document || '08.123.456/0001-99'}</td></tr>
+                      <tr><td class="text-muted">Chave PIX:</td><td class="text-dark font-monospace">${curAcc.pixKey || '08123456000199'}</td></tr>
+                    </table>
+                  </div>
+                </div>
+                <!-- Nova Conta Proposta -->
+                <div class="col-md-6">
+                  <div class="p-2 bg-primary-subtle rounded border border-primary-subtle h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <strong class="fs-xs text-primary d-flex align-items-center gap-1">
+                        <i class="ph-arrows-clockwise"></i> DADOS SOLICITADOS (Proposta)
+                      </strong>
+                      <span class="badge bg-warning text-dark fs-xxs">PENDENTE APROVAÇÃO</span>
+                    </div>
+                    <table class="table table-sm table-borderless fs-xxs mb-0">
+                      <tr><td class="text-muted">Banco:</td><td class="text-dark fw-bold">${reqAcc.bankName || req.payload?.bankName || 'Banco Santander'} (${reqAcc.bankCode || req.payload?.bankCode || '033'})</td></tr>
+                      <tr><td class="text-muted">Agência:</td><td class="text-dark font-monospace fw-bold">${reqAcc.agency || req.payload?.agency || '0082'}</td></tr>
+                      <tr><td class="text-muted">Conta:</td><td class="text-dark font-monospace fw-bold">${reqAcc.account || req.payload?.account || '44810-9'}</td></tr>
+                      <tr><td class="text-muted">Titular:</td><td class="text-dark">${reqAcc.holderName || req.payload?.holderName || req.producerName}</td></tr>
+                      <tr><td class="text-muted">CNPJ/CPF:</td><td class="text-dark font-monospace">${reqAcc.document || req.payload?.document || '08.123.456/0001-99'}</td></tr>
+                      <tr><td class="text-muted">Chave PIX:</td><td class="text-dark font-monospace">${reqAcc.pixKey || req.payload?.pixKey || req.payload?.newPixKey || '—'}</td></tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <strong class="fs-xxs text-uppercase text-muted d-block mb-1">Documentos Comprobatórios Anexados</strong>
+              <div class="d-flex flex-wrap gap-2">
+                ${docs.length > 0 ? docs.map(d => `
+                  <span class="badge bg-light text-dark border p-2 d-flex align-items-center gap-1 fs-xxs">
+                    <i class="ph-file-pdf text-danger fs-6"></i> Comprovante de Titularidade: ${d.name || d}
+                  </span>
+                `).join('') : `
+                  <span class="badge bg-light text-muted border p-2 fs-xxs"><i class="ph-file-pdf text-danger me-1"></i> Comprovante de Titularidade Bancária</span>
+                `}
+              </div>
+            </div>
+          </div>
+
+          <div class="card border border-primary-subtle shadow-sm mb-3">
+            <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+              <strong class="fs-xs text-uppercase text-dark d-flex align-items-center gap-1">
+                <i class="ph-chart-line-up text-primary"></i> Situação Financeira
+              </strong>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">Posição Atualizada</span>
+            </div>
+            <div class="card-body p-3">
+              <div class="table-responsive">
+                <table class="table table-sm table-borderless align-middle mb-0 fs-xs font-monospace">
+                  <tbody>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Vendas brutas</td>
+                      <td class="text-end fw-bold text-dark">R$ ${fiSituation.grossSales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Taxas</td>
+                      <td class="text-end text-danger">- R$ ${fiSituation.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Estornos</td>
+                      <td class="text-end text-danger">- R$ ${fiSituation.refunds.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Chargebacks</td>
+                      <td class="text-end text-danger">- R$ ${fiSituation.chargebacks.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted font-sans-serif">Valores comprometidos</td>
+                      <td class="text-end text-warning">- R$ ${fiSituation.committed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="border-top border-secondary">
+                      <td class="fw-bold text-dark font-sans-serif">Saldo disponível</td>
+                      <td class="text-end fw-bold text-success fs-sm">R$ ${fiSituation.available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="bg-light">
+                      <td class="fw-bold text-primary font-sans-serif">Repasse / Valor solicitado</td>
+                      <td class="text-end fw-bold text-primary fs-sm">R$ ${req.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="border-top border-primary-subtle">
+                      <td class="fw-bold text-dark font-sans-serif">Saldo projetado</td>
+                      <td class="text-end fw-bold ${fiSituation.projected >= 0 ? 'text-success' : 'text-danger'} fs-sm">R$ ${fiSituation.projected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
       } else {
         financialSituationHtml = `
           <div class="card border border-primary-subtle shadow-sm mb-3">
@@ -479,7 +683,7 @@ export const financialApprovalsController = {
       }
     }
 
-    // 3. Dados Bancários & Favorecido (Ocultado em transferências internas entre eventos)
+    // 3. Dados Bancários & Favorecido (Ocultado apenas em transferências internas entre eventos)
     const bankDetailsHtml = req.type !== 'TRANSFERENCIA_EVENTOS' ? `
       <div class="card border mb-3 shadow-sm bg-white">
         <div class="card-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
@@ -603,7 +807,29 @@ export const financialApprovalsController = {
     if (footer) {
       if (isProducer) {
         // PRODUTOR NUNCA TEM BOTÕES DE APROVAR/REPROVAR/DEVOLVER
-        if (req.status === 'DEVOLVIDA' || req.status === 'AGUARDANDO_CORRECAO') {
+        if (req.status === 'AGUARDANDO_ACEITE_PRODUTOR') {
+          footer.innerHTML = `
+            <div class="w-100">
+              <div class="alert alert-info py-2 px-3 fs-xs mb-2">
+                <div class="d-flex align-items-center gap-1 mb-1">
+                  <i class="ph-info text-primary"></i>
+                  <strong>Condição Ajustada pelo Financeiro Disk:</strong>
+                </div>
+                Valor: <strong>R$ ${(req.adjustedCondition?.approvedAmount || req.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> |
+                Taxa: <strong>${req.adjustedCondition?.approvedRate || 2.5}% a.m.</strong><br>
+                <span class="fst-italic text-muted">"${req.adjustedCondition?.reason || 'Ajuste de crédito.'}"</span>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-danger w-50" onclick="window.cancelAdjustedConditionAction('${req.id}')">
+                  Recusar / Cancelar
+                </button>
+                <button class="btn btn-sm btn-success w-50 fw-bold shadow-sm" onclick="window.acceptAdjustedConditionAction('${req.id}')">
+                  <i class="ph-check-circle me-1"></i> Aceitar Condição
+                </button>
+              </div>
+            </div>
+          `;
+        } else if (req.status === 'DEVOLVIDA' || req.status === 'AGUARDANDO_CORRECAO') {
           footer.innerHTML = `
             <div class="w-100 d-flex gap-2">
               <button class="btn btn-sm btn-light border w-50" data-bs-dismiss="offcanvas">Fechar</button>
@@ -633,6 +859,13 @@ export const financialApprovalsController = {
           footer.innerHTML = `
             <div class="w-100 d-flex justify-content-between align-items-center">
               <span class="fs-xs text-danger fw-bold"><i class="ph-x-circle me-1"></i> Operação Reprovada / Arquivada</span>
+              <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar</button>
+            </div>
+          `;
+        } else if (req.status === 'AGUARDANDO_ACEITE_PRODUTOR') {
+          footer.innerHTML = `
+            <div class="w-100 d-flex justify-content-between align-items-center">
+              <span class="fs-xs text-info fw-bold"><i class="ph-clock-countdown me-1"></i> Aguardando Aceite da Contraproposta pelo Produtor</span>
               <button class="btn btn-sm btn-light border" data-bs-dismiss="offcanvas">Fechar</button>
             </div>
           `;
@@ -679,6 +912,11 @@ export const financialApprovalsController = {
                 ${(req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE') ? `
                   <button class="btn btn-sm btn-outline-info fw-bold d-flex align-items-center gap-1" onclick="window.startAnalysisAction('${req.id}')">
                     <i class="ph-magnifying-glass"></i> Iniciar Análise
+                  </button>
+                ` : ''}
+                ${(req.type === 'ANTECIPACAO' && (req.status === 'AGUARDANDO_APROVACAO' || req.status === 'AGUARDANDO_ANALISE' || req.status === 'EM_ANALISE')) ? `
+                  <button class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1" onclick="window.openAdjustConditionModal('${req.id}')">
+                    <i class="ph-sliders"></i> Propor Ajuste
                   </button>
                 ` : ''}
                 ${canReturn ? `
@@ -936,6 +1174,39 @@ export const financialApprovalsController = {
     window.startAnalysisAction = (id) => this.startAnalysisAction(id);
     window.executeApprovedAction = (id) => this.executeApprovedAction(id);
     window.refreshApprovalsDashboard = () => this.refreshDashboard();
+    window.acceptAdjustedConditionAction = async (id) => {
+      try {
+        await financialApprovalService.acceptAdjustedCondition(id, currentActor);
+        this.refreshDashboard();
+        this.openDrawer(id);
+        if (window.showAppNotification) window.showAppNotification('Condição aceita com sucesso!', 'success');
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+    window.cancelAdjustedConditionAction = async (id) => {
+      try {
+        await financialApprovalService.cancelAdjustedCondition(id, currentActor);
+        this.refreshDashboard();
+        this.openDrawer(id);
+        if (window.showAppNotification) window.showAppNotification('Solicitação cancelada.', 'info');
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+    window.openAdjustConditionModal = (id) => {
+      const req = financialApprovalService.getRequestById(id);
+      if (!req) return;
+      const newAmount = prompt(`Ajustar Valor para Aprovação (Atual: R$ ${req.amount}):`, req.amount);
+      if (newAmount === null) return;
+      const newRate = prompt(`Ajustar Taxa de Antecipação % a.m.:`, '2.5');
+      if (newRate === null) return;
+      const reason = prompt(`Motivo do ajuste / contraproposta:`, 'Ajuste de alçada operacional e volume da agenda.');
+      if (reason === null) return;
+      financialApprovalService.adjustConditions(id, currentActor, { approvedAmount: Number(newAmount), approvedRate: Number(newRate), reason });
+      this.refreshDashboard();
+      this.openDrawer(id);
+    };
     window.handleNotificationItemClick = (notifId, reqId) => {
       financialApprovalNotificationService.markAsRead(notifId, currentRole);
       if (reqId) this.openDrawer(reqId);

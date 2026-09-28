@@ -181,6 +181,52 @@ export const financialApprovalNotificationService = {
   },
 
   /**
+   * Notifica produtor quando o Financeiro propõe condição ajustada (contraproposta)
+   */
+  notifyConditionAdjusted(request, arg2, arg3) {
+    const adjustedConditions = (arg3 && typeof arg3 === 'object') ? arg3 : (arg2 || {});
+    const val = Number(adjustedConditions.approvedAmount || request.amount || 0);
+    const notif = {
+      id: `NOTIF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      recipientRole: 'PRODUTOR',
+      recipientUserId: request.requestedBy?.id,
+      title: 'Condição ajustada pelo Financeiro Disk',
+      message: `A solicitação ${request.protocol || request.id} (${request.type}) recebeu contraproposta de R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. Seu aceite é necessário para prosseguir.`,
+      requestId: request.id,
+      requestType: request.type,
+      timestamp: new Date().toISOString(),
+      read: false,
+      actionUrl: `#/financeiro/minhas-solicitacoes?id=${request.id}`,
+      priority: 'ALTA'
+    };
+    NOTIFICATIONS.unshift(notif);
+    this.refreshNavbarBell('PRODUTOR');
+    return notif;
+  },
+
+  /**
+   * Dispara alerta de segurança crítico ao produtor
+   */
+  notifySecurityAlert(data = {}) {
+    const notif = {
+      id: `NOTIF-SEC-${Date.now()}`,
+      recipientRole: 'PRODUTOR',
+      recipientUserId: data.recipientUserId || null,
+      title: 'ALERTA DE SEGURANÇA: Dados Bancários',
+      message: data.message || `Foi solicitada uma alteração nos dados bancários do Produtor em ${new Date().toLocaleString('pt-BR')}.`,
+      requestId: data.requestId,
+      requestType: 'ALTERACAO_DADOS_BANCARIOS',
+      timestamp: new Date().toISOString(),
+      read: false,
+      actionUrl: `#/financeiro/contas-bancarias`,
+      priority: 'ALTA'
+    };
+    NOTIFICATIONS.unshift(notif);
+    this.refreshNavbarBell('PRODUTOR');
+    return notif;
+  },
+
+  /**
    * Atualiza reativamente os elementos visuais do sininho no DOM (#notification-badge e lista)
    */
   refreshNavbarBell(role = 'FINANCEIRO') {

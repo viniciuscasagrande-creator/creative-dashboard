@@ -12,6 +12,8 @@ import { eventBalanceService } from './eventBalanceService.js';
 import { accessControlService } from './accessControlService.js';
 import { accessAuditService } from './accessAuditService.js';
 import { balanceTransferService } from './balanceTransferService.js';
+import { producerBankAccountService } from './producerBankAccountService.js';
+import { receivableAnticipationService } from './receivableAnticipationService.js';
 
 // Base de Solicitações Unificadas de Aprovação
 let APPROVAL_REQUESTS = [
@@ -624,16 +626,83 @@ export const financialApprovalService = {
       }
     }
 
+    // Regras Específicas de ANTECIPACAO (Cálculo de Base Elegível e Snapshot de Simulação)
+    if (type === 'ANTECIPACAO') {
+      const baseInfo = await receivableAnticipationService.calculateEligibleBase(eventId || '3368', producerId);
+      if (numAmount > baseInfo.eligibleBase && baseInfo.eligibleBase > 0) {
+        throw new Error(`Valor solicitado (R$ ${numAmount.toFixed(2)}) supera a base elegível de antecipação (R$ ${baseInfo.eligibleBase.toFixed(2)}).`);
+      }
+      const sim = await receivableAnticipationService.simulateAnticipation({
+        eventId: eventId || '3368',
+        producerId,
+        requestedAmount: numAmount
+      });
+      payload.advanceSnapshot = sim;
+      payload.bankAccountSnapshot = producerBankAccountService.getActiveAccount(producerId);
+
+      financialImpact = {
+        requestedAmount: numAmount,
+        eligibleBase: sim.eligibleBase,
+        contractRate: sim.contractRate,
+        estimatedCost: sim.estimatedCost,
+        otherCharges: sim.otherCharges,
+        estimatedNet: sim.estimatedNet,
+        allocatedSchedule: sim.allocatedSchedule,
+        calculatedAt: sim.calculatedAt
+      };
+    }
+
+    // Regras Específicas de ALTERACAO_DADOS_BANCARIOS (Segurança, Concorrência e Versionamento)
+    if (type === 'ALTERACAO_DADOS_BANCARIOS') {
+      const activeBankReq = APPROVAL_REQUESTS.find(r =>
+        r.type === 'ALTERACAO_DADOS_BANCARIOS' &&
+        r.producerId === producerId &&
+        (r.status === 'AGUARDANDO_ANALISE' || r.status === 'EM_ANALISE' || r.status === 'AGUARDANDO_CORRECAO' || r.status === 'AGUARDANDO_APROVACAO')
+      );
+      if (activeBankReq) {
+        throw new Error(`Transferência/Alteração bloqueada: já existe uma solicitação de alteração bancária em andamento para este produtor (Protocolo ${activeBankReq.protocol || activeBankReq.id}). Aguarde a análise para submeter nova alteração.`);
+      }
+
+      const currentActive = producerBankAccountService.getActiveAccount(producerId);
+      const requestedAcc = producerBankAccountService.requestAccountChange({
+        producerId,
+        producerName,
+        bankCode: payload.bankCode,
+        bankName: payload.bankName,
+        agency: payload.agency,
+        account: payload.account,
+        accountType: payload.accountType,
+        holderName: payload.holderName,
+        document: payload.document,
+        pixKey: payload.pixKey,
+        documents: attachments,
+        requestedBy,
+        justification
+      });
+
+      payload.currentAccount = currentActive;
+      payload.requestedAccount = requestedAcc;
+    }
+
+    // Snapshot bancário para REPASSE (Preservação estrita da conta aprovada)
+    if (type === 'REPASSE' && !payload.bankAccountSnapshot) {
+      payload.bankAccountSnapshot = producerBankAccountService.getActiveAccount(producerId);
+    }
+
     const nextSeq = APPROVAL_REQUESTS.length + 143;
     const isRepasse = type === 'REPASSE';
     const isTransfer = type === 'TRANSFERENCIA_EVENTOS';
+    const isAdvance = type === 'ANTECIPACAO';
+    const isBankChange = type === 'ALTERACAO_DADOS_BANCARIOS';
     let prefix = 'APR';
     if (isRepasse) prefix = 'RP';
     else if (isTransfer) prefix = 'TR';
+    else if (isAdvance) prefix = 'ANT';
+    else if (isBankChange) prefix = 'BAN';
 
-    const padLen = (isRepasse || isTransfer) ? 6 : 5;
+    const padLen = (isRepasse || isTransfer || isAdvance || isBankChange) ? 6 : 5;
     const id = `${prefix}-${new Date().getFullYear()}-${String(nextSeq).padStart(padLen, '0')}`;
-    const initialStatus = (isRepasse || isTransfer) ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
+    const initialStatus = (isRepasse || isTransfer || isAdvance || isBankChange) ? 'AGUARDANDO_ANALISE' : 'AGUARDANDO_APROVACAO';
     const statusMeta = financialApprovalRulesService.getStatusMeta(initialStatus);
 
     const newRequest = {
@@ -679,6 +748,11 @@ export const financialApprovalService = {
       updatedAt: new Date().toISOString()
     };
 
+    // Bloqueia recebíveis se for antecipação
+    if (type === 'ANTECIPACAO' && payload.advanceSnapshot?.allocatedSchedule) {
+      receivableAnticipationService.lockReceivables(id, payload.advanceSnapshot.allocatedSchedule);
+    }
+
     // 4. Reserva financeira preventiva (FinancialReservation: ATIVA)
     this.reserveBalance(newRequest);
 
@@ -697,6 +771,7 @@ export const financialApprovalService = {
    */
   reserveBalance(request) {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
+    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS') return;
     try {
       const sourceEventId = String(request.eventId);
       const val = Number(request.amount);
@@ -751,6 +826,7 @@ export const financialApprovalService = {
    */
   releaseBalance(request, reason = '') {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
+    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS') return;
     try {
       const sourceEventId = String(request.eventId);
       const val = Number(request.amount);
@@ -791,6 +867,7 @@ export const financialApprovalService = {
    */
   consumeReservation(request) {
     if (!request.eventId || !request.amount || request.amount <= 0) return;
+    if (request.type === 'ANTECIPACAO' || request.type === 'ALTERACAO_DADOS_BANCARIOS') return;
     try {
       const res = FINANCIAL_RESERVATIONS.find(r => r.requestId === request.id || r.id === `RES-${request.id}`);
       if (res) {
@@ -1043,6 +1120,30 @@ export const financialApprovalService = {
       }
     }
 
+    // Validação específica de Alçada N2 para Alteração de Dados Bancários
+    if (item.type === 'ALTERACAO_DADOS_BANCARIOS') {
+      const canApproveBank = accessControlService.can(resolvedActor, 'financeiro.dados_bancarios.aprovar', {
+        operation: 'ALTERACAO_DADOS_BANCARIOS',
+        producerId: item.producerId
+      });
+      if (!canApproveBank) {
+        throw new Error(`Alçada Insuficiente: A aprovação de alteração de domicílio bancário requer alçada de Gestor Financeiro / Nível 2.`);
+      }
+    }
+
+    // Validação específica de Alçada para Antecipação
+    if (item.type === 'ANTECIPACAO') {
+      const canApproveAnt = accessControlService.can(resolvedActor, 'financeiro.antecipacoes.aprovar', {
+        amount: item.amount,
+        operation: 'ANTECIPACAO',
+        producerId: item.producerId,
+        eventId: item.eventId
+      });
+      if (!canApproveAnt) {
+        throw new Error(`Alçada Insuficiente: O usuário "${resolvedActor.name}" não possui autorização ou alçada para aprovar antecipações.`);
+      }
+    }
+
     // Aprovação definitiva
     item.status = 'APROVADA';
     const statusMeta = financialApprovalRulesService.getStatusMeta('APROVADA');
@@ -1185,6 +1286,23 @@ export const financialApprovalService = {
         } catch (_) {}
       }
 
+      // Se for antecipação de recebíveis, baixa na agenda e liquidação contábil
+      if (item.type === 'ANTECIPACAO') {
+        const settleRes = receivableAnticipationService.settleAnticipation(item.id, item);
+        if (settleRes && !settleRes.ok) {
+          throw new Error(settleRes.error || 'Falha na liquidação contábil da antecipação.');
+        }
+      }
+
+      // Se for alteração de dados bancários, ativação atômica da nova conta
+      if (item.type === 'ALTERACAO_DADOS_BANCARIOS') {
+        const targetAccId = item.payload?.requestedAccount?.id;
+        const actRes = producerBankAccountService.activateAccount(item.producerId, targetAccId, item.reviewedBy || { id: 'user-fin-gestor', name: 'Gestor Financeiro' });
+        if (actRes && !actRes.ok) {
+          throw new Error(actRes.error || 'Falha na ativação da nova conta bancária.');
+        }
+      }
+
       item.status = 'CONCLUIDA';
       const conclMeta = financialApprovalRulesService.getStatusMeta('CONCLUIDA');
       item.statusLabelPtBr = conclMeta.label;
@@ -1251,6 +1369,17 @@ export const financialApprovalService = {
 
     // Libera a reserva de saldo
     this.releaseBalance(item);
+
+    // Se for antecipação, libera os recebíveis bloqueados
+    if (item.type === 'ANTECIPACAO') {
+      receivableAnticipationService.releaseReceivables(item.id);
+    }
+
+    // Se for alteração de dados bancários, rejeita a conta solicitada e mantém a ativa
+    if (item.type === 'ALTERACAO_DADOS_BANCARIOS') {
+      const targetAccId = item.payload?.requestedAccount?.id;
+      producerBankAccountService.rejectAccountChange(item.producerId, targetAccId, resolvedActor, reason);
+    }
 
     const prevStatus = item.status;
     item.status = 'REJEITADA';
@@ -1527,11 +1656,226 @@ export const financialApprovalService = {
   },
 
   /**
+   * Proposta de Condição Ajustada pelo Financeiro Disk (Contraproposta)
+   * Transiciona o status para AGUARDANDO_ACEITE_PRODUTOR
+   */
+  adjustConditions(id, actor, { approvedAmount, approvedRate, reason = '' } = {}) {
+    const item = this.getRequestById(id);
+    if (!item) throw new Error(`Solicitação ${id} não encontrada.`);
+
+    const resolvedActor = accessControlService.resolveUser(actor);
+    const canAnalyze = accessControlService.can(resolvedActor, 'financeiro.aprovacoes.analisar', {
+      producerId: item.producerId,
+      eventId: item.eventId
+    });
+    if (!canAnalyze) {
+      throw new Error(`Acesso Negado: O usuário "${resolvedActor.name}" não possui permissão para propor ajustes nesta operação.`);
+    }
+
+    const prevStatus = item.status;
+    item.status = 'AGUARDANDO_ACEITE_PRODUTOR';
+    const statusMeta = financialApprovalRulesService.getStatusMeta('AGUARDANDO_ACEITE_PRODUTOR');
+    item.statusLabelPtBr = statusMeta.label;
+    item.badgeClass = statusMeta.badgeClass;
+
+    const numApprovedAmount = Number(approvedAmount) || item.amount;
+    const numApprovedRate = approvedRate !== undefined ? Number(approvedRate) : (item.payload?.advanceSnapshot?.contractRate || 2.5);
+
+    item.adjustedCondition = {
+      originalAmount: item.amount,
+      approvedAmount: numApprovedAmount,
+      approvedRate: numApprovedRate,
+      reason: reason || 'Condição de antecipação recalculada conforme agenda de recebíveis e alçada de crédito.',
+      adjustedBy: resolvedActor,
+      adjustedAt: new Date().toISOString()
+    };
+    item.updatedAt = new Date().toISOString();
+
+    item.auditTrail.push({
+      id: `AUD-${id}-ADJUST`,
+      timestamp: new Date().toISOString(),
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'CONDICAO_AJUSTADA',
+      previousStatus: prevStatus,
+      newStatus: 'AGUARDANDO_ACEITE_PRODUTOR',
+      comment: `Condição ajustada pelo Financeiro Disk: R$ ${numApprovedAmount.toFixed(2)} (Taxa: ${numApprovedRate}% a.m.). Motivo: ${reason}`
+    });
+
+    accessAuditService.log({
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'APPROVAL_CONDITION_ADJUSTED',
+      details: `Contraproposta apresentada para ${id}: R$ ${numApprovedAmount.toFixed(2)} a ${numApprovedRate}%. Motivo: ${reason}`
+    });
+
+    financialApprovalNotificationService.notifyConditionAdjusted(item, resolvedActor, item.adjustedCondition);
+
+    return { ok: true, data: item };
+  },
+
+  /**
+   * Aceite da Condição Ajustada pelo Produtor
+   */
+  acceptAdjustedCondition(id, actor) {
+    const item = this.getRequestById(id);
+    if (!item) throw new Error(`Solicitação ${id} não encontrada.`);
+
+    if (item.status !== 'AGUARDANDO_ACEITE_PRODUTOR' || !item.adjustedCondition) {
+      throw new Error(`Apenas solicitações com condição ajustada pendente podem ser aceitas.`);
+    }
+
+    const resolvedActor = accessControlService.resolveUser(actor);
+    const newAmount = item.adjustedCondition.approvedAmount;
+    const newRate = item.adjustedCondition.approvedRate;
+    item.amount = newAmount;
+
+    if (item.payload) {
+      item.payload.discountRate = `${newRate}% a.m.`;
+      if (item.payload.advanceSnapshot) {
+        item.payload.advanceSnapshot.requestedAmount = newAmount;
+        item.payload.advanceSnapshot.contractRate = newRate;
+        item.payload.advanceSnapshot.estimatedCost = Number((newAmount * (newRate / 100)).toFixed(2));
+        item.payload.advanceSnapshot.estimatedNet = Number((newAmount - item.payload.advanceSnapshot.estimatedCost).toFixed(2));
+      }
+    }
+
+    const prevStatus = item.status;
+    item.status = 'AGUARDANDO_ANALISE';
+    const statusMeta = financialApprovalRulesService.getStatusMeta('AGUARDANDO_ANALISE');
+    item.statusLabelPtBr = 'Condição Aceita (Aguardando Aprovação)';
+    item.badgeClass = 'bg-primary-subtle text-primary border border-primary';
+    item.updatedAt = new Date().toISOString();
+
+    item.auditTrail.push({
+      id: `AUD-${id}-ACCEPT-COND`,
+      timestamp: new Date().toISOString(),
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'CONTRAPROPOSTA_ACEITA',
+      previousStatus: prevStatus,
+      newStatus: 'AGUARDANDO_ANALISE',
+      comment: `Produtor ${resolvedActor.name} aceitou a condição ajustada de R$ ${newAmount.toFixed(2)} com taxa de ${newRate}%. Encaminhado para aprovação final.`
+    });
+
+    accessAuditService.log({
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'APPROVAL_CONDITION_ACCEPTED',
+      details: `Condição ajustada para ${id} aceita pelo Produtor. Valor reajustado para R$ ${newAmount.toFixed(2)}.`
+    });
+
+    return { ok: true, data: item };
+  },
+
+  /**
+   * Recusa da Condição Ajustada pelo Produtor (Cancela a solicitação e libera recebíveis/reservas)
+   */
+  cancelAdjustedCondition(id, actor, reason = '') {
+    const item = this.getRequestById(id);
+    if (!item) throw new Error(`Solicitação ${id} não encontrada.`);
+
+    const resolvedActor = accessControlService.resolveUser(actor);
+
+    // Libera recebíveis se for antecipação
+    if (item.type === 'ANTECIPACAO') {
+      receivableAnticipationService.releaseReceivables(item.id);
+    }
+    this.releaseBalance(item, 'Condição ajustada recusada pelo produtor');
+
+    const prevStatus = item.status;
+    item.status = 'CANCELADA';
+    const statusMeta = financialApprovalRulesService.getStatusMeta('CANCELADA');
+    item.statusLabelPtBr = statusMeta.label;
+    item.badgeClass = statusMeta.badgeClass;
+    item.updatedAt = new Date().toISOString();
+
+    item.auditTrail.push({
+      id: `AUD-${id}-CANCEL-COND`,
+      timestamp: new Date().toISOString(),
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'SOLICITACAO_CANCELADA',
+      previousStatus: prevStatus,
+      newStatus: 'CANCELADA',
+      comment: `Produtor recusou a condição ajustada. Solicitação cancelada. ${reason ? 'Motivo: ' + reason : ''}`
+    });
+
+    accessAuditService.log({
+      actorId: resolvedActor.id,
+      actorName: resolvedActor.name,
+      actorRole: resolvedActor.profile,
+      action: 'APPROVAL_CONDITION_DECLINED',
+      details: `Produtor recusou a condição ajustada para ${id}. Solicitação encerrada.`
+    });
+
+    return { ok: true, data: item };
+  },
+
+  /**
    * Retorna os Dados Bancários Cadastrados para a Solicitação / Favorecido
+   * Preserva estritamente snapshots de solicitações existentes já cadastradas
    */
   getBankDetails(requestOrId) {
     const item = typeof requestOrId === 'string' ? this.getRequestById(requestOrId) : requestOrId;
     const payload = item?.payload || {};
+
+    // 1. Snapshot imutável pré-gravado (Garante que repasses já solicitados/aprovados nunca sofram desvio)
+    if (payload.bankAccountSnapshot) {
+      const snap = payload.bankAccountSnapshot;
+      return {
+        holderName: snap.holderName || item?.producerName || 'DiskIngressos Eventos Ltda',
+        document: snap.document || '08.123.456/0001-99',
+        bankName: snap.bankName || 'Banco do Brasil',
+        bankCode: snap.bankCode || '001',
+        agency: snap.agency || '1502-4',
+        account: snap.account || '99201-0',
+        accountType: snap.accountType || 'Conta Corrente Pessoa Jurídica',
+        pixKey: snap.pixKey || snap.account,
+        isSnapshot: true,
+        complianceStatus: 'CONTA_CONGELADA_SNAPSHOT'
+      };
+    }
+
+    // 2. Para solicitação de alteração bancária, dados da conta solicitada
+    if (item?.type === 'ALTERACAO_DADOS_BANCARIOS' && payload.requestedAccount) {
+      const reqAcc = payload.requestedAccount;
+      return {
+        holderName: reqAcc.holderName,
+        document: reqAcc.document,
+        bankName: reqAcc.bankName,
+        bankCode: reqAcc.bankCode,
+        agency: reqAcc.agency,
+        account: reqAcc.account,
+        accountType: reqAcc.accountType,
+        pixKey: reqAcc.pixKey,
+        isRequestedChange: true,
+        complianceStatus: 'EM_ANALISE_COMPLIANCE'
+      };
+    }
+
+    // 3. Busca conta ativa atual do produtor
+    if (item?.producerId) {
+      const active = producerBankAccountService.getActiveAccount(item.producerId);
+      if (active) {
+        return {
+          holderName: active.holderName,
+          document: active.document,
+          bankName: active.bankName,
+          bankCode: active.bankCode,
+          agency: active.agency,
+          account: active.account,
+          accountType: active.accountType,
+          pixKey: active.pixKey,
+          complianceStatus: 'VALIDADO_COMPLIANCE'
+        };
+      }
+    }
 
     return {
       holderName: payload.holderName || item?.producerName || 'DiskIngressos Eventos Ltda',

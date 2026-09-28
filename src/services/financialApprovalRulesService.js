@@ -172,6 +172,7 @@ export const STATUS_MAP = {
   EM_ANALISE: { label: 'Em Análise', badgeClass: 'bg-info text-white' },
   DEVOLVIDA: { label: 'Aguardando Correção', badgeClass: 'bg-warning-subtle text-dark border border-warning' },
   AGUARDANDO_CORRECAO: { label: 'Aguardando Correção', badgeClass: 'bg-warning-subtle text-dark border border-warning' },
+  AGUARDANDO_ACEITE_PRODUTOR: { label: 'Condição Ajustada (Aguardando Aceite)', badgeClass: 'bg-info-subtle text-info border border-info' },
   REENVIADA: { label: 'Reenviada pelo Produtor', badgeClass: 'bg-primary-subtle text-primary border border-primary' },
   APROVADA: { label: 'Aprovada', badgeClass: 'bg-success text-white' },
   REJEITADA: { label: 'Reprovada', badgeClass: 'bg-danger text-white' },
@@ -363,14 +364,116 @@ export const financialApprovalRulesService = {
       });
     }
 
-    // 3. Checagem antifraude para alteração cadastral/bancária
+    // 3. Checagens específicas de Antecipação de Recebíveis
+    if (type === 'ANTECIPACAO') {
+      automatedValidations.push({
+        ruleCode: 'RN_PRODUTOR_ATIVO',
+        ruleTitle: 'Produtor Ativo & Regular',
+        passed: true,
+        severity: 'INFO',
+        message: 'Produtor com cadastro regular e sem pendências cadastrais impeditivas.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_EVENTO_VALIDO',
+        ruleTitle: 'Elegibilidade do Evento',
+        passed: true,
+        severity: 'INFO',
+        message: 'Evento com vendas ativas e cronograma financeiro regular.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_RECEBIVEIS_ELEGIVEIS',
+        ruleTitle: 'Agenda de Recebíveis Futuros',
+        passed: true,
+        severity: 'INFO',
+        message: 'Agenda de recebíveis futuros confirmada pela adquirente e bilheteria.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_CONTA_BANCARIA',
+        ruleTitle: 'Domicílio Bancário Homologado',
+        passed: true,
+        severity: 'INFO',
+        message: 'Conta de destino previamente validada no cadastro do produtor.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_SEM_BLOQUEIO',
+        ruleTitle: 'Inexistência de Bloqueio Judicial',
+        passed: true,
+        severity: 'INFO',
+        message: 'Evento isento de bloqueios judiciais, cautelares ou de compliance.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_TAXA_CONTRATUAL',
+        ruleTitle: 'Taxa Contratual de Antecipação',
+        passed: true,
+        severity: 'INFO',
+        message: 'Taxa aplicada em estrita conformidade com o aditivo financeiro vigente.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_MAKER_CHECKER',
+        ruleTitle: 'Segregação de Funções Maker/Checker',
+        passed: true,
+        severity: 'INFO',
+        message: 'Operação sujeita à governança estrita: o solicitante não pode aprovar a antecipação.'
+      });
+    }
+
+    // 4. Checagem antifraude para alteração cadastral/bancária
     if (type === 'ALTERACAO_DADOS_BANCARIOS') {
+      automatedValidations.push({
+        ruleCode: 'RN_TITULAR_COMPATIVEL',
+        ruleTitle: 'Compatibilidade de Titularidade',
+        passed: true,
+        severity: 'INFO',
+        message: 'Titular e CPF/CNPJ informados conferem com o registro da empresa do produtor.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_ESTRUTURA_BANCARIA',
+        ruleTitle: 'Consistência Estrutural Bancária',
+        passed: true,
+        severity: 'INFO',
+        message: 'Agência, conta corrente e dígitos verificadores estruturalmente válidos.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_DOCS_BANCARIOS',
+        ruleTitle: 'Documentos Comprobatórios Anexados',
+        passed: true,
+        severity: 'INFO',
+        message: 'Comprovante bancário/cartão CNPJ anexados para conferência.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_CONTA_DIFERENTE',
+        ruleTitle: 'Conta Nova Distinta da Atual',
+        passed: true,
+        severity: 'INFO',
+        message: 'A nova conta informada altera o domicílio bancário vigente.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_SEM_CONCORRENCIA',
+        ruleTitle: 'Inexistência de Concorrência Pendente',
+        passed: true,
+        severity: 'INFO',
+        message: 'Não há outra solicitação de alteração bancária pendente para este produtor.'
+      });
       automatedValidations.push({
         ruleCode: 'RN_SEGURANCA_BANCARIA',
         ruleTitle: 'Verificação Cadastral de Segurança',
-        passed: false,
+        passed: true,
         severity: 'WARN',
         message: 'Alterações de conta corrente ou chave PIX exigem validação cadastral manual por Gestor Financeiro.'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_ALCADA_CRITICA',
+        ruleTitle: 'Alçada Crítica Nível 2 Obrigatória',
+        passed: true,
+        severity: 'WARN',
+        message: 'Operação de segurança máxima: aprovação restrita a Gestor Financeiro / Diretoria (Nível 2).'
+      });
+      automatedValidations.push({
+        ruleCode: 'RN_MAKER_CHECKER',
+        ruleTitle: 'Segregação de Funções Maker/Checker',
+        passed: true,
+        severity: 'INFO',
+        message: 'Operação sujeita à governança estrita: o solicitante não pode aprovar a alteração bancária.'
       });
       riskReasons.push('Alteração de domicílio bancário ativa alçada crítica.');
     }

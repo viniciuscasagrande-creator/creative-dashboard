@@ -15,6 +15,8 @@ import { initProcureToPayView, switchP2PTab } from './controllers/procureToPayCo
 import { initTreasuryView, switchTreasuryTab } from './controllers/treasuryController.js';
 import { initUnifiedPayoutsModule, handleProducerRepasseSubmitConfirmed, refreshUnifiedPayoutsDashboard } from './controllers/unifiedPayoutsController.js';
 import { financialApprovalsController } from './controllers/financialApprovalsController.js';
+import { receivableAnticipationController } from './controllers/receivableAnticipationController.js';
+import { producerBankAccountController } from './controllers/producerBankAccountController.js';
 import { accessControlService } from './services/accessControlService.js';
 import { accessAuditService } from './services/accessAuditService.js';
 import { accessManagementController } from './controllers/accessManagementController.js';
@@ -371,6 +373,18 @@ function initApp() {
     AppRouter.registerHook('financial-approvals', (route) => {
       if (financialApprovalsController && typeof financialApprovalsController.refreshDashboard === 'function') {
         financialApprovalsController.refreshDashboard();
+      }
+    });
+
+    AppRouter.registerHook('financial-advance', () => {
+      if (receivableAnticipationController && typeof receivableAnticipationController.loadAdvanceView === 'function') {
+        receivableAnticipationController.loadAdvanceView();
+      }
+    });
+
+    AppRouter.registerHook('financial-accounts', () => {
+      if (producerBankAccountController && typeof producerBankAccountController.loadBankAccountView === 'function') {
+        producerBankAccountController.loadBankAccountView();
       }
     });
 
@@ -3025,6 +3039,12 @@ function initFinanceModule() {
   if (typeof initUnifiedPayoutsModule === 'function') initUnifiedPayoutsModule();
   if (typeof financialApprovalsController !== 'undefined' && typeof financialApprovalsController.init === 'function') {
     financialApprovalsController.init();
+  }
+  if (typeof receivableAnticipationController !== 'undefined' && typeof receivableAnticipationController.init === 'function') {
+    receivableAnticipationController.init();
+  }
+  if (typeof producerBankAccountController !== 'undefined' && typeof producerBankAccountController.init === 'function') {
+    producerBankAccountController.init();
   }
 
   // Render new Ticketera modules
