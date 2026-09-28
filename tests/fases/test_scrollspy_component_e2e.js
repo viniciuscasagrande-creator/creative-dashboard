@@ -280,10 +280,9 @@ async function run() {
     assert(logContainer.innerHTML.includes('Item 3-1'), 'Log container deve exibir o item ativado');
   });
 
-  await test('15. Menu lateral possui o link direto para o ScrollSpy', () => {
+  await test('15. Menu lateral NÃO deve conter item para ScrollSpy (ScrollSpy é função utilitária)', () => {
     const menuLink = document.querySelector('#main-sidebar-nav a[data-view="components-scrollspy"]');
-    assert(menuLink, 'Link para components-scrollspy deve existir na barra lateral');
-    assert.strictEqual(menuLink.getAttribute('data-route'), '/componentes/scrollspy');
+    assert.strictEqual(menuLink, null, 'Link para components-scrollspy não deve existir na barra lateral');
   });
 
   console.log(`\n============================================================`);
