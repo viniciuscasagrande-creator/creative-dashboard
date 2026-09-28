@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-CjafAqgP.js"></script>
+      <script type="module" crossorigin src="./assets/index-CyKneoh_.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-CNW2NMqO.css">
     </head>
 <body>
@@ -4890,6 +4890,7 @@
                                                 <select class="form-select form-select-sm" id="modal-fee-type">
                                                     <option value="PERCENTAGE">Percentual (%)</option>
                                                     <option value="FIXED_PER_TICKET">Fixo por Ingresso (R$)</option>
+                                                    <option value="FIXED_EVENT">Fixo por Evento (R$)</option>
                                                 </select>
                                             </div>
                                             <div class="col-6">
@@ -4913,6 +4914,48 @@
                                             <button type="submit" class="btn btn-sm btn-primary">Salvar Regra</button>
                                         </div>
                                     </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL: EDITOR DE TAXA DO EVENTO (IMPLANTAÇÃO 5.1) -->
+                    <div class="modal fade" id="fee-rule-modal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header bg-light border-bottom py-2">
+                                    <div>
+                                        <h6 class="modal-title fw-bold text-dark mb-0"><i class="ph-sliders me-1 text-primary"></i> Configurar Taxa do Evento</h6>
+                                        <div class="text-muted fs-xs" id="fee-rule-event-name"></div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-3">
+                                    <input type="hidden" id="fee-rule-event-id">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Modelo da Taxa</label>
+                                        <select class="form-select form-select-sm fw-bold" id="fee-rule-type">
+                                            <option value="PERCENT">Percentual sobre vendas (%)</option>
+                                            <option value="FIXED_PER_TICKET">Valor fixo por ingresso (R$/ing)</option>
+                                            <option value="FIXED_EVENT">Valor fixo por evento (R$/evento)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Valor da Taxa</label>
+                                        <input class="form-control form-control-sm fw-bold font-monospace" id="fee-rule-value" type="number" min="0" step="0.01">
+                                        <div class="form-text fs-xxs text-muted">Para percentual, informe 15 para 15%. Para valor fixo, informe o valor em reais.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-bold text-muted text-uppercase mb-1">Início da Vigência</label>
+                                        <input class="form-control form-control-sm" id="fee-rule-effective-from" type="date">
+                                    </div>
+                                    <div class="alert alert-info py-2 mb-0 fs-xs">
+                                        <i class="ph-info me-1"></i> A alteração cria uma nova vigência. A regra anterior é preservada no histórico para auditoria e memória de cálculo.
+                                    </div>
+                                </div>
+                                <div class="modal-footer py-2 bg-light">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button class="btn btn-sm btn-primary fw-bold" onclick="window.saveFeeRule()">Salvar Nova Vigência</button>
                                 </div>
                             </div>
                         </div>

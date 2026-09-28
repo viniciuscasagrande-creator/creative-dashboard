@@ -20,6 +20,7 @@ import { producerBankAccountController } from './controllers/producerBankAccount
 import { refundController } from './controllers/refundController.js';
 import { supplierPaymentController } from './controllers/supplierPaymentController.js';
 import { financialConsolidationController } from './controllers/financialConsolidationController.js';
+import { eventFeeRulesService } from './services/eventFeeRulesService.js';
 import { accessControlService } from './services/accessControlService.js';
 import { accessAuditService } from './services/accessAuditService.js';
 import { accessManagementController } from './controllers/accessManagementController.js';
@@ -12878,3 +12879,169 @@ function traceOrderFromActiveReconciliation() {
   });
 }
 window.traceOrderFromActiveReconciliation = traceOrderFromActiveReconciliation;
+
+/* ==========================================================================
+   Implantação 5.1 — Motor de Taxas por Evento + Posição Geral + Taxas e Custos
+   ========================================================================== */
+const FinancialFlowDashboard = (() => {
+  const money = (v) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0));
+  let charts = {};
+  function destroy(name){ if(charts[name]) { charts[name].destroy(); delete charts[name]; } }
+  function normalizeEvent(ev){
+    const gross = Number(ev.revenue || 0);
+    const feeCalc = eventFeeRulesService.calculate({
+      eventId: ev.id,
+      producerId: ev.producerId || 'prod-1',
+      grossSales: gross,
+      ticketCount: ev.salesCount || 0,
+      at: new Date().toISOString().slice(0, 10)
+    });
+    const diskFee = Number(feeCalc.amount || 0);
+    const paymentCost = Number(ev.fees?.card || 0);
+    const refunds = Number(ev.refunds || 0);
+    const chargebacks = Number(ev.chargebacks || 0);
+    const committed = Number(ev.committed || 0);
+    const paid = Number(ev.paidPayouts || 0);
+    const available = Math.max(0, gross - diskFee - paymentCost - refunds - chargebacks - committed - paid);
+    return { ...ev, gross, diskFee, paymentCost, refunds, chargebacks, committed, paid, available, feeCalc };
+  }
+  function dataset(filter = 'all'){
+    const all = (window.EVENTS_DATA || EVENTS_DATA || []).map(normalizeEvent);
+    return filter === 'all' ? all : all.filter(e => String(e.id) === String(filter));
+  }
+  function fillFilter(id){
+    const el = document.getElementById(id);
+    if (!el || el.dataset.ready) return;
+    (window.EVENTS_DATA || EVENTS_DATA || []).forEach(ev => {
+      const o = document.createElement('option');
+      o.value = ev.id;
+      o.textContent = ev.name;
+      el.appendChild(o);
+    });
+    el.dataset.ready = '1';
+    el.addEventListener('change', () => render());
+  }
+  function sum(rows, key){ return rows.reduce((a, r) => a + Number(r[key] || 0), 0); }
+  function kpi(title, value, sub){
+    return `<div class="col-6 col-lg-3"><div class="card h-100 shadow-sm border-0"><div class="card-body p-3"><div class="fs-xxs text-uppercase text-muted fw-bold">${title}</div><div class="fs-5 fw-bold mt-1">${money(value)}</div><div class="fs-xxs text-muted mt-1">${sub}</div></div></div></div>`;
+  }
+  function render(){
+    fillFilter('fin-position-event-filter');
+    fillFilter('fin-fees-event-filter');
+    const pf = document.getElementById('fin-position-event-filter')?.value || 'all';
+    const ff = document.getElementById('fin-fees-event-filter')?.value || 'all';
+    renderPosition(dataset(pf));
+    renderFees(dataset(ff));
+  }
+  function renderPosition(rows){
+    const gross = sum(rows, 'gross');
+    const disk = sum(rows, 'diskFee');
+    const costs = sum(rows, 'paymentCost');
+    const refunds = sum(rows, 'refunds');
+    const chargebacks = sum(rows, 'chargebacks');
+    const available = sum(rows, 'available');
+    const box = document.getElementById('fin-position-kpis');
+    if (box) box.innerHTML = kpi('Volume bruto de vendas', gross, 'Fluxo de vendas, não saldo') + kpi('Taxas Disk', disk, 'Receita/taxa contratual calculada') + kpi('Custos de pagamento', costs, 'Cartão, gateway e adquirência') + kpi('Saldo disponível', available, 'Após componentes registrados');
+    const tbody = document.getElementById('fin-position-events');
+    if (tbody) tbody.innerHTML = rows.map(r => `<tr><td><strong>${r.name}</strong></td><td class="text-end">${money(r.gross)}</td><td class="text-end">${money(r.diskFee)}</td><td class="text-end">${money(r.paymentCost)}</td><td class="text-end">${money(r.refunds)}</td><td class="text-end fw-bold">${money(r.available)}</td></tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sem dados para o filtro.</td></tr>';
+    if (typeof Chart === 'undefined') return;
+    destroy('position');
+    destroy('composition');
+    const c = document.getElementById('fin-position-chart');
+    if (c) charts.position = new Chart(c, { type: 'bar', data: { labels: rows.slice(0, 12).map(r => r.name), datasets: [{ label: 'Vendas', data: rows.slice(0, 12).map(r => r.gross) }, { label: 'Taxa Disk', data: rows.slice(0, 12).map(r => r.diskFee) }, { label: 'Saldo disponível', data: rows.slice(0, 12).map(r => r.available) }] }, options: { responsive: true, maintainAspectRatio: false } });
+    const d = document.getElementById('fin-composition-chart');
+    if (d) charts.composition = new Chart(d, { type: 'doughnut', data: { labels: ['Taxa Disk', 'Cartão/Gateway', 'Estornos', 'Saldo disponível'], datasets: [{ data: [disk, costs, refunds + chargebacks, available] }] }, options: { responsive: true, maintainAspectRatio: false } });
+  }
+  function renderFees(rows){
+    const gross = sum(rows, 'gross');
+    const disk = sum(rows, 'diskFee');
+    const costs = sum(rows, 'paymentCost');
+    const refunds = sum(rows, 'refunds');
+    const chargebacks = sum(rows, 'chargebacks');
+    const box = document.getElementById('fin-fees-kpis');
+    if (box) box.innerHTML = kpi('Base de vendas', gross, 'Base atualmente registrada') + kpi('Taxa Disk calculada', disk, 'Separada de custos operacionais') + kpi('Cartão / Gateway', costs, 'Custo de processamento') + kpi('Estornos + chargebacks', refunds + chargebacks, 'Eventos financeiros separados na memória');
+    const tbody = document.getElementById('fin-fees-events');
+    if (tbody) tbody.innerHTML = rows.map(r => `<tr><td><strong>${r.name}</strong></td><td>${r.feeCalc?.label || 'Sem regra'}</td><td class="text-end">${money(r.gross)}</td><td class="text-end fw-bold">${money(r.diskFee)}</td><td class="text-end">${money(r.paymentCost)}</td><td class="text-end">${money(r.refunds)}</td><td class="text-end">${money(r.chargebacks)}</td><td class="text-end"><button class="btn btn-outline-primary btn-sm" onclick="window.openFeeRuleEditor('${r.id}')">Configurar</button></td></tr>`).join('') || '<tr><td colspan="8" class="text-center text-muted py-4">Sem dados para o filtro.</td></tr>';
+    if (typeof Chart === 'undefined') return;
+    destroy('fees');
+    destroy('costs');
+    const c = document.getElementById('fin-fees-chart');
+    if (c) charts.fees = new Chart(c, { type: 'bar', data: { labels: rows.slice(0, 12).map(r => r.name), datasets: [{ label: 'Taxa Disk', data: rows.slice(0, 12).map(r => r.diskFee) }] }, options: { responsive: true, maintainAspectRatio: false } });
+    const d = document.getElementById('fin-costs-chart');
+    if (d) charts.costs = new Chart(d, { type: 'doughnut', data: { labels: ['Cartão/Gateway', 'Estornos', 'Chargebacks'], datasets: [{ data: [costs, refunds, chargebacks] }] }, options: { responsive: true, maintainAspectRatio: false } });
+  }
+  function openFeeRuleEditor(eventId){
+    const ev = (window.EVENTS_DATA || EVENTS_DATA || []).find(e => String(e.id) === String(eventId));
+    if (!ev) return;
+    const current = eventFeeRulesService.resolve({ eventId: ev.id, producerId: ev.producerId || 'prod-1' });
+    const idEl = document.getElementById('fee-rule-event-id');
+    if (idEl) idEl.value = ev.id;
+    const nameEl = document.getElementById('fee-rule-event-name');
+    if (nameEl) nameEl.textContent = ev.name;
+    const typeEl = document.getElementById('fee-rule-type');
+    if (typeEl) typeEl.value = current?.type || 'PERCENT';
+    const valEl = document.getElementById('fee-rule-value');
+    if (valEl) valEl.value = current?.value ?? 10;
+    const fromEl = document.getElementById('fee-rule-effective-from');
+    if (fromEl) fromEl.value = new Date().toISOString().slice(0, 10);
+    const modalEl = document.getElementById('fee-rule-modal');
+    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+  }
+  function saveFeeRule(){
+    try {
+      const eventId = document.getElementById('fee-rule-event-id')?.value;
+      const ev = (window.EVENTS_DATA || EVENTS_DATA || []).find(e => String(e.id) === String(eventId));
+      const type = document.getElementById('fee-rule-type')?.value || 'PERCENT';
+      const value = Number(document.getElementById('fee-rule-value')?.value || 0);
+      const effectiveFrom = document.getElementById('fee-rule-effective-from')?.value || new Date().toISOString().slice(0, 10);
+
+      eventFeeRulesService.upsert({
+        eventId,
+        producerId: ev?.producerId || 'prod-1',
+        type,
+        value,
+        base: 'GROSS_SALES',
+        effectiveFrom,
+        effectiveTo: null
+      });
+
+      // Sincroniza também com o financialConsolidationService
+      if (window.financialConsolidationService) {
+        window.financialConsolidationService.setFeeRule({
+          targetId: eventId,
+          feeType: type === 'PERCENT' ? 'PERCENTAGE' : type,
+          rate: value,
+          calculationBase: 'GROSS_SALES',
+          reason: 'Configurado via Editor de Taxas por Evento',
+          actor: { id: 'usr-fin', name: 'Financeiro Disk' }
+        });
+      }
+
+      const modalEl = document.getElementById('fee-rule-modal');
+      if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+      }
+
+      render();
+      if (window.financialConsolidationController) {
+        window.financialConsolidationController.renderTaxasCustos();
+        window.financialConsolidationController.renderPosicaoGeral();
+      }
+      if (window.renderFinancialBalanceRows) window.renderFinancialBalanceRows();
+
+      if (typeof showToast === 'function') showToast('Regra de taxa salva com histórico de vigência.', 'success');
+      else alert('Regra de taxa salva com sucesso!');
+    } catch(err){
+      if (typeof showToast === 'function') showToast(err.message, 'danger');
+      else alert(err.message);
+    }
+  }
+  return { render, openFeeRuleEditor, saveFeeRule, normalizeEvent, dataset };
+})();
+
+window.FinancialFlowDashboard = FinancialFlowDashboard;
+window.openFeeRuleEditor = (id) => FinancialFlowDashboard.openFeeRuleEditor(id);
+window.saveFeeRule = () => FinancialFlowDashboard.saveFeeRule();
+window.eventFeeRulesService = eventFeeRulesService;

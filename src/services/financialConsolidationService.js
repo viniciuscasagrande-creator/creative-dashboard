@@ -18,6 +18,7 @@
 
 import { eventBalanceService, OFFICIAL_PRODUCERS } from './eventBalanceService.js';
 import { accessAuditService } from './accessAuditService.js';
+import { eventFeeRulesService } from './eventFeeRulesService.js';
 
 // Catálogo e histórico de regras de taxa Disk por produtor e evento
 let DISK_FEE_RULES = [
@@ -459,13 +460,16 @@ export const financialConsolidationService = {
     const rateVal = rule.rate !== undefined ? rule.rate : (rule.value !== undefined ? rule.value : 15);
     const calcBase = rule.calculationBase || 'GROSS_SALES';
 
-    if (rateType === 'PERCENTAGE' || rateType === 'PERCENTUAL') {
+    if (rateType === 'PERCENTAGE' || rateType === 'PERCENTUAL' || rateType === 'PERCENT') {
       calculatedFee = Number(((numAmount * rateVal) / 100).toFixed(2));
       formulaDesc = `${rateVal}% sobre R$ ${numAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     } else if (rateType === 'FIXED_PER_TICKET' || rateType === 'VALOR_FIXO') {
       const multiplier = (calcBase === 'QUANTIDADE_INGRESSOS' || calcBase === 'TICKETS' || numTickets > 0) ? numTickets : 1;
       calculatedFee = Number((rateVal * multiplier).toFixed(2));
       formulaDesc = `R$ ${rateVal.toFixed(2)} fixos × ${multiplier} ingressos`;
+    } else if (rateType === 'FIXED_EVENT' || rateType === 'VALOR_FIXO_EVENTO') {
+      calculatedFee = Number(rateVal.toFixed(2));
+      formulaDesc = `R$ ${rateVal.toFixed(2)} fixo por evento`;
     }
 
     return {
@@ -549,6 +553,19 @@ export const financialConsolidationService = {
         details: `Regra de taxa ${targetId} alterada para ${feeType} (${rateVal}). Justificativa: ${justification}`
       });
 
+      try {
+        const mappedType = feeType === 'FIXED_PER_TICKET' ? 'FIXED_PER_TICKET' : (feeType === 'FIXED_EVENT' ? 'FIXED_EVENT' : 'PERCENT');
+        eventFeeRulesService.upsert({
+          eventId: targetId !== 'DEFAULT' && targetId !== 'prod-1' && targetId !== 'prod-2' ? targetId : null,
+          producerId: existing?.producerId || (targetId.startsWith('prod-') ? targetId : 'prod-1'),
+          type: mappedType,
+          value: rateVal,
+          base: calculationBase,
+          effectiveFrom: now.slice(0, 10),
+          effectiveTo: null
+        }, resolvedActor.name);
+      } catch (_) {}
+
       return { ok: true, data: newRule, ...newRule };
     } else {
       const newRule = {
@@ -587,6 +604,20 @@ export const financialConsolidationService = {
         ]
       };
       DISK_FEE_RULES.push(newRule);
+
+      try {
+        const mappedType = feeType === 'FIXED_PER_TICKET' ? 'FIXED_PER_TICKET' : (feeType === 'FIXED_EVENT' ? 'FIXED_EVENT' : 'PERCENT');
+        eventFeeRulesService.upsert({
+          eventId: targetId !== 'DEFAULT' && targetId !== 'prod-1' && targetId !== 'prod-2' ? targetId : null,
+          producerId: targetId.startsWith('prod-') ? targetId : 'prod-1',
+          type: mappedType,
+          value: rateVal,
+          base: calculationBase,
+          effectiveFrom: now.slice(0, 10),
+          effectiveTo: null
+        }, resolvedActor.name);
+      } catch (_) {}
+
       return { ok: true, data: newRule, ...newRule };
     }
   },

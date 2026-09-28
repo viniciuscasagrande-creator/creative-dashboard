@@ -403,12 +403,12 @@ export const financialConsolidationController = {
             <div class="fs-xxs text-muted">Criado por: ${r.updatedBy || 'Sistema'}</div>
           </td>
           <td>
-            <span class="badge ${r.feeType === 'PERCENTAGE' ? 'bg-primary' : 'bg-info'}">
-              ${r.feeType === 'PERCENTAGE' ? 'Percentual (%)' : 'Fixo por Ingresso'}
+            <span class="badge ${r.feeType === 'PERCENTAGE' || r.feeType === 'PERCENT' ? 'bg-primary' : (r.feeType === 'FIXED_EVENT' ? 'bg-purple text-white' : 'bg-info')}">
+              ${r.feeType === 'PERCENTAGE' || r.feeType === 'PERCENT' ? 'Percentual (%)' : (r.feeType === 'FIXED_EVENT' ? 'Fixo por Evento' : 'Fixo por Ingresso')}
             </span>
           </td>
           <td class="text-end fw-bold">
-            ${r.feeType === 'PERCENTAGE' ? formatPercent(r.rate) : formatCurrency(r.rate)}
+            ${r.feeType === 'PERCENTAGE' || r.feeType === 'PERCENT' ? formatPercent(r.rate) : (r.feeType === 'FIXED_EVENT' ? formatCurrency(r.rate) + ' fixo' : formatCurrency(r.rate) + '/ing')}
           </td>
           <td>${r.calculationBase === 'GROSS_SALES' ? 'Vendas Brutas (GMV)' : 'Vendas Líquidas'}</td>
           <td class="text-muted">Min: ${r.minFee ? formatCurrency(r.minFee) : '-'} | Max: ${r.maxFee ? formatCurrency(r.maxFee) : '-'}</td>
@@ -481,7 +481,7 @@ export const financialConsolidationController = {
           <span class="fw-bold text-dark fs-6">${formatCurrency(gross)}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light">
-          <span>(-) Taxa da Plataforma Disk (${rule.feeType === 'PERCENTAGE' ? formatPercent(rule.rate) : formatCurrency(rule.rate) + '/ing'}):</span>
+          <span>(-) Taxa da Plataforma Disk (${rule.feeType === 'PERCENTAGE' || rule.feeType === 'PERCENT' ? formatPercent(rule.rate) : (rule.feeType === 'FIXED_EVENT' ? formatCurrency(rule.rate) + ' fixo' : formatCurrency(rule.rate) + '/ing')}):</span>
           <span class="text-danger fw-semibold">-${formatCurrency(feeCalculation.diskFee)}</span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light">
