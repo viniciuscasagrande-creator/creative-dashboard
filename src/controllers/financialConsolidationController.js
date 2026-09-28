@@ -165,7 +165,7 @@ export const financialConsolidationController = {
     const elCount = document.getElementById('posicao-events-count-badge');
     if (elCount) elCount.textContent = `${master.events.length} evento(s)`;
 
-    // Atualiza Tabela Hierárquica
+    // Atualiza Tabela Hierárquica em 3 Níveis (Master Disk -> Produtores -> Eventos)
     const tbody = document.getElementById('posicao-master-tbody');
     if (tbody) {
       if (master.events.length === 0) {
@@ -173,26 +173,88 @@ export const financialConsolidationController = {
         return;
       }
 
-      tbody.innerHTML = master.events.map(ev => `
-        <tr>
+      const hierarchy = financialConsolidationService.getConsolidatedHierarchy(filters);
+
+      let rowsHtml = '';
+      hierarchy.level2_producers.forEach(p => {
+        // NÍVEL 2: Produtor (Subtotal Agregado)
+        rowsHtml += `
+          <tr class="table-light border-top border-primary" style="background-color: #f1f5f9; border-left: 4px solid #3b82f6 !important;">
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary text-white"><i class="ph-buildings me-1"></i>Produtor</span>
+                <span class="fw-bold text-dark">${p.producerName}</span>
+                <span class="badge bg-secondary-subtle text-secondary rounded-pill fs-xxs">${p.events.length} evento(s)</span>
+              </div>
+            </td>
+            <td class="text-end fw-bold text-dark">${formatCurrency(p.totals.grossSales)}</td>
+            <td class="text-end fw-bold text-danger">-${formatCurrency(p.totals.diskFee)}</td>
+            <td class="text-end fw-bold text-danger">-${formatCurrency(p.totals.paymentCosts)}</td>
+            <td class="text-end fw-bold text-primary">${formatCurrency(p.totals.diskMargin)}</td>
+            <td class="text-end fw-bold text-muted">-${formatCurrency(p.totals.refunds + p.totals.chargebacks)}</td>
+            <td class="text-end fw-bold text-muted">-${formatCurrency(p.totals.paidOut)}</td>
+            <td class="text-end fw-bold text-success">${formatCurrency(p.totals.availableBalance)}</td>
+            <td class="text-center text-muted fs-xxs fw-bold">Subtotal</td>
+          </tr>
+        `;
+
+        // NÍVEL 3: Eventos do Produtor
+        p.events.forEach(ev => {
+          const rule = financialConsolidationService.getFeeRule(ev.eventId);
+          const badgeText = rule.feeType === 'FIXED_PER_TICKET'
+            ? `R$ ${rule.rate.toFixed(2)}/ing`
+            : `${rule.rate}%`;
+
+          rowsHtml += `
+            <tr class="border-bottom">
+              <td style="padding-left: 28px;">
+                <div class="d-flex align-items-center gap-1">
+                  <span class="text-muted me-1">↳</span>
+                  <div>
+                    <span class="fw-semibold text-dark">${ev.eventName}</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1 fs-xxs" title="Taxa Disk parametrizada: ${badgeText}">${badgeText}</span>
+                    <div class="fs-xxs text-muted">ID: #${ev.eventId} &bull; Status: ${ev.status === 'ACTIVE' ? 'Ativo' : 'Encerrado'}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-end text-dark">${formatCurrency(ev.grossSales)}</td>
+              <td class="text-end text-danger">-${formatCurrency(ev.diskFee)}</td>
+              <td class="text-end text-danger">-${formatCurrency(ev.paymentCosts)}</td>
+              <td class="text-end fw-semibold text-primary">${formatCurrency(ev.diskMargin)}</td>
+              <td class="text-end text-muted">-${formatCurrency(ev.refunds + ev.chargebacks)}</td>
+              <td class="text-end text-muted">-${formatCurrency(ev.paidOut)}</td>
+              <td class="text-end fw-bold text-success">${formatCurrency(ev.availableBalance)}</td>
+              <td class="text-center">
+                <button type="button" class="btn btn-xs btn-outline-primary p-1" title="Ver Composição Detalhada" onclick="window.financialConsolidationController.openEventCompositionDrawer('${ev.eventId}')">
+                  <i class="ph-tree-structure"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      });
+
+      // NÍVEL 1: Master Disk Ingressos (Linha de Fechamento Consolidado)
+      rowsHtml += `
+        <tr class="table-dark text-white fw-bold border-top border-dark" style="background-color: #0f172a;">
           <td>
-            <div class="fw-bold text-dark">${ev.eventName}</div>
-            <div class="fs-xxs text-muted">Produtor: ${ev.producerName} &bull; ID Evento: #${ev.eventId}</div>
+            <div class="d-flex align-items-center gap-2">
+              <i class="ph-chart-pie-slice fs-5 text-warning"></i>
+              <span>TOTAL CONSOLIDADO DISK INGRESSOS (MASTER)</span>
+            </div>
           </td>
-          <td class="text-end fw-semibold">${formatCurrency(ev.grossSales)}</td>
-          <td class="text-end text-danger">${formatCurrency(ev.diskFee)}</td>
-          <td class="text-end text-danger">${formatCurrency(ev.paymentCosts)}</td>
-          <td class="text-end fw-bold text-primary">${formatCurrency(ev.diskMargin)}</td>
-          <td class="text-end text-muted">${formatCurrency(ev.refunds + ev.chargebacks)}</td>
-          <td class="text-end text-muted">${formatCurrency(ev.paidOut)}</td>
-          <td class="text-end fw-bold text-success">${formatCurrency(ev.availableBalance)}</td>
-          <td class="text-center">
-            <button type="button" class="btn btn-xs btn-outline-primary p-1" title="Ver Composição Detalhada" onclick="window.financialConsolidationController.openEventCompositionDrawer('${ev.eventId}')">
-              <i class="ph-tree-structure"></i>
-            </button>
-          </td>
+          <td class="text-end">${formatCurrency(master.totals.grossSales)}</td>
+          <td class="text-end text-warning">-${formatCurrency(master.totals.diskRevenue)}</td>
+          <td class="text-end text-danger">-${formatCurrency(master.totals.paymentCosts)}</td>
+          <td class="text-end text-info">${formatCurrency(master.totals.diskMargin)}</td>
+          <td class="text-end text-white-50">-${formatCurrency(master.totals.refunds + master.totals.chargebacks)}</td>
+          <td class="text-end text-white-50">-${formatCurrency(master.totals.paidOut)}</td>
+          <td class="text-end text-success">${formatCurrency(master.totals.availableBalance)}</td>
+          <td class="text-center text-warning fs-xxs">MASTER</td>
         </tr>
-      `).join('');
+      `;
+
+      tbody.innerHTML = rowsHtml;
     }
   },
 
@@ -233,14 +295,20 @@ export const financialConsolidationController = {
 
       const tbody = document.getElementById('saldos-events-tbody');
       if (tbody) {
-        tbody.innerHTML = data.events.map(ev => `
+        tbody.innerHTML = data.events.map(ev => {
+          const rule = financialConsolidationService.getFeeRule(ev.eventId);
+          const badgeText = rule.feeType === 'FIXED_PER_TICKET'
+            ? `R$ ${rule.rate.toFixed(2)}/ing`
+            : `${rule.rate}%`;
+
+          return `
           <tr>
             <td>
               <div class="fw-bold text-dark">${ev.eventName}</div>
               <div class="fs-xxs text-muted">ID: #${ev.eventId} &bull; Produtor: ${ev.producerName}</div>
             </td>
             <td class="text-end">${formatCurrency(ev.grossSales)}</td>
-            <td class="text-end text-danger">-${formatCurrency(ev.diskFee)}</td>
+            <td class="text-end text-danger">-${formatCurrency(ev.diskFee)} <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1 fs-xxs" title="Taxa Disk: ${badgeText}">${badgeText}</span></td>
             <td class="text-end text-danger">-${formatCurrency(ev.paymentCosts)}</td>
             <td class="text-end text-muted">-${formatCurrency(ev.refunds + ev.chargebacks)}</td>
             <td class="text-end fw-semibold text-primary">${formatCurrency(ev.producerFunds)}</td>
@@ -258,7 +326,8 @@ export const financialConsolidationController = {
               </div>
             </td>
           </tr>
-        `).join('');
+        `;
+        }).join('');
       }
     } else {
       // Visão de Evento Específico

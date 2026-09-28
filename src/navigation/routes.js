@@ -270,14 +270,14 @@ export const ROUTES = {
     sub: 'Agendamentos de repasses, lotes homologados e liquidação bancária.'
   },
 
-  // Financeiro — Central Unificada de Aprovações (Transversal)
+  // Financeiro — Central Unificada de Solicitações (Transversal)
   '/financeiro/aprovacoes': {
     path: '/financeiro/aprovacoes',
     view: 'financial-approvals',
     module: 'financeiro',
     menuKey: 'fin-approvals',
-    title: 'Central de Aprovações',
-    sub: 'Workflow transversal de aprovação e autorização de operações financeiras.'
+    title: 'Central de Solicitações',
+    sub: 'Workflow transversal de solicitações, aprovação e autorização de operações financeiras.'
   },
   '/financeiro/minhas-solicitacoes': {
     path: '/financeiro/minhas-solicitacoes',
@@ -294,7 +294,7 @@ export const ROUTES = {
     tab: 'approvals',
     menuKey: 'fin-approvals',
     title: 'Procure-to-Pay & Compras',
-    sub: 'Fornecedor 360°, cotações, pedidos, contratos e centro de custos.'
+    sub: 'Visão Completa do Fornecedor, cotações, pedidos, contratos e centro de custos.'
   },
   '/financeiro/compras/solicitacoes': {
     path: '/financeiro/compras/solicitacoes',
@@ -349,7 +349,7 @@ export const ROUTES = {
     module: 'financeiro',
     tab: 'suppliers',
     menuKey: 'fin-suppliers-360',
-    title: 'Fornecedor 360°',
+    title: 'Visão Completa do Fornecedor',
     sub: 'Visão unificada, histórico financeiro, compras e conformidade.'
   },
   '/financeiro/fornecedores/documentos': {

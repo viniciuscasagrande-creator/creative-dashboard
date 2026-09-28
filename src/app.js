@@ -7959,9 +7959,27 @@ function renderFinancialBalanceRows() {
   let pendingRepassesTotal = 0;
 
   filteredEvents.forEach(ev => {
-    const platformFee = ev.fees?.platform || 0;
-    const cardFee = ev.fees?.card || 0;
+    let platformFee = ev.fees?.platform || 0;
+    let cardFee = ev.fees?.card || 0;
     const retention = ev.fees?.retention || 0;
+    let feeBadge = '';
+
+    if (typeof window !== 'undefined' && window.financialConsolidationService) {
+      const feeRule = window.financialConsolidationService.getFeeRule(ev.id);
+      const diskFeeCalc = window.financialConsolidationService.calculateDiskFee({
+        amount: ev.revenue,
+        ticketCount: ev.salesCount || Math.round(ev.revenue / 80),
+        rule: feeRule
+      });
+      platformFee = diskFeeCalc.diskFee;
+      if (ev.fees) ev.fees.platform = platformFee;
+
+      const badgeText = feeRule.feeType === 'FIXED_PER_TICKET'
+        ? `R$ ${feeRule.rate.toFixed(2)}/ing`
+        : `${feeRule.rate}%`;
+      feeBadge = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 10px;" title="Taxa Disk parametrizada: ${badgeText}">${badgeText}</span>`;
+    }
+
     const fees = platformFee + cardFee + retention;
     const net = Math.max(0, ev.revenue - fees);
     
@@ -8006,7 +8024,7 @@ function renderFinancialBalanceRows() {
         </td>
         <td><span class="badge bg-light text-dark fw-bold">${organizer}</span></td>
         <td class="text-end font-monospace">R$ ${ev.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-        <td class="text-end text-muted font-monospace">R$ ${fees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td class="text-end text-muted font-monospace">R$ ${fees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}${feeBadge}</td>
         <td class="text-end font-monospace fw-semibold text-dark">R$ ${net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
         <td class="text-end font-monospace text-success fw-bold">R$ ${available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
         <td class="text-end font-monospace text-primary">R$ ${releasing.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
@@ -8234,8 +8252,19 @@ function syncFinancialData() {
       if (ev.status === 'ativos') {
         ev.revenue += Math.round(Math.random() * 800 - 300);
         if (ev.fees) {
-          ev.fees.platform = ev.revenue * 0.1;
-          ev.fees.card = ev.revenue * 0.05;
+          if (typeof window !== 'undefined' && window.financialConsolidationService) {
+            const rule = window.financialConsolidationService.getFeeRule(ev.id);
+            const feeCalc = window.financialConsolidationService.calculateDiskFee({
+              amount: ev.revenue,
+              ticketCount: ev.salesCount || Math.round(ev.revenue / 80),
+              rule
+            });
+            ev.fees.platform = feeCalc.diskFee;
+            ev.fees.card = Math.round(ev.revenue * (rule?.cardMdrPercentage ? rule.cardMdrPercentage / 100 : 0.035) * 100) / 100;
+          } else {
+            ev.fees.platform = ev.revenue * 0.1;
+            ev.fees.card = ev.revenue * 0.05;
+          }
         }
       }
     });

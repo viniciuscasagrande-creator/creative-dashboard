@@ -296,6 +296,45 @@ it('Gestor Financeiro Disk possui permissão total sobre Posição Geral, Saldos
   assert.ok(accessControlService.can(gestor, 'financeiro.saldos.todos_produtores'));
 });
 
+// ============================================================================
+// SUÍTE 7: ÁRVORE DE CONSOLIDAÇÃO EM 3 NÍVEIS & ROTULAGEM P2P
+// ============================================================================
+console.log('\n7. Árvore de Consolidação em 3 Níveis & Rotulagem P2P:');
+
+it('getConsolidatedHierarchy() decompõe rigorosamente os 3 níveis hierárquicos', () => {
+  const tree = financialConsolidationService.getConsolidatedHierarchy();
+  assert.ok(tree.level1_disk, 'Nível 1 (Disk Ingressos Master) deve existir');
+  assert.ok(tree.level2_producers.length >= 2, 'Nível 2 (Produtores) deve conter múltiplos produtores');
+  assert.ok(tree.level3_events.length >= 3, 'Nível 3 (Eventos) deve conter múltiplos eventos');
+
+  // Valida integridade matemática: soma dos produtores = total Disk
+  const sumProdGMV = tree.level2_producers.reduce((acc, p) => acc + p.totals.grossSales, 0);
+  const sumProdDiskFee = tree.level2_producers.reduce((acc, p) => acc + p.totals.diskFee, 0);
+  const sumProdAvailable = tree.level2_producers.reduce((acc, p) => acc + p.totals.availableBalance, 0);
+
+  assert.strictEqual(Math.round(sumProdGMV * 100) / 100, tree.level1_disk.totals.grossSales, 'GMV dos produtores deve bater com Master Disk');
+  assert.strictEqual(Math.round(sumProdDiskFee * 100) / 100, tree.level1_disk.totals.diskRevenue, 'Receita Disk dos produtores deve bater com Master Disk');
+  assert.strictEqual(Math.round(sumProdAvailable * 100) / 100, tree.level1_disk.totals.availableBalance, 'Saldo disponível dos produtores deve bater com Master Disk');
+});
+
+it('index.html contém as nomenclaturas corrigidas "Central de Solicitações" e "Visão Completa do Fornecedor"', () => {
+  const html = fs.readFileSync(path.resolve(rootDir, 'index.html'), 'utf8');
+  assert.ok(html.includes('Central de Solicitações'), 'Nomenclatura "Central de Solicitações" deve constar no index.html');
+  assert.ok(html.includes('Visão Completa do Fornecedor'), 'Nomenclatura "Visão Completa do Fornecedor" deve constar no index.html');
+  assert.ok(!html.includes('id="p2p-tab-btn-approvals">Central de Aprovações'), 'Botão de aprovações antigo não deve mais existir com rótulo antigo');
+});
+
+it('financialConsolidationController renderiza a árvore com cabeçalhos de produtor e eventos subordinados', async () => {
+  const { financialConsolidationController } = await import('../../src/controllers/financialConsolidationController.js');
+  financialConsolidationController.renderPosicaoGeral();
+  const tbody = document.getElementById('posicao-master-tbody');
+  assert.ok(tbody, 'Tbody da tabela master deve existir');
+  const text = tbody.textContent;
+  assert.ok(text.includes('TOTAL CONSOLIDADO DISK INGRESSOS (MASTER)'), 'Linha Nível 1 (Master Disk) deve estar renderizada');
+  assert.ok(text.includes('Produtor'), 'Linhas Nível 2 (Produtor) devem estar renderizadas');
+  assert.ok(text.includes('↳'), 'Linhas Nível 3 (Eventos subordinados) devem estar indentadas com ↳');
+});
+
 console.log('\n================================================================');
 console.log(` RESULTADO FINAL: ${passedTests}/${totalTests} TESTES PASSARAM COM SUCESSO (100%)`);
 console.log('================================================================\n');

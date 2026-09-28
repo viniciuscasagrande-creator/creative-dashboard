@@ -824,7 +824,10 @@ export const financialConsolidationService = {
         paidOut: ev.paidOut,
         reserves: ev.reserves,
         committedFunds: ev.committedFunds,
-        availableBalance: available
+        availableBalance: available,
+        feeRule: feeCalc.rule,
+        feeRate: feeCalc.rule ? (feeCalc.rule.rate ?? feeCalc.rate) : 15,
+        feeType: feeCalc.rule ? (feeCalc.rule.feeType || 'PERCENTAGE') : 'PERCENTAGE'
       };
     });
 
@@ -846,6 +849,70 @@ export const financialConsolidationService = {
       totals,
       kpis: totals,
       events: eventRows
+    };
+  },
+
+  /**
+   * CONSOLIDAÇÃO HIERÁRQUICA EM 3 NÍVEIS:
+   * NÍVEL 1: Disk Ingressos (Master da Plataforma)
+   * NÍVEL 2: Produtor (Custódia Transitória / Passivo Circulante)
+   * NÍVEL 3: Evento Individual (Unidade Contábil / Ledger / Saldo Específico)
+   */
+  getConsolidatedHierarchy(filters = {}) {
+    const master = this.getDiskMasterPosition(filters);
+
+    const producersMap = {};
+    master.events.forEach(ev => {
+      const pid = ev.producerId || 'prod-outros';
+      const pname = ev.producerName || 'Outro Produtor';
+      if (!producersMap[pid]) {
+        producersMap[pid] = {
+          producerId: pid,
+          producerName: pname,
+          totals: {
+            grossSales: 0,
+            diskFee: 0,
+            paymentCosts: 0,
+            diskMargin: 0,
+            refunds: 0,
+            chargebacks: 0,
+            producerFunds: 0,
+            paidOut: 0,
+            reserves: 0,
+            committedFunds: 0,
+            availableBalance: 0
+          },
+          events: []
+        };
+      }
+
+      const p = producersMap[pid];
+      p.events.push(ev);
+      p.totals.grossSales = Math.round((p.totals.grossSales + ev.grossSales) * 100) / 100;
+      p.totals.diskFee = Math.round((p.totals.diskFee + ev.diskFee) * 100) / 100;
+      p.totals.paymentCosts = Math.round((p.totals.paymentCosts + ev.paymentCosts) * 100) / 100;
+      p.totals.diskMargin = Math.round((p.totals.diskMargin + ev.diskMargin) * 100) / 100;
+      p.totals.refunds = Math.round((p.totals.refunds + ev.refunds) * 100) / 100;
+      p.totals.chargebacks = Math.round((p.totals.chargebacks + ev.chargebacks) * 100) / 100;
+      p.totals.producerFunds = Math.round((p.totals.producerFunds + ev.producerFunds) * 100) / 100;
+      p.totals.paidOut = Math.round((p.totals.paidOut + ev.paidOut) * 100) / 100;
+      p.totals.reserves = Math.round((p.totals.reserves + ev.reserves) * 100) / 100;
+      p.totals.committedFunds = Math.round((p.totals.committedFunds + ev.committedFunds) * 100) / 100;
+      p.totals.availableBalance = Math.round((p.totals.availableBalance + ev.availableBalance) * 100) / 100;
+    });
+
+    const producersList = Object.values(producersMap);
+
+    return {
+      level1_disk: {
+        entityType: 'DISK_INGRESSOS_MASTER',
+        title: 'Disk Ingressos (Consolidado Master)',
+        totals: master.totals,
+        producerCount: producersList.length,
+        eventCount: master.events.length
+      },
+      level2_producers: producersList,
+      level3_events: master.events
     };
   },
 

@@ -251,7 +251,7 @@ async function renderSuppliersTab() {
         <td>${statusBadges[s.status] || s.status}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-outline-primary fw-bold d-flex align-items-center gap-1 ms-auto" onclick="window.openSupplier360Modal('${s.id}')">
-            <i class="ph-arrows-out-card"></i> Visão 360°
+            <i class="ph-arrows-out-card"></i> Visão Completa
           </button>
         </td>
       </tr>`;
