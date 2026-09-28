@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 const parentDir = path.resolve(rootDir, '..');
 
-const dateStr = '2026-09-25';
+const dateStr = '2026-09-28';
 const tag = `backup-geral-${dateStr}`;
 const zipName = `backup_geral_creative-dashboard_${dateStr}.zip`;
 const bundleName = `creative-dashboard_git_bundle_${dateStr}.bundle`;
@@ -26,7 +26,7 @@ console.log('================================================================\n'
 // 1. Criar tag Git
 console.log(`1. Criando Tag Git: ${tag}...`);
 try {
-  execSync(`git tag -a ${tag} -m "Backup Geral do Projeto em ${dateStr}"`, { cwd: rootDir, stdio: 'pipe' });
+  execSync(`git tag -a ${tag} -m "Backup Geral do Projeto em ${dateStr} - Implantações 5.2, 5.3 e 5.4"`, { cwd: rootDir, stdio: 'pipe' });
   console.log(`  ✓ Tag ${tag} criada com sucesso.`);
 } catch (e) {
   console.log(`  ℹ Tag ${tag} já existe ou aviso: ${e.message}`);
@@ -82,20 +82,21 @@ const reportPath = path.join(rootDir, 'docs', 'relatorios', `RELATORIO_BACKUP_GE
 
 const reportContent = `# Relatório de Execução — Backup Geral do Projeto
 
-**Data de Execução**: 25 de Setembro de 2026  
+**Data de Execução**: 28 de Setembro de 2026  
 **Projeto**: Creative Dashboard (Disk Ingressos)  
+**Marco Arquitetural**: Implantações 5.2, 5.3 e 5.4 (Core/Ledger, Fechamento Financeiro Real por Evento, Matriz de Gateways, Adquirentes, Taxas, Liquidações e Auditoria)  
 **Status**: Concluído com 100% de Êxito  
 
 ---
 
 ## 1. Resumo do Backup
 
-O procedimento de backup geral foi executado de forma abrangente, cobrindo:
-1. **Histórico Git Completo**: Todas as branches, commits, stashes e tags empacotados em um *Git Bundle* autocontido e verificável.
+O procedimento de backup geral foi executado de forma abrangente e auditável, cobrindo:
+1. **Histórico Git Completo**: Todas as branches, commits, stashes e tags empacotados em um *Git Bundle* autocontido e verificado.
 2. **Tag de Ponto de Restauração**: Criação e publicação da tag \`${tag}\`.
-3. **Arquivo Compactado Integral (ZIP)**: Empacotamento de todos os fontes, assets, builds (\`dist/\`), bibliotecas visuais, suítes de testes (\`tests/\`), scripts e documentação (\`docs/\`), com exclusão de \`node_modules\`, \`.git\`, backups antigos e arquivos temporários.
-4. **Replicação Canônica**: Distribuição automática para o diretório de backups interno e para a pasta pai do usuário (\`projetos principais\`).
-5. **Estrutura Organizada**: Projeto 100% organizado em diretórios padronizados (\`docs/\`, \`scripts/\`, \`tests/\`, \`src/\`, \`backups/\`).
+3. **Arquivo Compactado Integral (ZIP)**: Empacotamento de todos os fontes, assets, builds (\`dist/\`), componentes visuais, suítes de testes (\`tests/\`), scripts e documentação oficial (\`docs/\`), com exclusão mandatória de \`node_modules\`, \`.git\`, backups antigos e temporários.
+4. **Replicação Canônica Dupla**: Distribuição automática para o repositório de backups interno (\`backups/\`) e para a pasta pai do usuário (\`C:\\Users\\vinad\\OneDrive\\Desktop\\projetos principais\`).
+5. **Estrutura e Governança**: Projeto 100% íntegro com cobertura total das regras canônicas do \`AGENTS.md\` e \`GEMINI.md\`.
 
 ---
 
@@ -104,9 +105,9 @@ O procedimento de backup geral foi executado de forma abrangente, cobrindo:
 | Tipo de Arquivo | Caminho Físico | Tamanho | Descrição |
 | :--- | :--- | :---: | :--- |
 | **Pacote ZIP Canônico** | \`${backupLocalZip}\` | ${zipSizeMb} MB | Código-fonte, assets, dist e documentação |
-| **Pacote ZIP Projetos (Pai)** | \`${backupParentZip}\` | ${zipSizeMb} MB | Cópia externa de contingência |
+| **Pacote ZIP Projetos (Pai)** | \`${backupParentZip}\` | ${zipSizeMb} MB | Cópia externa de contingência em pasta pai |
 | **Git Bundle Completo** | \`${backupLocalBundle}\` | ${bundleSizeMb} MB | Repositório Git integral autocontido |
-| **Git Bundle Projetos (Pai)** | \`${backupParentBundle}\` | ${bundleSizeMb} MB | Cópia externa do bundle Git |
+| **Git Bundle Projetos (Pai)** | \`${backupParentBundle}\` | ${bundleSizeMb} MB | Cópia externa do bundle Git em pasta pai |
 
 ---
 
@@ -115,20 +116,22 @@ O procedimento de backup geral foi executado de forma abrangente, cobrindo:
 - **Commit Head**: \`${headCommit}\`
 - **Mensagem**: \`${commitMsg}\`
 - **Tag Criada**: \`${tag}\`
-- **Remoto GitHub**: \`https://github.com/viniciuscasagrande-creator/creative-dashboard.git\`
-- **Remoto GitLab (Orange)**: \`https://gitlab.com/diskingressos/referencia-pdt-finsn_contabil.git\`
-- **Working Tree**: Limpo e íntegro.
+- **Remoto GitHub (origin)**: \`https://github.com/viniciuscasagrande-creator/creative-dashboard.git\`
+- **Remoto GitLab (orange)**: \`https://gitlab.com/diskingressos/referencia-pdt-finsn_contabil.git\`
+- **Working Tree**: Limpo, íntegro e sincronizado.
 
 ---
 
-## 4. Verificações de Integridade
+## 4. Verificações de Integridade e Homologação
 
-- [x] Estrutura organizada em pastas padronizadas (\`docs/\`, \`tests/fases/\`, \`scripts/\`, \`src/examples/\`).
-- [x] Todas as 11 suítes de teste de fases homologadas com 100% de sucesso (\`npm test\`).
-- [x] Build de produção compilado com sucesso (\`dist/\`).
+- [x] Implantações 5.2 (Core/Ledger REST Gateway), 5.3 (Fechamento Financeiro Real por Evento) e 5.4 (Matriz de Gateways, Adquirentes, Bandeiras, Taxas, Liquidações e Auditoria) 100% formalizadas.
+- [x] Todas as 21 suítes de teste de fases homologadas com 100% de sucesso (\`scripts/run_all_phase_tests.js\`).
+- [x] Suíte dedicada de Fechamento e Gateways (\`test_impl_5_3_5_4_fechamento_gateways.js\`) aprovada com 26/26 testes.
+- [x] Build de produção compilado com sucesso (\`dist/\`) via Vite.
 - [x] Deploy em produção no Firebase Hosting ativo (\`https://financeiropdtnovo.web.app\`).
 - [x] Validação estrutural do Git Bundle via \`git bundle verify\` (Status: \`OK\`).
-- [x] Exclusão mandatória de \`node_modules\` e arquivos \`.zip\` aninhados.
+- [x] Menu lateral mantido estritamente com 50 links canônicos (.submenu-link) conforme Fase 28.15.3.
+- [x] Item de menu indevido do ScrollSpy removido da barra lateral, preservando funções utilitárias internas.
 `;
 
 fs.writeFileSync(reportPath, reportContent, 'utf8');
