@@ -69,7 +69,20 @@ export const PROFILE_DEFAULTS = {
       'marketing.campanhas.criar',
       'atendimento.consultar',
       'atendimento.atender',
-      'contabilidade.visualizar'
+      'contabilidade.visualizar',
+      'financeiro.gateways.visualizar',
+      'financeiro.gateways.administrar',
+      'financeiro.bandeiras.visualizar',
+      'financeiro.bandeiras.administrar',
+      'financeiro.mdr.visualizar',
+      'financeiro.mdr.configurar',
+      'financeiro.mdr.aprovar',
+      'financeiro.regras_comerciais.visualizar',
+      'financeiro.regras_comerciais.configurar',
+      'financeiro.regras_comerciais.aprovar',
+      'financeiro.liquidacoes.visualizar',
+      'financeiro.conciliacao.visualizar',
+      'financeiro.conciliacao.tratar'
     ],
     thresholds: {
       transferLimit: 10000000,
@@ -125,7 +138,20 @@ export const PROFILE_DEFAULTS = {
       'financeiro.estornos.aprovar',
       'financeiro.dados_bancarios.editar',
       'financeiro.dados_bancarios.aprovar',
-      'contabilidade.visualizar'
+      'contabilidade.visualizar',
+      'financeiro.gateways.visualizar',
+      'financeiro.gateways.administrar',
+      'financeiro.bandeiras.visualizar',
+      'financeiro.bandeiras.administrar',
+      'financeiro.mdr.visualizar',
+      'financeiro.mdr.configurar',
+      'financeiro.mdr.aprovar',
+      'financeiro.regras_comerciais.visualizar',
+      'financeiro.regras_comerciais.configurar',
+      'financeiro.regras_comerciais.aprovar',
+      'financeiro.liquidacoes.visualizar',
+      'financeiro.conciliacao.visualizar',
+      'financeiro.conciliacao.tratar'
     ],
     thresholds: {
       transferLimit: 500000,
@@ -173,7 +199,14 @@ export const PROFILE_DEFAULTS = {
       'financeiro.estorno.aprovar',
       'financeiro.estorno.executar',
       'financeiro.fornecedores.visualizar',
-      'financeiro.fornecedores.administrar'
+      'financeiro.fornecedores.administrar',
+      'financeiro.gateways.visualizar',
+      'financeiro.bandeiras.visualizar',
+      'financeiro.mdr.visualizar',
+      'financeiro.regras_comerciais.visualizar',
+      'financeiro.liquidacoes.visualizar',
+      'financeiro.conciliacao.visualizar',
+      'financeiro.conciliacao.tratar'
     ],
     thresholds: {
       transferLimit: 50000,
@@ -661,6 +694,21 @@ export const accessControlService = {
       default:
         return true;
     }
+  },
+
+  /**
+   * Verifica se o usuário tem permissão para acessar o módulo Gateways e Adquirentes (Implantação 5.4)
+   * Regra rígida: Exclusivo do Financeiro Disk / Administrador. Produtor NUNCA tem acesso.
+   */
+  canAccessGateways(user = this.getCurrentUser()) {
+    if (!user) return false;
+    const targetUser = this.resolveUser(user);
+    if (!targetUser) return false;
+    const roleStr = String(targetUser.profile || targetUser.role || '').toUpperCase();
+    if (targetUser.userType === 'PRODUTOR' || roleStr.startsWith('PRODUTOR_') || roleStr === 'PRODUTOR') {
+      return false;
+    }
+    return this.can(targetUser, 'financeiro.gateways.visualizar');
   },
 
   /**

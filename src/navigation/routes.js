@@ -239,7 +239,9 @@ export const ROUTES = {
     module: 'financeiro',
     menuKey: 'fin-gateways-adquirentes',
     title: 'Gateways e Adquirentes',
-    sub: 'Bandeiras, custos de adquirência, regras comerciais e vigências versionadas.'
+    sub: 'Bandeiras, custos de adquirência, regras comerciais e vigências versionadas.',
+    requiredRole: 'FINANCEIRO_DISK',
+    requiredPermission: 'financeiro.gateways.visualizar'
   },
 
   // Financeiro — Domínio 3: Contas
@@ -1130,6 +1132,19 @@ export function resolveRoute(input, subTab = null) {
 
   // 1. Garantir formato de caminho canônico com barra inicial
   const formattedPath = raw.startsWith('/') ? raw : '/' + raw;
+
+  // 1.5. Verificação de Acesso Estrito — Gateways e Adquirentes é Exclusivo do Financeiro Disk (Implantação 5.4)
+  if (formattedPath === '/financeiro/gateways-adquirentes' || raw === 'financial-gateways-adquirentes' || raw === 'gateways-adquirentes') {
+    const isProducer = typeof window !== 'undefined' && (
+      window.currentRole === 'PRODUTOR' ||
+      window.isProducerRole === true ||
+      (window.accessControlService && window.accessControlService.canAccessGateways && !window.accessControlService.canAccessGateways())
+    );
+    if (isProducer) {
+      console.warn('[resolveRoute] Acesso Negado: Gateways e Adquirentes é exclusivo do Financeiro Disk.');
+      return { ...ROUTES['/acesso-negado'] };
+    }
+  }
 
   // 2. Verificar correspondência exata em ROUTES (ex: /contabilidade/dre, /contabilidade/dashboard)
   if (ROUTES[formattedPath]) {

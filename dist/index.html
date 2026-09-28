@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-CsRhKktR.js"></script>
+      <script type="module" crossorigin src="./assets/index-Csvi54Jj.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-CNW2NMqO.css">
     </head>
 <body>
@@ -5520,8 +5520,13 @@
                                         </button>
                                     </li>
                                     <li class="nav-item">
+                                        <button class="nav-link fs-xs fw-semibold" id="tab-gw-liquidacoes" data-bs-toggle="tab" data-bs-target="#pane-gw-liquidacoes" type="button" role="tab">
+                                            <i class="ph-arrows-left-right me-1"></i> Liquidações (Previsto × Real)
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
                                         <button class="nav-link fs-xs fw-semibold" id="tab-gw-historico" data-bs-toggle="tab" data-bs-target="#pane-gw-historico" type="button" role="tab">
-                                            <i class="ph-clock-counter-clockwise me-1"></i> Histórico Versionado
+                                            <i class="ph-clock-counter-clockwise me-1"></i> Histórico &amp; Auditoria
                                         </button>
                                     </li>
                                 </ul>
@@ -5694,7 +5699,93 @@
                                         </div>
                                     </div>
 
-                                    <!-- TAB 5: HISTÓRICO VERSIONADO -->
+                                    <!-- TAB 5: LIQUIDAÇÕES & PREVISTO X REAL (IMPLANTAÇÃO 5.4.14 E 5.4.15) -->
+                                    <div class="tab-pane fade" id="pane-gw-liquidacoes" role="tabpanel">
+                                        <!-- 4 KPIs de Liquidação -->
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6 col-lg-3">
+                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                    <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Volume Processado</span>
+                                                    <h6 class="fw-bold text-dark mb-0 mt-1" id="gw-liq-kpi-total-gross">R$ 0,00</h6>
+                                                    <span class="fs-xxs text-muted">Total bruto registrado</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-lg-3">
+                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                    <span class="fs-xxs text-uppercase text-muted fw-bold d-block">MDR Previsto × Real</span>
+                                                    <h6 class="fw-bold text-primary mb-0 mt-1" id="gw-liq-kpi-mdr-compare">R$ 0,00 / R$ 0,00</h6>
+                                                    <span class="fs-xxs text-muted">Contratado vs Retido</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-lg-3">
+                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                    <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Divergências Identificadas</span>
+                                                    <h6 class="fw-bold text-danger mb-0 mt-1" id="gw-liq-kpi-divergence">R$ 0,00</h6>
+                                                    <span class="fs-xxs text-muted">Diferença apurada a conciliar</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-lg-3">
+                                                <div class="card border p-2 bg-light shadow-none mb-0">
+                                                    <span class="fs-xxs text-uppercase text-muted fw-bold d-block">Taxa de Conciliação</span>
+                                                    <h6 class="fw-bold text-success mb-0 mt-1" id="gw-liq-kpi-rate">100%</h6>
+                                                    <span class="fs-xxs text-muted">Automação de conferência</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Barra de Filtros de Liquidação -->
+                                        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2 bg-light p-2 rounded">
+                                            <div class="d-flex gap-2">
+                                                <select class="form-select form-select-sm" id="gw-filter-liq-acquirer" style="max-width: 180px;">
+                                                    <option value="TODOS">Todas as Adquirentes</option>
+                                                    <option value="Cielo">Cielo</option>
+                                                    <option value="Rede">Rede</option>
+                                                    <option value="Stone">Stone</option>
+                                                    <option value="PagBank">PagBank</option>
+                                                </select>
+                                                <select class="form-select form-select-sm" id="gw-filter-liq-status" style="max-width: 220px;">
+                                                    <option value="TODOS">Todos os Status</option>
+                                                    <option value="CONCILIADO">Conciliado</option>
+                                                    <option value="DIVERGENCIA_MDR">Divergência de MDR</option>
+                                                    <option value="DIVERGENCIA_TARIFA">Divergência de Tarifa</option>
+                                                    <option value="LIQUIDACAO_NAO_LOCALIZADA">Liquidação Não Localizada</option>
+                                                    <option value="CHARGEBACK">Chargeback</option>
+                                                </select>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fs-xxs text-muted d-none d-md-inline">Conferência automática: Contrato × Transação × Ledger × Adquirente × Banco.</span>
+                                                <button type="button" class="btn btn-xs btn-outline-primary d-flex align-items-center gap-1" onclick="window.gatewayFeeMatrixController.renderTabLiquidacoes()">
+                                                    <i class="ph-arrows-clockwise"></i> <span>Reconciliar</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tabela Analítica de Liquidações -->
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0">
+                                                <thead class="table-light fs-xs text-uppercase text-muted">
+                                                    <tr>
+                                                        <th>Transação / Pedido</th>
+                                                        <th>Adquirente &amp; Bandeira</th>
+                                                        <th>Modalidade</th>
+                                                        <th>Data Venda</th>
+                                                        <th>Liq. Real</th>
+                                                        <th class="text-end">Valor Bruto</th>
+                                                        <th class="text-end">MDR Previsto</th>
+                                                        <th class="text-end">MDR Real</th>
+                                                        <th class="text-end">Divergência</th>
+                                                        <th>Status Conciliação</th>
+                                                        <th class="text-center">Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="gw-liquidacoes-tbody" class="fs-xs">
+                                                    <!-- Renderizado via controller -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB 6: HISTÓRICO & AUDITORIA -->
                                     <div class="tab-pane fade" id="pane-gw-historico" role="tabpanel">
                                         <div class="table-responsive">
                                             <table class="table table-sm table-hover align-middle mb-0">
@@ -5714,6 +5805,31 @@
                                                     <!-- Renderizado via controller -->
                                                 </tbody>
                                             </table>
+                                        </div>
+
+                                        <div class="mt-4 pt-3 border-top">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <h6 class="fw-bold text-dark fs-xs text-uppercase mb-0">
+                                                    <i class="ph-shield-check me-1 text-primary"></i> Trilha Imutável de Auditoria (Event Log)
+                                                </h6>
+                                                <span class="fs-xxs text-muted">Registro contábil e de segurança de ações financeiras</span>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light fs-xs text-uppercase text-muted">
+                                                        <tr>
+                                                            <th>ID Evento</th>
+                                                            <th>Timestamp</th>
+                                                            <th>Tipo de Ação</th>
+                                                            <th>Detalhamento</th>
+                                                            <th>Ator Responsável</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="gw-audit-tbody" class="fs-xs font-monospace">
+                                                        <!-- Renderizado via controller -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

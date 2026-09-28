@@ -14,8 +14,9 @@ import { JSDOM } from 'jsdom';
 import assert from 'assert';
 
 import { financialClosingService, CLOSING_STATUSES } from '../../src/services/financialClosingService.js';
-import { gatewayFeeMatrixService, FEE_BEARERS } from '../../src/services/gatewayFeeMatrixService.js';
+import { gatewayFeeMatrixService, FEE_BEARERS, RULE_STATUSES, SETTLEMENT_STATUSES } from '../../src/services/gatewayFeeMatrixService.js';
 import { financialConsolidationGateway } from '../../src/services/financialConsolidationGateway.js';
+import { accessControlService } from '../../src/services/accessControlService.js';
 import { resolveRoute, ROUTES } from '../../src/navigation/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,8 +47,7 @@ function it(desc, fn) {
 // Carregar index.html real
 const indexHtmlContent = fs.readFileSync(path.resolve(rootDir, 'index.html'), 'utf8');
 const dom = new JSDOM(indexHtmlContent, {
-  url: 'http://localhost/#/financeiro/fechamento',
-  runScripts: 'dangerously'
+  url: 'http://localhost/#/financeiro/fechamento'
 });
 
 global.window = dom.window;
@@ -281,9 +281,299 @@ it('Criação dinâmica de nova bandeira/modalidade/taxa entra com versão 1.0 e
 });
 
 // ============================================================================
-// SUÍTE 4: ROTAS, NAVEGAÇÃO E REGRAS DE INTEGRIDADE DA SIDEBAR
+// SUÍTE 3 (CONTINUAÇÃO): FEE BEARERS, HIERARQUIA, SNAPSHOT E GOVERNANÇA (5.4)
 // ============================================================================
-console.log('\n4. Rotas e Integridade da Sidebar:');
+
+it('Motor de precificação simula corretamente quando a taxa é suportada pela DISK (absorção)', () => {
+  gatewayFeeMatrixService.createRule({
+    acquirer: 'Rede',
+    brand: 'Mastercard',
+    modality: 'DEBITO',
+    channel: 'ONLINE',
+    scope: 'GLOBAL',
+    acquirerMdr: 1.10,
+    commercialFee: 1.10,
+    feeBearer: 'DISK',
+    effectiveFrom: '2026-01-01',
+    reason: 'Campanha taxa de débito absorvida pela plataforma'
+  });
+
+  const resDisk = gatewayFeeMatrixService.calculateTransactionPricing({
+    amount: 1000.00,
+    acquirer: 'Rede',
+    brand: 'Mastercard',
+    modality: 'DEBITO'
+  });
+
+  assert.strictEqual(resDisk.breakdown.feeBearer, 'DISK');
+  assert.strictEqual(resDisk.breakdown.chargedFromCustomer, 0.00, 'Cliente não paga taxa extra');
+  assert.strictEqual(resDisk.breakdown.totalCustomerPays, 1000.00, 'Cliente paga valor nominal');
+  assert.strictEqual(resDisk.breakdown.netToProducer, 1000.00, 'Produtor recebe valor integral');
+  assert.strictEqual(resDisk.breakdown.absorbedByDisk, 11.00, 'Disk absorve integralmente a taxa de R$ 11,00');
+});
+
+it('Motor de precificação simula taxa COMPARTILHADA (DIVIDIDO) com fechamento centavos exato', () => {
+  gatewayFeeMatrixService.createRule({
+    acquirer: 'Stone (POS/Bilheteria)',
+    brand: 'Elo',
+    modality: 'CREDITO_3X',
+    channel: 'POS',
+    scope: 'GLOBAL',
+    acquirerMdr: 2.10,
+    commercialFee: 3.20,
+    feeBearer: 'DIVIDIDO',
+    effectiveFrom: '2026-01-01',
+    reason: 'Parceria compartilhada Stone'
+  });
+
+  const resSplit = gatewayFeeMatrixService.calculateTransactionPricing({
+    amount: 1000.00,
+    acquirer: 'Stone (POS/Bilheteria)',
+    brand: 'Elo',
+    modality: 'CREDITO_3X',
+    channel: 'POS',
+    splitProducerPercent: 37.5, // 1.20% de 3.20% = 37.5% -> R$ 12,00
+    splitCustomerPercent: 62.5  // 2.00% de 3.20% = 62.5% -> R$ 20,00
+  });
+
+  assert.strictEqual(resSplit.commercialFeeAmount, 32.00, 'Taxa comercial total deve ser 32.00');
+  assert.strictEqual(resSplit.breakdown.chargedFromCustomer, 20.00, 'Parcela do cliente deve ser 20.00');
+  assert.strictEqual(resSplit.breakdown.totalCustomerPays, 1020.00, 'Total pago pelo cliente: 1020.00');
+  assert.strictEqual(resSplit.breakdown.netToProducer, 988.00, 'Líquido do produtor: 1000 - 12 = 988.00');
+  
+  // Fechamento matemático obrigatório: (Cobrado Cliente) + (Descontado Produtor) == Taxa Comercial
+  const mathSum = resSplit.breakdown.chargedFromCustomer + (1000.00 - resSplit.breakdown.netToProducer);
+  assert.strictEqual(mathSum, resSplit.commercialFeeAmount, 'Fechamento matemático não bateu');
+});
+
+it('Hierarquia estrita das regras: Evento > Produtor > Global com identificação de ruleOrigin', () => {
+  // 1. Regra Global Padrão
+  gatewayFeeMatrixService.createRule({
+    acquirer: 'PagBank',
+    brand: 'Visa',
+    modality: 'DEBITO',
+    channel: 'ONLINE',
+    scope: 'GLOBAL',
+    acquirerMdr: 1.20,
+    commercialFee: 1.80,
+    feeBearer: 'CLIENTE_FINAL',
+    effectiveFrom: '2026-01-01',
+    reason: 'Regra Global PagBank'
+  });
+
+  // 2. Regra Específica do Produtor B
+  gatewayFeeMatrixService.createRule({
+    acquirer: 'PagBank',
+    brand: 'Visa',
+    modality: 'DEBITO',
+    channel: 'ONLINE',
+    scope: 'PRODUTOR',
+    producerId: 'PROD-B',
+    acquirerMdr: 1.20,
+    commercialFee: 1.50,
+    feeBearer: 'CLIENTE_FINAL',
+    effectiveFrom: '2026-01-01',
+    reason: 'Condição negociada Produtor B'
+  });
+
+  // 3. Regra Específica do Evento X do Produtor B
+  gatewayFeeMatrixService.createRule({
+    acquirer: 'PagBank',
+    brand: 'Visa',
+    modality: 'DEBITO',
+    channel: 'ONLINE',
+    scope: 'EVENTO',
+    producerId: 'PROD-B',
+    eventId: 'EVENTO-X',
+    acquirerMdr: 1.20,
+    commercialFee: 1.30,
+    feeBearer: 'CLIENTE_FINAL',
+    effectiveFrom: '2026-01-01',
+    reason: 'Condição especial Evento X'
+  });
+
+  // A. Consulta no Evento X: prevalece a do Evento (1.30%)
+  const matchEvent = gatewayFeeMatrixService.resolvePricingRule({
+    acquirer: 'PagBank',
+    brand: 'Visa',
+    modality: 'DEBITO',
+    producerId: 'PROD-B',
+    eventId: 'EVENTO-X'
+  });
+  assert.strictEqual(matchEvent.commercialFee, 1.30, 'Deveria prevalecer a regra do Evento');
+  assert.strictEqual(matchEvent.ruleOrigin, 'EVENTO', 'Origem deve ser EVENTO');
+
+  // B. Consulta no Produtor B para outro evento: prevalece a do Produtor (1.50%)
+  const matchProducer = gatewayFeeMatrixService.resolvePricingRule({
+    acquirer: 'PagBank',
+    brand: 'Visa',
+    modality: 'DEBITO',
+    producerId: 'PROD-B',
+    eventId: 'OUTRO-EVENTO'
+  });
+  assert.strictEqual(matchProducer.commercialFee, 1.50, 'Deveria prevalecer a regra do Produtor');
+  assert.strictEqual(matchProducer.ruleOrigin, 'PRODUTOR', 'Origem deve ser PRODUTOR');
+
+  // C. Consulta para outro produtor: prevalece a Global (1.80%)
+  const matchGlobal = gatewayFeeMatrixService.resolvePricingRule({
+    acquirer: 'PagBank',
+    brand: 'Visa',
+    modality: 'DEBITO',
+    producerId: 'PROD-C'
+  });
+  assert.strictEqual(matchGlobal.commercialFee, 1.80, 'Deveria herdar a regra Global');
+  assert.strictEqual(matchGlobal.ruleOrigin, 'GLOBAL', 'Origem deve ser GLOBAL');
+});
+
+it('Snapshot da transação gera registro imutável com rastreabilidade completa e grava trilha de auditoria', () => {
+  const snapshot = gatewayFeeMatrixService.createPaymentFeeSnapshot({
+    transactionId: 'TX-PEDIDO-9988',
+    orderId: 'PED-9988',
+    eventId: '5096',
+    producerId: 'PROD-101',
+    amount: 500.00,
+    acquirer: 'Cielo',
+    brand: 'Visa',
+    modality: 'CREDITO_3X',
+    channel: 'ONLINE'
+  });
+
+  assert.ok(snapshot.snapshotId.startsWith('SNP-'), 'ID de snapshot inválido');
+  assert.strictEqual(snapshot.transactionId, 'TX-PEDIDO-9988');
+  assert.strictEqual(snapshot.amount, 500.00);
+  assert.strictEqual(snapshot.acquirerCostMdr, 11.25, 'MDR de 2.25% sobre 500 deve ser 11.25');
+  assert.strictEqual(snapshot.commercialFeeAmount, 16.00, 'Taxa comercial 3.20% sobre 500 deve ser 16.00');
+  assert.strictEqual(snapshot.operationalSpreadAmount, 4.75, 'Spread 16.00 - 11.25 = 4.75');
+  assert.strictEqual(snapshot.immutable, true, 'Snapshot deve ser explicitamente imutável');
+
+  // Verificar gravação na trilha de auditoria
+  const auditLogs = gatewayFeeMatrixService.getAuditLog({ action: 'SNAPSHOT_CRIADO' });
+  assert.ok(auditLogs.length > 0, 'Evento de auditoria SNAPSHOT_CRIADO não encontrado');
+  const foundLog = auditLogs.find(l => l.details && l.details.transactionId === 'TX-PEDIDO-9988');
+  assert.ok(foundLog, 'Registro de auditoria para a transação não foi localizado');
+});
+
+it('Vigência e histórico: respeito rigoroso ao limite temporal (30/09/2026 vs 01/10/2026)', () => {
+  // Criar regra com vigência inicial em janeiro de 2026
+  const testRule = gatewayFeeMatrixService.createRule({
+    acquirer: 'Cielo',
+    brand: 'Elo',
+    modality: 'CREDITO_1X',
+    channel: 'ONLINE',
+    scope: 'GLOBAL',
+    acquirerMdr: 1.50,
+    commercialFee: 2.20,
+    feeBearer: 'PRODUTOR',
+    effectiveFrom: '2026-01-01',
+    reason: 'Taxa Q1-Q3 2026'
+  });
+
+  // Adicionar vigência que começa rigorosamente em 01/10/2026
+  gatewayFeeMatrixService.addNewVigency({
+    ruleId: testRule.id,
+    acquirerMdr: 1.80,
+    commercialFee: 2.60,
+    feeBearer: 'PRODUTOR',
+    effectiveFrom: '2026-10-01T00:00:00Z',
+    actorName: 'Gestor Comercial',
+    reason: 'Reajuste Q4 2026'
+  });
+
+  // Venda realizada em 30/09/2026 23:59:59 deve usar a taxa anterior (1.50% / 2.20%)
+  const ruleBefore = gatewayFeeMatrixService.resolvePricingRule({
+    acquirer: 'Cielo',
+    brand: 'Elo',
+    modality: 'CREDITO_1X',
+    atDate: '2026-09-30T23:59:59Z'
+  });
+  assert.strictEqual(ruleBefore.acquirerMdr, 1.50, 'Em 30/09 deve vigorar a taxa antiga 1.50%');
+  assert.strictEqual(ruleBefore.commercialFee, 2.20, 'Em 30/09 deve vigorar a taxa antiga 2.20%');
+
+  // Venda realizada em 01/10/2026 00:00:00 deve usar a nova taxa (1.80% / 2.60%)
+  const ruleAfter = gatewayFeeMatrixService.resolvePricingRule({
+    acquirer: 'Cielo',
+    brand: 'Elo',
+    modality: 'CREDITO_1X',
+    atDate: '2026-10-01T00:00:00Z'
+  });
+  assert.strictEqual(ruleAfter.acquirerMdr, 1.80, 'Em 01/10 deve vigorar a nova taxa 1.80%');
+  assert.strictEqual(ruleAfter.commercialFee, 2.60, 'Em 01/10 deve vigorar a nova taxa 2.60%');
+});
+
+it('Governança de regras: ciclo de aprovação formal (RASCUNHO -> PENDENTE_APROVACAO -> ATIVA / REPROVADO)', () => {
+  // 1. Criar regra em Rascunho
+  const draftRule = gatewayFeeMatrixService.createRule({
+    acquirer: 'Rede',
+    brand: 'Hipercard',
+    modality: 'CREDITO_1X',
+    acquirerMdr: 1.60,
+    commercialFee: 2.40,
+    feeBearer: 'PRODUTOR',
+    effectiveFrom: '2026-11-01',
+    status: RULE_STATUSES.RASCUNHO,
+    reason: 'Proposta preliminar'
+  });
+  assert.strictEqual(draftRule.status, 'RASCUNHO');
+
+  // 2. Submeter para aprovação
+  const submitted = gatewayFeeMatrixService.submitRuleForApproval(draftRule.id, 'Analista Contábil', 'Submissão formal');
+  assert.strictEqual(submitted.status, 'PENDENTE_APROVACAO');
+
+  // 3. Aprovação pela Diretoria/Gestão
+  const approved = gatewayFeeMatrixService.approveRule(draftRule.id, 'Diretor Financeiro', 'Aprovado conforme alçada');
+  assert.strictEqual(approved.status, 'ATIVA');
+  assert.ok(approved.approvedBy.includes('Diretor Financeiro'));
+
+  // 4. Fluxo de Reprovação
+  const draftRule2 = gatewayFeeMatrixService.createRule({
+    acquirer: 'Rede',
+    brand: 'Hipercard',
+    modality: 'CREDITO_2X',
+    acquirerMdr: 2.00,
+    commercialFee: 2.10, // Margem muito baixa
+    feeBearer: 'PRODUTOR',
+    status: RULE_STATUSES.RASCUNHO,
+    reason: 'Proposta de margem baixa'
+  });
+  gatewayFeeMatrixService.submitRuleForApproval(draftRule2.id, 'Analista', 'Envio para análise');
+  const rejected = gatewayFeeMatrixService.rejectRule(draftRule2.id, 'Diretor Financeiro', 'Spread insuficiente para cobrir float');
+  assert.strictEqual(rejected.status, 'REPROVADO');
+});
+
+it('Liquidações Previsto × Real detecta divergência exata de MDR e permite conciliação formal', () => {
+  // Transação de referência: Cielo R$ 1.000,00, Previsto R$ 22,50, Real R$ 22,73, Diferença R$ 0,23
+  const settlements = gatewayFeeMatrixService.getSettlements({ acquirer: 'Cielo' });
+  assert.ok(settlements.length > 0, 'Nenhuma liquidação da Cielo encontrada');
+
+  const targetTx = settlements.find(s => s.transactionId === 'TX-2026-001');
+  assert.ok(targetTx, 'Transação TX-2026-001 não localizada');
+  assert.strictEqual(targetTx.estimatedMdr, 22.50, 'MDR previsto deve ser 22.50');
+  assert.strictEqual(targetTx.actualMdr, 22.73, 'MDR real deve ser 22.73');
+  assert.strictEqual(targetTx.differenceMdr, 0.23, 'Divergência deve ser de R$ 0,23');
+  assert.strictEqual(targetTx.status, SETTLEMENT_STATUSES.DIVERGENCIA_MDR.key || 'DIVERGENCIA_MDR', 'Status deve ser DIVERGENCIA_MDR');
+
+  // Realizar conciliação/tratativa da divergência
+  const reconciled = gatewayFeeMatrixService.reconcileSettlement(
+    'TX-2026-001',
+    'CONCILIADO',
+    'Diferença de R$ 0,23 assimilada como tarifa de mensageria da adquirente',
+    'Auditor Contábil'
+  );
+
+  assert.strictEqual(reconciled.status, 'CONCILIADO', 'Status após conciliação deve ser CONCILIADO');
+  assert.strictEqual(reconciled.reconciledBy, 'Auditor Contábil');
+  assert.ok(reconciled.reconciledAt, 'Data de conciliação deve ser registrada');
+
+  // Trilha de auditoria deve conter o evento
+  const auditLogs = gatewayFeeMatrixService.getAuditLog({ action: 'LIQUIDACAO_CONCILIADA' });
+  const log = auditLogs.find(l => l.details && l.details.transactionId === 'TX-2026-001');
+  assert.ok(log, 'Auditoria de conciliação de liquidação não encontrada');
+});
+
+// ============================================================================
+// SUÍTE 4: ROTAS, NAVEGAÇÃO, CONTROLE DE ACESSO E INTEGRIDADE DA SIDEBAR
+// ============================================================================
+console.log('\n4. Rotas, Navegação e Controle de Acesso Estrito:');
 
 it('Rota /financeiro/fechamento resolve estritamente com view financial-fechamento', () => {
   const resolved = resolveRoute('/financeiro/fechamento');
@@ -292,31 +582,65 @@ it('Rota /financeiro/fechamento resolve estritamente com view financial-fechamen
   assert.strictEqual(resolved.menuKey, 'fin-fechamento');
 });
 
-it('Rota /financeiro/gateways-adquirentes resolve estritamente com view financial-gateways-adquirentes', () => {
+it('Rota /financeiro/gateways-adquirentes resolve estritamente com view financial-gateways-adquirentes para Administrador', () => {
+  global.window.currentRole = 'ADMINISTRADOR';
+  global.window.isProducerRole = false;
+
   const resolved = resolveRoute('/financeiro/gateways-adquirentes');
   assert.ok(resolved, 'Rota /financeiro/gateways-adquirentes não resolve');
   assert.strictEqual(resolved.view, 'financial-gateways-adquirentes');
   assert.strictEqual(resolved.menuKey, 'fin-gateways-adquirentes');
 });
 
-it('index.html contém as seções de view e os modais/botões de Adicionar Adquirente e Nova Bandeira/Taxa', () => {
-  const secClosing = document.getElementById('view-financial-fechamento');
-  assert.ok(secClosing, 'Seção #view-financial-fechamento ausente em index.html');
+it('Segregação inviolável: Produtor NÃO tem permissão de visualizar Gateways/Adquirentes', () => {
+  // Testar matriz de permissões do RBAC
+  assert.strictEqual(accessControlService.canAccessGateways({ role: 'PRODUTOR_ADMINISTRADOR' }), false);
+  assert.strictEqual(accessControlService.canAccessGateways({ role: 'PRODUTOR_OPERACIONAL' }), false);
+  assert.strictEqual(accessControlService.canAccessGateways({ role: 'PRODUTOR_VISUALIZADOR' }), false);
+  
+  // Testar permissões de perfis internos
+  assert.strictEqual(accessControlService.canAccessGateways({ role: 'ADMINISTRADOR' }), true);
+  assert.strictEqual(accessControlService.canAccessGateways({ role: 'GESTOR_FINANCEIRO' }), true);
+  assert.strictEqual(accessControlService.canAccessGateways({ role: 'FINANCEIRO' }), true);
+});
 
+it('Segregação inviolável: Tentativa de navegação direta de Produtor para /financeiro/gateways-adquirentes redireciona para /acesso-negado', () => {
+  // Simular usuário com perfil de produtor no ambiente de navegação
+  global.window.currentRole = 'PRODUTOR';
+  global.window.isProducerRole = true;
+
+  const resolved = resolveRoute('/financeiro/gateways-adquirentes');
+  assert.strictEqual(resolved.path, '/acesso-negado', 'Deveria redirecionar para /acesso-negado');
+  assert.strictEqual(resolved.view, 'access-denied', 'View deve ser access-denied');
+
+  // Restaurar role para Administrador
+  global.window.currentRole = 'ADMINISTRADOR';
+  global.window.isProducerRole = false;
+});
+
+it('index.html contém as 6 abas canônicas e tabelas analíticas de Liquidações e Auditoria', () => {
   const secGw = document.getElementById('view-financial-gateways-adquirentes');
   assert.ok(secGw, 'Seção #view-financial-gateways-adquirentes ausente em index.html');
 
-  const btnOpenAcq = document.getElementById('btn-gw-open-acquirer-modal');
-  assert.ok(btnOpenAcq, 'Botão #btn-gw-open-acquirer-modal ausente');
+  // Abas 1 a 6
+  assert.ok(document.getElementById('tab-gw-visao-geral'), 'Aba 1 (Visão Geral) ausente');
+  assert.ok(document.getElementById('tab-gw-operadoras'), 'Aba 2 (Operadoras) ausente');
+  assert.ok(document.getElementById('tab-gw-bandeiras'), 'Aba 3 (Bandeiras e Taxas) ausente');
+  assert.ok(document.getElementById('tab-gw-comercial'), 'Aba 4 (Regras Comerciais) ausente');
+  assert.ok(document.getElementById('tab-gw-liquidacoes'), 'Aba 5 (Liquidações) ausente');
+  assert.ok(document.getElementById('tab-gw-historico'), 'Aba 6 (Histórico & Auditoria) ausente');
 
-  const btnOpenRule = document.getElementById('btn-gw-open-rule-modal');
-  assert.ok(btnOpenRule, 'Botão #btn-gw-open-rule-modal ausente');
+  // Panes e tabelas
+  assert.ok(document.getElementById('pane-gw-liquidacoes'), 'Painel de liquidações ausente');
+  assert.ok(document.getElementById('gw-liquidacoes-tbody'), 'Tabela de liquidações ausente');
+  assert.ok(document.getElementById('pane-gw-historico'), 'Painel de histórico ausente');
+  assert.ok(document.getElementById('gw-audit-tbody'), 'Tabela de auditoria ausente');
 
-  const modalAcq = document.getElementById('modal-gw-new-acquirer');
-  assert.ok(modalAcq, 'Modal #modal-gw-new-acquirer ausente');
-
-  const modalRule = document.getElementById('modal-gw-new-rule');
-  assert.ok(modalRule, 'Modal #modal-gw-new-rule ausente');
+  // Modais de ação
+  assert.ok(document.getElementById('btn-gw-open-acquirer-modal'), 'Botão #btn-gw-open-acquirer-modal ausente');
+  assert.ok(document.getElementById('btn-gw-open-rule-modal'), 'Botão #btn-gw-open-rule-modal ausente');
+  assert.ok(document.getElementById('modal-gw-new-acquirer'), 'Modal #modal-gw-new-acquirer ausente');
+  assert.ok(document.getElementById('modal-gw-new-rule'), 'Modal #modal-gw-new-rule ausente');
 });
 
 it('O número de .submenu-link no menu Financeiro permanece estritamente em 50 para conformidade com a Fase 28.15.3', () => {

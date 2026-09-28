@@ -76,6 +76,16 @@ export const gatewayFeeMatrixController = {
     if (btnSaveRule) {
       btnSaveRule.addEventListener('click', () => this.handleSaveRule());
     }
+
+    const selLiqAcq = document.getElementById('gw-filter-liq-acquirer');
+    if (selLiqAcq) {
+      selLiqAcq.addEventListener('change', () => this.renderTabLiquidacoes());
+    }
+
+    const selLiqStatus = document.getElementById('gw-filter-liq-status');
+    if (selLiqStatus) {
+      selLiqStatus.addEventListener('change', () => this.renderTabLiquidacoes());
+    }
   },
 
   render() {
@@ -84,6 +94,7 @@ export const gatewayFeeMatrixController = {
     this.renderTabOperadoras();
     this.renderTabBandeiras();
     this.renderTabComercial();
+    this.renderTabLiquidacoes();
     this.renderTabHistorico();
     this.runSimulation();
   },
@@ -120,6 +131,17 @@ export const gatewayFeeMatrixController = {
       selModal.innerHTML = acquirers.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
       if (currentVal && Array.from(selModal.options).some(o => o.value === currentVal)) {
         selModal.value = currentVal;
+      }
+    }
+
+    // 4. Filtro na aba Liquidações (#gw-filter-liq-acquirer)
+    const selLiq = document.getElementById('gw-filter-liq-acquirer');
+    if (selLiq) {
+      const currentVal = selLiq.value;
+      selLiq.innerHTML = `<option value="TODOS">Todas as Adquirentes</option>` +
+        acquirers.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+      if (currentVal && Array.from(selLiq.options).some(o => o.value === currentVal)) {
+        selLiq.value = currentVal;
       }
     }
   },
@@ -247,25 +269,115 @@ export const gatewayFeeMatrixController = {
     }).join('');
   },
 
-  renderTabHistorico() {
-    const tbody = document.getElementById('gw-historico-tbody');
+  renderTabLiquidacoes() {
+    const tbody = document.getElementById('gw-liquidacoes-tbody');
     if (!tbody) return;
 
-    const rules = gatewayFeeMatrixService.getRules();
-    const allHistory = rules.flatMap(r => (r.history || []).map(h => ({ ...h, acquirer: r.acquirer, brand: r.brand, modality: r.modality })));
+    const acquirer = document.getElementById('gw-filter-liq-acquirer')?.value || 'TODOS';
+    const status = document.getElementById('gw-filter-liq-status')?.value || 'TODOS';
 
-    tbody.innerHTML = allHistory.map(h => `
-      <tr>
-        <td><span class="badge bg-secondary">v${h.version}</span></td>
-        <td><strong>${h.acquirer}</strong> - ${h.brand} (${h.modality})</td>
-        <td>${formatDate(h.effectiveFrom)} ${h.effectiveTo ? `até ${formatDate(h.effectiveTo)}` : '(Vigente)'}</td>
-        <td class="text-end text-danger">${formatPercent(h.acquirerMdr)}</td>
-        <td class="text-end text-success">${formatPercent(h.commercialFee)}</td>
-        <td><span class="badge bg-light text-dark border">${h.feeBearer || 'PRODUTOR'}</span></td>
-        <td class="fw-semibold">${h.actor || 'Administrador'}</td>
-        <td class="fs-xxs text-muted">${h.reason || '-'}</td>
-      </tr>
-    `).join('');
+    const settlements = gatewayFeeMatrixService.getSettlements({ acquirer, status });
+    const summary = gatewayFeeMatrixService.getSettlementsSummary({ acquirer, status });
+
+    // Atualiza KPIs
+    const elGross = document.getElementById('gw-liq-kpi-total-gross');
+    if (elGross) elGross.textContent = formatCurrency(summary.totalGross);
+
+    const elCompare = document.getElementById('gw-liq-kpi-mdr-compare');
+    if (elCompare) elCompare.textContent = `${formatCurrency(summary.totalExpectedMdr)} / ${formatCurrency(summary.totalRealMdr)}`;
+
+    const elDiv = document.getElementById('gw-liq-kpi-divergence');
+    if (elDiv) elDiv.textContent = formatCurrency(summary.totalDivergence);
+
+    const elRate = document.getElementById('gw-liq-kpi-rate');
+    if (elRate) elRate.textContent = `${summary.reconciliationRate}%`;
+
+    tbody.innerHTML = settlements.map(s => {
+      const isReconciled = s.reconciliationStatus === 'CONCILIADO';
+      const statusBadge = isReconciled
+        ? 'bg-success-subtle text-success border border-success-subtle'
+        : (s.reconciliationStatus === 'CHARGEBACK' ? 'bg-dark text-white' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle');
+
+      return `
+        <tr>
+          <td>
+            <strong class="text-dark">${s.transactionId}</strong>
+            <div class="fs-xxs text-muted">${s.orderId} • ${s.eventName}</div>
+          </td>
+          <td>
+            <strong>${s.acquirer}</strong>
+            <span class="badge bg-light text-dark border ms-1">${s.brand}</span>
+          </td>
+          <td><code>${s.modality}</code></td>
+          <td class="fs-xxs text-muted">${formatDate(s.transactionDate)}</td>
+          <td class="fs-xxs">${s.settlementRealDate ? formatDate(s.settlementRealDate) : '<span class="text-danger">Pendente</span>'}</td>
+          <td class="text-end fw-semibold">${formatCurrency(s.grossAmount)}</td>
+          <td class="text-end text-primary font-monospace">${formatCurrency(s.mdrExpectedAmount)} <span class="fs-xxs">(${s.mdrExpectedPercent}%)</span></td>
+          <td class="text-end font-monospace ${isReconciled ? 'text-success' : 'text-danger fw-bold'}">
+            ${s.mdrRealAmount !== null ? `${formatCurrency(s.mdrRealAmount)} <span class="fs-xxs">(${s.mdrRealPercent}%)</span>` : '-'}
+          </td>
+          <td class="text-end font-monospace ${s.differenceAmount > 0 ? 'text-danger fw-bold' : 'text-muted'}">
+            ${s.differenceAmount > 0 ? `+${formatCurrency(s.differenceAmount)}` : 'R$ 0,00'}
+          </td>
+          <td>
+            <span class="badge ${statusBadge}" title="${s.reconciliationNotes || ''}">
+              ${s.reconciliationStatus.replace(/_/g, ' ')}
+            </span>
+          </td>
+          <td class="text-center">
+            ${isReconciled ? '<span class="text-success fs-xs fw-semibold"><i class="ph-check-circle"></i> OK</span>' : `
+              <button class="btn btn-xs btn-outline-primary" onclick="window.gatewayFeeMatrixController.handleReconcilePrompt('${s.transactionId}')">
+                Conciliar
+              </button>
+            `}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  handleReconcilePrompt(transactionId) {
+    const reason = prompt('Informe a justificativa contábil para aprovar e conciliar esta liquidação:', 'Divergência de MDR aceita conforme aditivo contratual Cielo');
+    if (reason) {
+      gatewayFeeMatrixService.reconcileSettlement(transactionId, { notes: reason, actor: 'Carlos Lima (Financeiro Disk)' });
+      this.renderTabLiquidacoes();
+      alert('Transação conciliada com sucesso e registrada na trilha de auditoria!');
+    }
+  },
+
+  renderTabHistorico() {
+    const tbody = document.getElementById('gw-historico-tbody');
+    if (tbody) {
+      const rules = gatewayFeeMatrixService.getRules();
+      const allHistory = rules.flatMap(r => (r.history || []).map(h => ({ ...h, acquirer: r.acquirer, brand: r.brand, modality: r.modality })));
+
+      tbody.innerHTML = allHistory.map(h => `
+        <tr>
+          <td><span class="badge bg-secondary">v${h.version}</span></td>
+          <td><strong>${h.acquirer}</strong> - ${h.brand} (${h.modality})</td>
+          <td>${formatDate(h.effectiveFrom)} ${h.effectiveTo ? `até ${formatDate(h.effectiveTo)}` : '(Vigente)'}</td>
+          <td class="text-end text-danger">${formatPercent(h.acquirerMdr)}</td>
+          <td class="text-end text-success">${formatPercent(h.commercialFee)}</td>
+          <td><span class="badge bg-light text-dark border">${h.feeBearer || 'PRODUTOR'}</span></td>
+          <td class="fw-semibold">${h.actor || 'Administrador'}</td>
+          <td class="fs-xxs text-muted">${h.reason || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    const auditTbody = document.getElementById('gw-audit-tbody');
+    if (auditTbody) {
+      const logs = gatewayFeeMatrixService.getAuditLog();
+      auditTbody.innerHTML = logs.map(l => `
+        <tr>
+          <td><code>${l.id}</code></td>
+          <td class="text-muted fs-xxs">${formatDate(l.timestamp)}</td>
+          <td><span class="badge bg-secondary-subtle text-secondary border">${l.event}</span></td>
+          <td>${l.details}</td>
+          <td class="fw-semibold text-dark">${l.actor}</td>
+        </tr>
+      `).join('');
+    }
   },
 
   runSimulation() {
@@ -283,6 +395,9 @@ export const gatewayFeeMatrixController = {
       <div class="row g-2 fs-xs">
         <div class="col-6"><strong>Valor Transacionado:</strong></div>
         <div class="col-6 text-end fw-bold">${formatCurrency(result.amount)}</div>
+
+        <div class="col-6 text-muted">Regra Aplicada (Hierarquia):</div>
+        <div class="col-6 text-end"><span class="badge bg-secondary-subtle text-secondary border">${result.rule.ruleOrigin || result.rule.scope}</span> <code class="fs-xxs">v${result.rule.version || 1}</code></div>
 
         <div class="col-6 text-danger">Custo Adquirente (${result.rule.acquirer} - ${formatPercent(result.rule.acquirerMdr)}):</div>
         <div class="col-6 text-end text-danger fw-semibold">-${formatCurrency(result.acquirerCostMdr)}</div>
