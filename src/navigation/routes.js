@@ -869,6 +869,14 @@ export const ROUTES = {
     menuKey: 'access-denied',
     title: 'Acesso Negado',
     sub: 'Você não possui permissão para visualizar este recurso.'
+  },
+  '/componentes/scrollspy': {
+    path: '/componentes/scrollspy',
+    view: 'components-scrollspy',
+    module: 'componentes',
+    menuKey: 'comp-scrollspy',
+    title: 'Componente ScrollSpy',
+    sub: 'Sincronização automática de menus e seções de rolagem Bootstrap.'
   }
 };
 
@@ -1049,7 +1057,9 @@ export const LEGACY_ROUTE_ALIASES = {
   'login': '/login',
   'auth-login': '/login',
   'acesso-negado': '/acesso-negado',
-  'access-denied': '/acesso-negado'
+  'access-denied': '/acesso-negado',
+  'components-scrollspy': '/componentes/scrollspy',
+  'scrollspy': '/componentes/scrollspy'
 };
 
 /**

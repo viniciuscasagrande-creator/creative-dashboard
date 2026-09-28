@@ -197,6 +197,11 @@ class AppRouter {
 
     // Atualizar título e subtítulo dinâmicos da página
     this.updatePageHeader(route);
+
+    // Sincronizar instâncias do ScrollSpy presentes na view ativa
+    if (typeof window !== 'undefined' && window.ScrollSpyHelper) {
+      window.ScrollSpyHelper.refreshAll(targetElement);
+    }
   }
 
   /**

@@ -143,3 +143,5 @@ export function createUiChart({ id, type, data, options = {} }) {
     options: { ...defaultOptions, ...options }
   });
 }
+
+export { scrollSpyHelper } from './scrollSpyHelper.js';

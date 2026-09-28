@@ -20,6 +20,8 @@ import { producerBankAccountController } from './controllers/producerBankAccount
 import { accessControlService } from './services/accessControlService.js';
 import { accessAuditService } from './services/accessAuditService.js';
 import { accessManagementController } from './controllers/accessManagementController.js';
+import { scrollSpyHelper } from './components/scrollSpyHelper.js';
+import { scrollSpyController } from './controllers/scrollSpyController.js';
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 import { AppRouter } from './navigation/router.js';
@@ -397,6 +399,12 @@ function initApp() {
         }
       }
     });
+
+    AppRouter.registerHook('components-scrollspy', () => {
+      if (scrollSpyController && typeof scrollSpyController.init === 'function') {
+        scrollSpyController.init();
+      }
+    });
   }
 
   // Navegação unificada pelo AppRouter Central
@@ -412,6 +420,11 @@ function initApp() {
   initReportsModule();
   initQuickActions();
   initCharts();
+
+  // Inicialização global do ScrollSpy
+  if (typeof scrollSpyHelper !== 'undefined') {
+    scrollSpyHelper.autoInit();
+  }
 
   // MEGA PACOTE 1 — Global Window Bindings de Acesso & Login
   window.accessControlService = accessControlService;
