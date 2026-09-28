@@ -246,15 +246,14 @@ export const ROUTES = {
     sub: 'Agendamentos de repasses, lotes homologados e liquidação bancária.'
   },
 
-  // Financeiro — Domínio 4: Compras
+  // Financeiro — Central Unificada de Aprovações (Transversal)
   '/financeiro/aprovacoes': {
     path: '/financeiro/aprovacoes',
-    view: 'procure-to-pay',
+    view: 'financial-approvals',
     module: 'financeiro',
-    tab: 'approvals',
     menuKey: 'fin-approvals',
     title: 'Central de Aprovações',
-    sub: 'Workflow de aprovação multinível de despesas e pedidos.'
+    sub: 'Workflow transversal de aprovação e autorização de operações financeiras.'
   },
   '/financeiro/compras': {
     path: '/financeiro/compras',
@@ -732,12 +731,13 @@ export const ROUTES = {
     sub: 'Razão social, CNPJ e domicílio fiscal.'
   },
   '/configuracoes/usuarios': {
-    path: '/configuracoes/usuarios',
-    view: 'settings-profile',
-    module: 'configuracoes',
-    menuKey: 'settings-users',
-    title: 'Gestão de Usuários',
-    sub: 'Controle de acessos, papéis e permissões.'
+    path: '/acesso/usuarios',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-users',
+    tab: 'usuarios',
+    title: 'Usuários & Operadores',
+    sub: 'Administração de credenciais e operadores autorizados.'
   },
   '/configuracoes/integracoes': {
     path: '/configuracoes/integracoes',
@@ -762,6 +762,105 @@ export const ROUTES = {
     menuKey: 'settings-security',
     title: 'Segurança & Auditoria',
     sub: 'Sessões ativas, logs e autenticação de dois fatores.'
+  },
+
+  // Gerenciamento de Acesso & Autenticação (Mega Pacote 1)
+  '/acesso': {
+    path: '/acesso',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-overview',
+    tab: 'visao-geral',
+    title: 'Gerenciamento de Acesso',
+    sub: 'Usuários, perfis, RBAC, escopos, alçadas e auditoria.'
+  },
+  '/acesso/visao-geral': {
+    path: '/acesso/visao-geral',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-overview',
+    tab: 'visao-geral',
+    title: 'Visão Geral de Acessos',
+    sub: 'Métricas de usuários ativos, sessões e auditoria.'
+  },
+  '/acesso/usuarios': {
+    path: '/acesso/usuarios',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-users',
+    tab: 'usuarios',
+    title: 'Usuários & Operadores',
+    sub: 'Administração de credenciais e operadores autorizados.'
+  },
+  '/acesso/perfis': {
+    path: '/acesso/perfis',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-profiles',
+    tab: 'perfis',
+    title: 'Perfis de Acesso',
+    sub: 'Matriz oficial de perfis e permissões padrão.'
+  },
+  '/acesso/permissoes': {
+    path: '/acesso/permissoes',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-permissions',
+    tab: 'permissoes',
+    title: 'Dicionário de Permissões',
+    sub: 'Regras granulares de autorização por ação e módulo.'
+  },
+  '/acesso/alcadas': {
+    path: '/acesso/alcadas',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-thresholds',
+    tab: 'alcadas',
+    title: 'Alçadas de Aprovação',
+    sub: 'Limites monetários de autorização por colaborador.'
+  },
+  '/acesso/escopos': {
+    path: '/acesso/escopos',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-scopes',
+    tab: 'escopos',
+    title: 'Eventos & Escopos',
+    sub: 'Matriz de produtores e eventos autorizados por operador.'
+  },
+  '/acesso/seguranca': {
+    path: '/acesso/seguranca',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-security',
+    tab: 'seguranca',
+    title: 'Sessões & Segurança',
+    sub: 'Políticas de senha, MFA e revogação de sessões.'
+  },
+  '/acesso/auditoria': {
+    path: '/acesso/auditoria',
+    view: 'access-management',
+    module: 'acesso',
+    menuKey: 'access-audit',
+    tab: 'auditoria',
+    title: 'Auditoria de Acessos',
+    sub: 'Trilha imutável de eventos de autenticação e governança.'
+  },
+  '/login': {
+    path: '/login',
+    view: 'auth-login',
+    module: 'autenticacao',
+    menuKey: 'auth-login',
+    title: 'Acesso ao Sistema',
+    sub: 'Autenticação de usuários corporativos e produtores.'
+  },
+  '/acesso-negado': {
+    path: '/acesso-negado',
+    view: 'access-denied',
+    module: 'acesso',
+    menuKey: 'access-denied',
+    title: 'Acesso Negado',
+    sub: 'Você não possui permissão para visualizar este recurso.'
   }
 };
 
@@ -927,7 +1026,20 @@ export const LEGACY_ROUTE_ALIASES = {
   'relatorios': '/relatorios',
   'reports-sales': '/relatorios',
   'configuracoes': '/configuracoes',
-  'settings-profile': '/configuracoes'
+  'settings-profile': '/configuracoes',
+
+  // Gerenciamento de Acesso & Autenticação
+  'acesso': '/acesso/visao-geral',
+  'access-management': '/acesso/visao-geral',
+  'acesso/usuarios': '/acesso/usuarios',
+  'access-users': '/acesso/usuarios',
+  'configuracoes/usuarios': '/acesso/usuarios',
+  'configuracoes-usuarios': '/acesso/usuarios',
+  'usuarios': '/acesso/usuarios',
+  'login': '/login',
+  'auth-login': '/login',
+  'acesso-negado': '/acesso-negado',
+  'access-denied': '/acesso-negado'
 };
 
 /**

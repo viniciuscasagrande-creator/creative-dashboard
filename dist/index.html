@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom stylesheet -->
-      <script type="module" crossorigin src="./assets/index-C_mOqGH2.js"></script>
+      <script type="module" crossorigin src="./assets/index-CGY69dF7.js"></script>
       <link rel="stylesheet" crossorigin href="./assets/index-CdfODmdt.css">
     </head>
 <body>
@@ -222,6 +222,12 @@
                                     <i class="ph-squares-four me-1 text-primary"></i> 1. Visão Geral
                                 </li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-dashboard" data-menu-key="fin-dashboard" data-route="/financeiro/dashboard"><i class="ph-chart-pie-slice me-2"></i> Dashboard Financeiro</a></li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link approval-submenu-link fw-bold d-flex align-items-center justify-content-between" data-view="financial-approvals" data-menu-key="fin-approvals" data-route="/financeiro/aprovacoes" style="color: #f59e0b !important;">
+                                        <span><i class="ph-scales me-2 text-warning"></i> Aprovações</span>
+                                        <span id="fin-nav-approvals-badge" class="badge rounded-pill bg-danger fs-xxs" style="padding: 2px 7px;">17</span>
+                                    </a>
+                                </li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="financial-analytics" data-menu-key="fin-intelligence" data-route="/financeiro/inteligencia"><i class="ph-brain me-2"></i> Inteligência Financeira</a></li>
                                 <li class="nav-item"><a href="#" class="nav-link submenu-link" data-view="dashboard-indicators" data-menu-key="fin-indicators" data-route="/financeiro/indicadores"><i class="ph-gauge me-2"></i> Indicadores</a></li>
 
@@ -3956,6 +3962,320 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ============================================================================ -->
+                    <!-- MEGA PACOTE 1: GERENCIAMENTO DE ACESSO, RBAC, ESCOPOS & AUDITORIA              -->
+                    <!-- ============================================================================ -->
+                    <section id="view-access-management" class="page-section" style="display:none;">
+                        <!-- Header da Central de Acesso -->
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                    <i class="ph-shield-check text-primary"></i> Gerenciamento de Acesso &amp; Governança
+                                </h5>
+                                <div class="text-muted fs-xs">
+                                    Controle Central de Usuários &bull; Perfis &bull; Permissões RBAC &bull; Alçadas &bull; Escopos &bull; Auditoria
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <button type="button" class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1 shadow-sm" onclick="window.openCreateUserWizard()">
+                                    <i class="ph-user-plus"></i> Novo Usuário
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light border text-secondary" title="Recarregar" onclick="window.accessManagementController.renderCurrentTab()">
+                                    <i class="ph-arrows-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 8 Abas Canônicas de Navegação de Acesso -->
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-header bg-white border-bottom py-2 px-3">
+                                <div class="btn-group btn-group-sm flex-wrap" role="group" id="access-management-tabs">
+                                    <button type="button" class="btn btn-primary text-white fw-bold active tab-access-link" id="tab-access-visao-geral" onclick="window.switchAccessTab('visao-geral')">Visão Geral</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-usuarios" onclick="window.switchAccessTab('usuarios')">Usuários</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-perfis" onclick="window.switchAccessTab('perfis')">Perfis de Acesso</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-permissoes" onclick="window.switchAccessTab('permissoes')">Permissões</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-alcadas" onclick="window.switchAccessTab('alcadas')">Alçadas de Aprovação</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-escopos" onclick="window.switchAccessTab('escopos')">Eventos e Escopos</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-seguranca" onclick="window.switchAccessTab('seguranca')">Sessões e Segurança</button>
+                                    <button type="button" class="btn btn-light text-dark fw-semibold tab-access-link" id="tab-access-auditoria" onclick="window.switchAccessTab('auditoria')">Auditoria de Acessos</button>
+                                </div>
+                            </div>
+
+                            <!-- Conteúdo Renderizado Dinamicamente -->
+                            <div class="card-body p-3" id="access-management-content-pane">
+                                <!-- Preenchido pelo accessManagementController.renderCurrentTab() -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Tela Oficial de Acesso Negado (403) com Princípio de Menor Privilégio -->
+                    <section id="view-access-denied" class="page-section" style="display:none;">
+                        <div class="container py-5 text-center" style="max-width: 600px;">
+                            <div class="card border-0 shadow-lg p-4">
+                                <div class="mb-3 text-danger">
+                                    <i class="ph-shield-warning" style="font-size: 64px;"></i>
+                                </div>
+                                <h4 class="fw-bold text-dark mb-1">Acesso Não Autorizado (Código 403)</h4>
+                                <p class="text-muted fs-xs mb-3">
+                                    Seu perfil ou operador atual não possui a permissão requerida ou o escopo necessário para acessar este recurso da plataforma.
+                                </p>
+                                <div class="alert alert-warning py-2 px-3 fs-xxs text-start mb-3">
+                                    <strong><i class="ph-lock-key me-1"></i> Governança Corporativa Disk:</strong><br>
+                                    A segurança do sistema é baseada no princípio do menor privilégio. Nenhuma ação administrativa ou financeira pode ser executada sem autorização explícita e alçada válida.
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary fw-bold px-4" onclick="window.AppRouter.navigate('/dashboard')">
+                                        <i class="ph-arrow-left me-1"></i> Voltar ao Painel Geral
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Tela Oficial de Autenticação / Login -->
+                    <section id="view-auth-login" class="page-section" style="display:none;">
+                        <div class="container py-5" style="max-width: 480px;">
+                            <div class="card border-0 shadow-lg p-4">
+                                <div class="text-center mb-4">
+                                    <h4 class="fw-bold text-dark mb-0">DISK INGRESSOS</h4>
+                                    <span class="fs-xs text-muted text-uppercase fw-semibold">Central de Autenticação &amp; Acesso</span>
+                                </div>
+                                <form id="form-app-login" onsubmit="event.preventDefault(); window.executeAppLogin(event);">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-semibold text-dark">E-mail Corporativo</label>
+                                        <input type="email" class="form-control" id="login-input-email" required placeholder="seu.email@diskingressos.com.br" value="carlos.lima@diskingressos.com.br">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fs-xs fw-semibold text-dark">Senha de Acesso</label>
+                                        <input type="password" class="form-control" id="login-input-password" required placeholder="Digite sua senha" value="senha123">
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 fs-xs">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="login-keep-connected" checked>
+                                            <label class="form-check-label text-muted" for="login-keep-connected">Manter conectado</label>
+                                        </div>
+                                        <a href="#" class="text-primary text-decoration-none" onclick="alert('Instruções de redefinição serão enviadas ao e-mail cadastrado.')">Esqueci minha senha</a>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm mb-3">
+                                        <i class="ph-sign-in me-1"></i> Acessar Sistema
+                                    </button>
+                                </form>
+
+                                <hr class="my-3">
+                                <span class="fs-xxs text-uppercase fw-bold text-muted d-block text-center mb-2">Simulação Rápida de Perfis (Ambiente Demo):</span>
+                                <div class="d-grid gap-1">
+                                    <button type="button" class="btn btn-xs btn-outline-success text-start d-flex justify-content-between align-items-center" onclick="window.quickLoginAs('user-fin-mariana')">
+                                        <span><strong>Maria Souza</strong> &bull; Financeiro Operacional (N1)</span>
+                                        <span class="badge bg-success">N1 &bull; R$ 50k</span>
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-primary text-start d-flex justify-content-between align-items-center" onclick="window.quickLoginAs('user-admin-carlos')">
+                                        <span><strong>Carlos Lima</strong> &bull; Gestor Financeiro (N2)</span>
+                                        <span class="badge bg-primary">N2 &bull; R$ 500k</span>
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-warning text-dark text-start d-flex justify-content-between align-items-center" onclick="window.quickLoginAs('user-producer-joao')">
+                                        <span><strong>João Silva</strong> &bull; Produtor Parque Jaime Lerner</span>
+                                        <span class="badge bg-warning text-dark">Produtor</span>
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-dark text-start d-flex justify-content-between align-items-center" onclick="window.quickLoginAs('user-admin-master')">
+                                        <span><strong>Admin Master</strong> &bull; Acesso Irrestrito</span>
+                                        <span class="badge bg-dark">Master</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ============================================================================ -->
+                    <!-- CENTRAL UNIFICADA DE APROVAÇÕES (WORKFLOW TRANSVERSAL PRODUTOR -> FINANCEIRO)   -->
+                    <!-- ============================================================================ -->
+                    <section id="view-financial-approvals" class="page-section" style="display:none;">
+                        <!-- Header com Título e Switcher de Perfil RBAC / Simulação -->
+                        <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-3" style="border-radius: 6px;">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                    <i class="ph-shield-check text-primary"></i> Central Unificada de Aprovações Financeiras
+                                </h5>
+                                <div class="text-muted fs-xs">
+                                    Workflow Transversal Produtor ➔ Controladoria &bull; Governança Maker/Checker &bull; Alçadas &bull; SLA
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center w-100 w-md-auto">
+                                <span class="fs-xxs text-uppercase fw-bold text-muted d-none d-sm-inline">Perfil Operacional:</span>
+                                <div class="btn-group shadow-sm" role="group" id="approval-role-toggle">
+                                    <button type="button" class="btn btn-xs btn-outline-primary fw-semibold" id="btn-profile-produtor" onclick="window.switchApprovalRole('PRODUTOR')">
+                                        <i class="ph-user"></i> Produtor
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-success active fw-semibold" id="btn-profile-financeiro" onclick="window.switchApprovalRole('FINANCEIRO')">
+                                        <i class="ph-bank"></i> Financeiro
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-dark fw-semibold" id="btn-profile-admin" onclick="window.switchApprovalRole('ADMINISTRADOR')">
+                                        <i class="ph-shield-check"></i> Master
+                                    </button>
+                                </div>
+                                <span class="badge bg-light text-dark border fs-xxs py-1 px-2 fw-semibold" id="approval-current-role-badge">
+                                    Mariana Controladoria
+                                </span>
+                                <button type="button" class="btn btn-xs btn-light border shadow-sm text-secondary" title="Recarregar solicitações" onclick="window.refreshApprovalsDashboard()">
+                                    <i class="ph-arrows-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 5 Cards de Indicadores Superiores (KPIs) -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-12 col-sm-6 col-xl">
+                                <div class="card card-body shadow-sm border-0 border-start border-primary border-4 p-2 h-100">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="fs-xxs text-uppercase fw-bold text-muted d-block">Aguardando Aprovação</span>
+                                            <h4 class="fw-bold mb-0 text-primary mt-1" id="kpi-appr-pending-count">17</h4>
+                                        </div>
+                                        <div class="p-2 bg-primary-subtle text-primary rounded-circle">
+                                            <i class="ph-hourglass fs-3"></i>
+                                        </div>
+                                    </div>
+                                    <div class="fs-xxs text-muted mt-2">
+                                        <i class="ph-info"></i> Fila ativa para análise
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl">
+                                <div class="card card-body shadow-sm border-0 border-start border-success border-4 p-2 h-100">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="fs-xxs text-uppercase fw-bold text-muted d-block">Valor Aguardando</span>
+                                            <h4 class="fw-bold mb-0 text-success mt-1" id="kpi-appr-pending-amount">R$ 284.500,00</h4>
+                                        </div>
+                                        <div class="p-2 bg-success-subtle text-success rounded-circle">
+                                            <i class="ph-currency-dollar-simple fs-3"></i>
+                                        </div>
+                                    </div>
+                                    <div class="fs-xxs text-muted mt-2">
+                                        <i class="ph-lock-key"></i> Saldo comprometido retido
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl">
+                                <div class="card card-body shadow-sm border-0 border-start border-danger border-4 p-2 h-100">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="fs-xxs text-uppercase fw-bold text-muted d-block">Urgentes / Críticas</span>
+                                            <h4 class="fw-bold mb-0 text-danger mt-1" id="kpi-appr-urgent-count">4</h4>
+                                        </div>
+                                        <div class="p-2 bg-danger-subtle text-danger rounded-circle">
+                                            <i class="ph-warning-octagon fs-3"></i>
+                                        </div>
+                                    </div>
+                                    <div class="fs-xxs text-muted mt-2">
+                                        <i class="ph-lightning"></i> Prioridade alta de análise
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl">
+                                <div class="card card-body shadow-sm border-0 border-start border-warning border-4 p-2 h-100">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="fs-xxs text-uppercase fw-bold text-muted d-block">Vencendo SLA</span>
+                                            <h4 class="fw-bold mb-0 text-warning mt-1" id="kpi-appr-sla-expiring">3</h4>
+                                        </div>
+                                        <div class="p-2 bg-warning-subtle text-warning rounded-circle">
+                                            <i class="ph-clock-countdown fs-3"></i>
+                                        </div>
+                                    </div>
+                                    <div class="fs-xxs text-muted mt-2">
+                                        <i class="ph-alarm"></i> Menos de 2h para limite
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-xl">
+                                <div class="card card-body shadow-sm border-0 border-start border-info border-4 p-2 h-100">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="fs-xxs text-uppercase fw-bold text-muted d-block">Aprovadas Hoje</span>
+                                            <h4 class="fw-bold mb-0 text-info mt-1" id="kpi-appr-approved-today">21</h4>
+                                        </div>
+                                        <div class="p-2 bg-info-subtle text-info rounded-circle">
+                                            <i class="ph-check-circle fs-3"></i>
+                                        </div>
+                                    </div>
+                                    <div class="fs-xxs text-muted mt-2">
+                                        <i class="ph-trend-up"></i> Liquidações autorizadas
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card de Tabela Operacional com Abas e Filtros -->
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-header bg-white border-bottom py-2 px-3">
+                                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-stretch align-items-lg-center gap-2">
+                                    <!-- Abas de Navegação -->
+                                    <div class="btn-group btn-group-sm flex-wrap" role="group" id="approval-status-tabs">
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-todas" onclick="window.switchApprovalTab('todas')">Todas</button>
+                                        <button type="button" class="btn btn-primary text-white fw-bold active tab-approval-link" id="tab-appr-pendentes" onclick="window.switchApprovalTab('pendentes')">Pendentes</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-em_analise" onclick="window.switchApprovalTab('em_analise')">Em Análise</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-devolvidas" onclick="window.switchApprovalTab('devolvidas')">Devolvidas</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-aprovadas" onclick="window.switchApprovalTab('aprovadas')">Aprovadas</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-rejeitadas" onclick="window.switchApprovalTab('rejeitadas')">Rejeitadas</button>
+                                        <button type="button" class="btn btn-light text-dark fw-semibold tab-approval-link" id="tab-appr-concluidas" onclick="window.switchApprovalTab('concluidas')">Concluídas</button>
+                                    </div>
+
+                                    <!-- Filtros e Busca Rápida -->
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        <div class="input-group input-group-sm" style="width: 220px;">
+                                            <span class="input-group-text bg-light border-end-0"><i class="ph-magnifying-glass"></i></span>
+                                            <input type="text" class="form-control border-start-0" id="input-filter-approval-search" placeholder="Buscar ID, produtor, evento..." oninput="window.filterApprovalTable()">
+                                        </div>
+                                        <select class="form-select form-select-sm" id="select-filter-approval-type" style="width: 170px;" onchange="window.filterApprovalTable()">
+                                            <option value="TODOS">Todos os Tipos</option>
+                                            <option value="REPASSE">Repasse Financeiro</option>
+                                            <option value="ANTECIPACAO">Antecipação Recebíveis</option>
+                                            <option value="TRANSFERENCIA_EVENTOS">Transf. entre Eventos</option>
+                                            <option value="PAGAMENTO">Pagamento Fornecedor</option>
+                                            <option value="PAGAMENTO_LOTE">Pagamento em Lote</option>
+                                            <option value="PIX">Transferência PIX</option>
+                                            <option value="ALTERACAO_DADOS_BANCARIOS">Alteração Bancária</option>
+                                            <option value="ESTORNO">Estorno Financeiro</option>
+                                            <option value="COMPRA">Compra / Contratação</option>
+                                            <option value="CONTRATO">Contrato de Serviço</option>
+                                            <option value="ALTERACAO_TAXA">Alteração de Taxa</option>
+                                            <option value="ALTERACAO_REGRA_REPASSE">Regra de Repasse</option>
+                                            <option value="DESPESA_EXTRAORDINARIA">Despesa Extraordinária</option>
+                                        </select>
+                                        <select class="form-select form-select-sm" id="select-filter-approval-risk" style="width: 130px;" onchange="window.filterApprovalTable()">
+                                            <option value="TODOS">Todos Riscos</option>
+                                            <option value="BAIXO">Baixo Risco</option>
+                                            <option value="MEDIO">Médio Risco</option>
+                                            <option value="ALTO">Alto Risco</option>
+                                            <option value="CRITICO">Crítico</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 fs-xs">
+                                    <thead class="table-light text-uppercase fs-xxs text-muted fw-bold">
+                                        <tr>
+                                            <th style="width: 130px;">Solicitação</th>
+                                            <th style="width: 180px;">Tipo de Operação</th>
+                                            <th>Produtor &bull; Evento</th>
+                                            <th style="width: 130px;">Valor</th>
+                                            <th style="width: 140px;">Solicitante</th>
+                                            <th style="width: 130px;">Criada em</th>
+                                            <th style="width: 130px;">Alçada</th>
+                                            <th style="width: 110px;">SLA</th>
+                                            <th style="width: 120px;">Status</th>
+                                            <th style="width: 100px;" class="text-end">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-financial-approvals-body">
+                                        <!-- Preenchido via financialApprovalsController.renderTable() -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
 
                     <section id="view-financial-repass" class="page-section"  style="display:none;">
                         <div class="card card-body shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 py-2 mb-0" style="border-radius: 6px;">
@@ -19033,6 +19353,202 @@ Como podemos te ajudar hoje?
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+    <!-- ============================================================================ -->
+    <!-- CENTRAL DE APROVAÇÕES — OFFCANVAS DE DECISÃO & MODAIS OPERACIONAIS              -->
+    <!-- ============================================================================ -->
+
+    <!-- Painel Lateral de Decisão Financeira (Offcanvas / Drawer) -->
+    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvas-approval-decision" style="width: 580px; max-width: 95vw;">
+        <div class="offcanvas-header bg-light border-bottom py-3">
+            <h5 class="offcanvas-title fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="ph-shield-check text-primary fs-4"></i> Painel de Decisão Financeira
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+        </div>
+        <div class="offcanvas-body p-3" id="offcanvas-approval-content">
+            <!-- Injetado dinamicamente via financialApprovalsController.openDrawer() -->
+        </div>
+        <div class="offcanvas-footer p-3 border-top bg-light" id="offcanvas-approval-footer">
+            <!-- Ações e botões de decisão injetados dinamicamente com governança Maker/Checker -->
+        </div>
+    </div>
+
+    <!-- Modal 1: Confirmação de Aprovação Formal -->
+    <div class="modal fade" id="modal-approval-confirm-approve" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-success text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <i class="ph-check-circle fs-5"></i> Confirmar Aprovação de Operação
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="alert alert-success-subtle border border-success-subtle text-dark py-2 px-3 fs-xs mb-3">
+                        <strong class="d-block mb-1">Solicitação: <span id="modal-approve-appr-id" class="font-monospace fw-bold text-success"></span></strong>
+                        <span id="modal-approve-appr-desc" class="fs-xs text-muted"></span>
+                    </div>
+                    <p class="fs-xs text-secondary mb-3">
+                        Ao aprovar, a operação avançará para a execução financeira automática. Seus dados cadastrais e carimbo de data/hora serão gravados na trilha de auditoria contábil.
+                    </p>
+                    <div class="mb-2">
+                        <label class="form-label fs-xs fw-semibold text-dark mb-1">Parecer / Observações do Aprovador (opcional):</label>
+                        <textarea class="form-control fs-xs" id="input-approve-decision-notes" rows="2" placeholder="Ex: Conferido saldo em conta e documentação válida. Aprovado."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1" onclick="window.confirmApproveDecision()">
+                        <i class="ph-check-bold"></i> Autorizar e Executar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Rejeição Definitiva com Motivo Obrigatório -->
+    <div class="modal fade" id="modal-approval-confirm-reject" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-danger text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <i class="ph-x-circle fs-5"></i> Rejeitar Operação Financeira
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="alert alert-danger-subtle border border-danger-subtle text-dark py-2 px-3 fs-xs mb-3">
+                        <strong class="d-block mb-1">Solicitação: <span id="modal-reject-appr-id" class="font-monospace fw-bold text-danger"></span></strong>
+                        <span class="fs-xxs text-danger fw-semibold">Atenção: A rejeição encerra definitivamente esta solicitação e libera os saldos retidos.</span>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fs-xs fw-semibold text-dark mb-1">Justificativa da Rejeição (obrigatória):</label>
+                        <textarea class="form-control fs-xs" id="input-reject-decision-reason" rows="3" required placeholder="Informe o motivo formal para arquivamento e rejeição..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-danger fw-bold d-flex align-items-center gap-1" onclick="window.confirmRejectDecision()">
+                        <i class="ph-x-bold"></i> Confirmar Rejeição
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Devolução ao Produtor para Correção -->
+    <div class="modal fade" id="modal-approval-confirm-return" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-warning text-dark py-2 px-3">
+                    <h6 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <i class="ph-arrow-u-up-left fs-5"></i> Devolver Solicitação ao Produtor
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="alert alert-warning-subtle border border-warning-subtle text-dark py-2 px-3 fs-xs mb-3">
+                        <strong class="d-block mb-1">Solicitação: <span id="modal-return-appr-id" class="font-monospace fw-bold text-dark"></span></strong>
+                        <span class="fs-xxs text-muted">A solicitação não será cancelada; o produtor receberá uma notificação para ajustar os dados e reenviar mantendo o mesmo protocolo.</span>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fs-xs fw-semibold text-dark mb-1">Orientação / Ajustes Necessários (obrigatório):</label>
+                        <textarea class="form-control fs-xs" id="input-return-decision-notes" rows="3" required placeholder="Ex: Por favor anexar a nota fiscal correta e conferir o CNPJ da conta de destino..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1" onclick="window.confirmReturnDecision()">
+                        <i class="ph-paper-plane-tilt"></i> Devolver para Correção
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Produtor Corrige e Reenvia Solicitação -->
+    <div class="modal fade" id="modal-approval-resubmit" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-primary text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <i class="ph-pencil-simple fs-5"></i> Corrigir e Reenviar Solicitação
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="alert alert-warning py-2 px-3 fs-xs mb-3">
+                        <strong class="d-block mb-1"><i class="ph-info me-1"></i> Apontamento da Controladoria Financeira:</strong>
+                        <div id="modal-resubmit-return-notes" class="fst-italic text-dark"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fs-xs fw-semibold text-dark mb-1">Justificativa Corrigida / Esclarecimentos:</label>
+                        <textarea class="form-control fs-xs" id="input-resubmit-justification" rows="3" required placeholder="Descreva os ajustes efetuados para nova análise do Financeiro..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-primary fw-bold d-flex align-items-center gap-1" onclick="window.confirmResubmit()">
+                        <i class="ph-paper-plane-tilt"></i> Reenviar para Aprovação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MEGA PACOTE 1: MODAIS DE GESTÃO DE ACESSO & WIZARD DE USUÁRIOS (8 ETAPAS)     -->
+    <!-- ============================================================================ -->
+
+    <!-- Modal do Assistente de Criação de Usuário (8 Etapas) -->
+    <div class="modal fade" id="modal-access-user-wizard" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-dark text-white py-2 px-3">
+                    <h6 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <i class="ph-user-plus text-primary fs-5"></i> Assistente de Cadastro de Usuário
+                    </h6>
+                    <span class="badge bg-primary text-white ms-auto me-2 fs-xxs" id="wizard-step-indicator">Etapa 1 de 8</span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3" id="wizard-user-step-content">
+                    <!-- Renderizado dinamicamente via accessManagementController.renderWizardStep() -->
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-secondary" id="btn-wizard-prev" onclick="window.wizardPrevStep()" style="display:none;">
+                            <i class="ph-arrow-left me-1"></i> Anterior
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" id="btn-wizard-next" onclick="window.wizardNextStep()">
+                            Próximo <i class="ph-arrow-right ms-1"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success fw-bold" id="btn-wizard-finish" onclick="window.confirmCreateUserWizard()" style="display:none;">
+                            <i class="ph-check-bold me-1"></i> Concluir e Criar Usuário
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes e Permissões do Usuário -->
+    <div class="modal fade" id="modal-access-user-details" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-light border-bottom py-2 px-3">
+                    <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="ph-user-focus text-primary fs-5"></i> Ficha Cadastral do Usuário
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-3" id="modal-user-details-content">
+                    <div class="text-center py-3 text-muted">Carregando detalhes do operador...</div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>

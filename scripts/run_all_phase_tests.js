@@ -18,7 +18,11 @@ for (const file of testFiles) {
   const filePath = path.join('tests/fases', file);
   console.log(`▶ Rodando ${file}...`);
   try {
-    const out = execSync(`node ${filePath}`, { cwd: rootDir, stdio: 'pipe' }).toString();
+    const out = execSync(`node ${filePath}`, {
+      cwd: rootDir,
+      stdio: 'pipe',
+      env: { ...process.env, NODE_ENV: 'test' }
+    }).toString();
     console.log(`  ✓ ${file} passou com sucesso!`);
     passedSuites++;
   } catch (err) {

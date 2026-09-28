@@ -14,6 +14,10 @@ import { initFinancialEventTransfersView, switchTransferTab } from './controller
 import { initProcureToPayView, switchP2PTab } from './controllers/procureToPayController.js';
 import { initTreasuryView, switchTreasuryTab } from './controllers/treasuryController.js';
 import { initUnifiedPayoutsModule, handleProducerRepasseSubmitConfirmed, refreshUnifiedPayoutsDashboard } from './controllers/unifiedPayoutsController.js';
+import { financialApprovalsController } from './controllers/financialApprovalsController.js';
+import { accessControlService } from './services/accessControlService.js';
+import { accessAuditService } from './services/accessAuditService.js';
+import { accessManagementController } from './controllers/accessManagementController.js';
 import { initLocalBalanceStore } from './services/eventBalanceService.js';
 import { createUiCard, createUiTable, createUiModal, createUiChart } from './components/ui.js';
 import { AppRouter } from './navigation/router.js';
@@ -363,6 +367,22 @@ function initApp() {
         switchAccountingTab(targetTab);
       }
     });
+
+    AppRouter.registerHook('financial-approvals', (route) => {
+      if (financialApprovalsController && typeof financialApprovalsController.refreshDashboard === 'function') {
+        financialApprovalsController.refreshDashboard();
+      }
+    });
+
+    AppRouter.registerHook('access-management', (route) => {
+      if (accessManagementController) {
+        if (route.tab) {
+          accessManagementController.switchTab(route.tab);
+        } else {
+          accessManagementController.renderCurrentTab();
+        }
+      }
+    });
   }
 
   // Navegação unificada pelo AppRouter Central
@@ -371,10 +391,73 @@ function initApp() {
   }
   initEventsModule();
   initFinanceModule();
+  if (typeof accessManagementController !== 'undefined' && typeof accessManagementController.init === 'function') {
+    accessManagementController.init();
+  }
   initSettingsModule();
   initReportsModule();
   initQuickActions();
   initCharts();
+
+  // MEGA PACOTE 1 — Global Window Bindings de Acesso & Login
+  window.accessControlService = accessControlService;
+  window.accessAuditService = accessAuditService;
+  window.accessManagementController = accessManagementController;
+  window.executeAppLogin = async (event) => {
+    if (event && event.preventDefault) event.preventDefault();
+    const email = document.getElementById('login-input-email')?.value;
+    const pass = document.getElementById('login-input-password')?.value;
+    const keep = document.getElementById('login-keep-connected')?.checked;
+    try {
+      await accessControlService.login(email, pass, keep);
+      AppRouter.navigate('/dashboard');
+      if (window.showAppNotification) {
+        window.showAppNotification(`Bem-vindo, ${accessControlService.getCurrentUser().name}!`, 'success');
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+  window.quickLoginAs = (userId) => {
+    accessControlService.switchCurrentUser(userId);
+    const user = accessControlService.getCurrentUser();
+    if (window.showAppNotification) {
+      window.showAppNotification(`Sessão alternada para ${user.name} (${user.profileLabelPtBr})`, 'info');
+    }
+    AppRouter.navigate('/dashboard');
+  };
+  window.openUserDetailsModal = (id) => {
+    const user = accessControlService.getUserById(id);
+    if (!user) return;
+    const container = document.getElementById('modal-user-details-content');
+    if (container) {
+      container.innerHTML = `
+        <div class="card card-body p-3 bg-light border mb-2 fs-xs">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong class="text-dark fs-sm">${user.name}</strong>
+            <span class="badge bg-primary">${user.profileLabelPtBr}</span>
+          </div>
+          <div class="text-muted fs-xxs mb-1"><i class="ph-envelope me-1"></i> ${user.email} &bull; ${user.phone || 'Sem telefone'}</div>
+          <div class="text-muted fs-xxs mb-1"><i class="ph-buildings me-1"></i> Vínculo: ${user.userType === 'INTERNO_DISK' ? 'Interno DiskIngressos' : user.producerName}</div>
+          <div class="text-muted fs-xxs mb-2"><i class="ph-compass me-1"></i> Escopo: ${user.scope.allEvents ? 'Todos os eventos' : `${user.scope.eventIds.length} eventos restritos`}</div>
+          <hr class="my-2">
+          <div class="d-flex justify-content-between fs-xs mb-1">
+            <span class="text-muted">Alçada Transferência:</span>
+            <strong class="text-dark">R$ ${(user.thresholds?.transferLimit || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+          </div>
+          <div class="d-flex justify-content-between fs-xs mb-1">
+            <span class="text-muted">Alçada Repasse:</span>
+            <strong class="text-dark">R$ ${(user.thresholds?.payoutLimit || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+          </div>
+          <div class="d-flex justify-content-between fs-xs">
+            <span class="text-muted">Status Atual:</span>
+            <span class="badge ${user.status === 'ATIVO' ? 'bg-success' : 'bg-danger'}">${user.status}</span>
+          </div>
+        </div>
+      `;
+    }
+    accessManagementController.showModal('modal-access-user-details');
+  };
   
   // Custom module initializers
   if (typeof initAiAssistant === 'function') initAiAssistant();
@@ -2940,6 +3023,9 @@ function initFinanceModule() {
   calculateAnticipationSimPage();
   resetRepasseWizard();
   if (typeof initUnifiedPayoutsModule === 'function') initUnifiedPayoutsModule();
+  if (typeof financialApprovalsController !== 'undefined' && typeof financialApprovalsController.init === 'function') {
+    financialApprovalsController.init();
+  }
 
   // Render new Ticketera modules
   if (typeof renderPDVs === 'function') renderPDVs();

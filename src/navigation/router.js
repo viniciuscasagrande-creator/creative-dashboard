@@ -7,6 +7,7 @@
 
 import { ROUTES, LEGACY_ROUTE_ALIASES, resolveRoute } from './routes.js';
 import { MenuStateManager } from './menu-state.js';
+import { accessControlService } from '../services/accessControlService.js';
 
 class AppRouter {
   constructor() {
@@ -62,6 +63,35 @@ class AppRouter {
         console.error('[AppRouter] Rota não encontrada:', path);
         this.isNavigating = false;
         return this.navigate('/dashboard', { replace: true });
+      }
+
+      // =========================================================================
+      // VALIDAÇÃO DE SEGURANÇA & RBAC (MEGA PACOTE 1)
+      // Nenhuma tela sensível pode ser acessada apenas digitando a URL
+      // =========================================================================
+      if (route.path !== '/login' && route.path !== '/acesso-negado') {
+        const ROUTE_PERMISSIONS = {
+          '/financeiro/aprovacoes': 'financeiro.aprovacoes.visualizar',
+          '/acesso': 'acesso.usuarios.visualizar',
+          '/acesso/visao-geral': 'acesso.usuarios.visualizar',
+          '/acesso/usuarios': 'acesso.usuarios.visualizar',
+          '/acesso/perfis': 'acesso.perfis.visualizar',
+          '/acesso/permissoes': 'acesso.permissoes.administrar',
+          '/acesso/alcadas': 'acesso.alcadas.visualizar',
+          '/acesso/escopos': 'acesso.usuarios.visualizar',
+          '/acesso/seguranca': 'acesso.usuarios.visualizar',
+          '/acesso/auditoria': 'acesso.auditoria.visualizar'
+        };
+
+        const requiredPerm = ROUTE_PERMISSIONS[route.path];
+        if (requiredPerm && typeof accessControlService !== 'undefined') {
+          const user = accessControlService.getCurrentUser();
+          if (!accessControlService.can(user, requiredPerm)) {
+            console.warn(`[AppRouter] Acesso Negado à rota "${route.path}". Permissão requerida: ${requiredPerm}`);
+            this.isNavigating = false;
+            return this.navigate('/acesso-negado', { replace: true });
+          }
+        }
       }
 
       const routeState = {
